@@ -1,0 +1,2272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ 模板与泛型编程 · 知识图谱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0c1222;
+    --ink-soft: #1a2438;
+    --paper: #f3f6fb;
+    --panel: rgba(255, 255, 255, 0.92);
+    --panel-solid: #ffffff;
+    --line: #d5deec;
+    --muted: #6b7a94;
+    --text: #1e2a3f;
+    --cyan: #0d9488;
+    --cyan-deep: #0f766e;
+    --cyan-soft: #ccfbf1;
+    --amber: #d97706;
+    --amber-soft: #fef3c7;
+    --blue: #2563eb;
+    --blue-soft: #dbeafe;
+    --rose: #e11d48;
+    --rose-soft: #ffe4e6;
+    --violet: #7c3aed;
+    --violet-soft: #ede9fe;
+    --shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    color: var(--text);
+    font-family: "Noto Sans SC", "DM Sans", sans-serif;
+    background: var(--paper);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 80% 50% at 10% -10%, rgba(13, 148, 136, 0.14), transparent 50%),
+      radial-gradient(ellipse 60% 40% at 90% 0%, rgba(37, 99, 235, 0.10), transparent 45%),
+      radial-gradient(ellipse 50% 40% at 70% 100%, rgba(217, 119, 6, 0.08), transparent 50%),
+      linear-gradient(165deg, #eef2f8 0%, #f5f7fb 40%, #e8eef6 100%);
+  }
+
+  .app {
+    --detail-w: 360px;
+    display: grid;
+    grid-template-columns: 280px 1fr 6px var(--detail-w);
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    gap: 0;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 16px 28px;
+    border-bottom: 1px solid rgba(213, 222, 236, 0.8);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px);
+    z-index: 20;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background:
+      linear-gradient(145deg, #0d9488 0%, #0f766e 55%, #115e59 100%);
+    box-shadow: 0 8px 20px rgba(13, 148, 136, 0.35);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .brand-mark svg { width: 22px; height: 22px; }
+
+  .brand-text h1 {
+    font-family: "DM Sans", "Noto Sans SC", sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .brand-text p {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .search {
+    position: relative;
+    width: min(280px, 36vw);
+  }
+
+  .search input {
+    width: 100%;
+    height: 40px;
+    padding: 0 14px 0 40px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    font: 500 13px/1 "Noto Sans SC", sans-serif;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .search input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  }
+
+  .search svg {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .tool-btn {
+    height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    font: 600 12px/1 "Noto Sans SC", sans-serif;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  }
+
+  .tool-btn:hover {
+    background: #f8fafc;
+    border-color: #b8c5d8;
+  }
+
+  .tool-btn:active { transform: scale(0.97); }
+
+  .tool-btn.primary {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.28);
+  }
+
+  .tool-btn.primary:hover { filter: brightness(1.05); }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    padding: 22px 18px 28px;
+    border-right: 1px solid rgba(213, 222, 236, 0.8);
+    background: rgba(255, 255, 255, 0.55);
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  .side-block + .side-block { margin-top: 28px; }
+
+  .side-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .layer-list, .legend-list, .path-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .layer-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--text);
+    font: 500 13px/1.3 "Noto Sans SC", sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .layer-btn:hover { background: rgba(255, 255, 255, 0.8); }
+
+  .layer-btn.active {
+    background: #fff;
+    border-color: var(--line);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  }
+
+  .layer-btn .swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px var(--swatch-ring);
+  }
+
+  .layer-btn .meta {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    font-family: "DM Sans", sans-serif;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .legend-item i {
+    width: 28px;
+    height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .path-chip {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    text-align: left;
+    width: 100%;
+    font: inherit;
+    color: inherit;
+  }
+
+  .path-chip:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 6px 18px rgba(13, 148, 136, 0.1);
+  }
+
+  .path-chip .num {
+    width: 22px;
+    height: 22px;
+    border-radius: 8px;
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+    font: 700 11px/22px "DM Sans", sans-serif;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .path-chip strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+
+  .path-chip span {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  /* ── Graph stage ── */
+  .stage-wrap {
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .stage {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .stage.dragging { cursor: grabbing; }
+
+  .stage svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .edge {
+    fill: none;
+    stroke: #c5d0e0;
+    stroke-width: 1.5;
+    opacity: 0.7;
+    transition: opacity 0.25s ease, stroke 0.25s ease, stroke-width 0.25s ease;
+  }
+
+  /* 焦点模式：无关边变细、变浅灰，不消失 */
+  .stage.focus-on .edge.quiet {
+    stroke: #dde4ef;
+    stroke-width: 1;
+    opacity: 0.45;
+  }
+
+  .edge.hot {
+    opacity: 1;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+  }
+
+  .edge.hot.flow {
+    stroke-dasharray: 6 10;
+    animation: edge-flow 1.1s linear infinite;
+  }
+
+  @keyframes edge-flow {
+    to { stroke-dashoffset: -16; }
+  }
+
+  .edge-label-g {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .edge-label-g.show { opacity: 1; }
+
+  .edge-label-g text {
+    font-size: 10px;
+    fill: #64748b;
+    font-family: "DM Sans", "Noto Sans SC", sans-serif;
+    font-weight: 600;
+  }
+
+  .node {
+    cursor: grab;
+  }
+
+  .node.dragging {
+    cursor: grabbing;
+  }
+
+  .node.dragging .body {
+    filter: drop-shadow(0 8px 18px rgba(13, 148, 136, 0.28));
+  }
+
+  .node .glow {
+    fill: #0d9488;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .node .ring {
+    fill: none;
+    stroke: #0d9488;
+    stroke-width: 1.75;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .node .body {
+    transition: fill 0.22s ease, stroke 0.22s ease, stroke-width 0.22s ease, filter 0.22s ease;
+  }
+
+  .node-title {
+    font-family: "Noto Sans SC", "DM Sans", sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    fill: var(--ink);
+    pointer-events: none;
+    transition: fill 0.22s ease;
+  }
+
+  .node-en {
+    font-family: "DM Sans", sans-serif;
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    fill: var(--muted);
+    pointer-events: none;
+    text-transform: uppercase;
+    transition: fill 0.22s ease;
+  }
+
+  .node.hub .node-title { font-size: 14px; fill: #fff; }
+  .node.hub .node-en { fill: rgba(255, 255, 255, 0.78); font-size: 9px; }
+
+  /* 关联：细虚线青环，描边改青色 */
+  .node.related .ring {
+    opacity: 0.7;
+    stroke-dasharray: 3.5 3.5;
+  }
+  .node.related:not(.hub) .body {
+    stroke: #0d9488 !important;
+    stroke-width: 2.2;
+  }
+
+  /* 选中：统一青色描边 + 轻投影 */
+  .node.selected .glow { opacity: 0.08; }
+  .node.selected .ring {
+    opacity: 1;
+    stroke-width: 1.8;
+    stroke-dasharray: none;
+  }
+  .node.selected:not(.hub) .body {
+    fill: #f0fdfa;
+    stroke: #0d9488 !important;
+    stroke-width: 2.6;
+    filter: drop-shadow(0 4px 12px rgba(13, 148, 136, 0.18));
+  }
+  .node.selected.hub .body {
+    filter: drop-shadow(0 6px 16px rgba(13, 148, 136, 0.32));
+  }
+
+  /* 无关：压低描边与英文，中文仍可读 */
+  .stage.focus-on .node.quiet:not(.hub) .body {
+    fill: #f8fafc;
+    stroke: #dbe2ec;
+    stroke-width: 1.4;
+    filter: none;
+  }
+  .stage.focus-on .node.quiet .node-title { fill: #a0aec0; }
+  .stage.focus-on .node.quiet .node-en { fill: #d0d7e2; }
+  .stage.focus-on .node.quiet.hub .body { opacity: 0.5; }
+  .stage.focus-on .node.quiet .glow,
+  .stage.focus-on .node.quiet .ring { opacity: 0 !important; }
+
+  .stage.path-on .node.on-path:not(.quiet):not(.selected):not(.hub) .body {
+    stroke-width: 2.4;
+  }
+  .edge.on-path:not(.hot) {
+    opacity: 0.8;
+    stroke-width: 1.9;
+  }
+
+  .hint-bar {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: rgba(12, 18, 34, 0.88);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 12px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 12px 32px rgba(12, 18, 34, 0.25);
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .hint-bar kbd {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #fff;
+  }
+
+  /* ── Detail panel ── */
+  .detail-resizer {
+    position: relative;
+    z-index: 15;
+    cursor: col-resize;
+    background: transparent;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .detail-resizer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+    background: rgba(213, 222, 236, 0.95);
+    transition: background 0.15s, width 0.15s, box-shadow 0.15s;
+  }
+
+  .detail-resizer::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 36px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: #c5d0e0;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+  }
+
+  .detail-resizer:hover::before,
+  .detail-resizer.is-dragging::before {
+    width: 2px;
+    background: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .detail-resizer:hover::after,
+  .detail-resizer.is-dragging::after {
+    opacity: 1;
+    background: var(--cyan);
+  }
+
+  body.is-resizing-detail {
+    cursor: col-resize;
+    user-select: none;
+  }
+
+  body.is-resizing-detail * {
+    cursor: col-resize !important;
+  }
+
+  .detail {
+    border-left: none;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(12px);
+    overflow-y: auto;
+    padding: 0;
+    z-index: 10;
+    min-width: 0;
+  }
+
+  .detail-empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 28px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .detail-empty .orb {
+    width: 72px;
+    height: 72px;
+    border-radius: 24px;
+    margin-bottom: 18px;
+    background:
+      linear-gradient(145deg, var(--cyan-soft), var(--blue-soft));
+    display: grid;
+    place-items: center;
+  }
+
+  .detail-empty h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .detail-empty p {
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 240px;
+  }
+
+  .detail-body { display: none; padding: 24px 22px 36px; }
+  .detail.has-selection .detail-empty { display: none; }
+  .detail.has-selection .detail-body { display: block; }
+
+  .detail-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .detail-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font: 700 14px/1 "DM Sans", sans-serif;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .detail-head h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  .detail-head .en {
+    margin-top: 4px;
+    font-family: "DM Sans", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .pill {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: var(--muted);
+  }
+
+  .pill.layer { background: var(--cyan-soft); color: var(--cyan-deep); }
+  .pill.card { background: var(--blue-soft); color: var(--blue); }
+
+  .section-title {
+    margin: 22px 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .detail-body p.desc {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .points {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .points li {
+    position: relative;
+    padding: 12px 14px 12px 36px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .points li::before {
+    content: attr(data-n);
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+    font: 700 10px/18px "DM Sans", sans-serif;
+    text-align: center;
+  }
+
+  .rule-table-wrap {
+    margin-top: 4px;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #e8eef6;
+    background: #fff;
+  }
+
+  .rule-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+
+  .rule-table th,
+  .rule-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #eef2f7;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .rule-table th {
+    background: #f8fafc;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .rule-table tr:last-child td { border-bottom: none; }
+
+  .rule-table .form {
+    font-family: "SF Mono", Menlo, "JetBrains Mono", monospace;
+    font-weight: 700;
+    color: var(--cyan-deep);
+    white-space: nowrap;
+  }
+
+  .rule-table .mono {
+    font-family: "SF Mono", Menlo, "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #334155;
+  }
+
+  .rule-table .err {
+    color: #e11d48;
+    font-weight: 700;
+  }
+
+  .rule-table .note {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .code-window {
+    margin-top: 4px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #1f1f24;
+    border: 1px solid #2c2c34;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+  }
+
+  .code-chrome {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 14px 8px;
+    background: linear-gradient(180deg, #2a2a30 0%, #232328 100%);
+    border-bottom: 1px solid #18181c;
+  }
+
+  .code-chrome .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.25);
+  }
+
+  .code-chrome .dot.red { background: #ff5f57; }
+  .code-chrome .dot.yellow { background: #febc2e; }
+  .code-chrome .dot.green { background: #28c840; }
+
+  .code-chrome .code-file {
+    margin-left: 8px;
+    font-family: "SF Mono", Menlo, Monaco, "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: #9a9aa2;
+    letter-spacing: 0.02em;
+  }
+
+  .code {
+    margin: 0;
+    padding: 14px 16px 16px;
+    background: #1f1f24;
+    color: #dfdfe0;
+    font-family: "SF Mono", Menlo, Monaco, "Cascadia Code", "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  /* Xcode Dark Default 语法色 */
+  .code .kw { color: #ff7ab2; }   /* keyword */
+  .code .tp { color: #6bdfff; }   /* type / system type */
+  .code .fn { color: #a8e6a1; }   /* function / declaration */
+  .code .cm { color: #6c7986; }   /* comment */
+  .code .str { color: #ff8170; }  /* string */
+  .code .num { color: #d0a8ff; }  /* number / constant */
+
+  .rel-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rel-chip {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .rel-chip:hover {
+    border-color: var(--cyan);
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+  }
+
+  .rel-chip .dir {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .card-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .link-card {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform 0.12s, border-color 0.15s, background 0.15s;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--text);
+  }
+
+  .link-card:hover { transform: translateY(-1px); }
+
+  .link-card.card-ans {
+    background: linear-gradient(135deg, #eff6ff, #f8fbff);
+    border-color: #dbeafe;
+    color: var(--blue);
+  }
+
+  .link-card.card-fu {
+    background: linear-gradient(135deg, #f0fdfa, #f7fffc);
+    border-color: #ccfbf1;
+    color: var(--cyan-deep);
+  }
+
+  .link-card .link-kicker {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .link-card small {
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1100px) {
+    .app {
+      --detail-w: auto;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto 1fr auto;
+      height: auto;
+      min-height: 100vh;
+      overflow: auto;
+    }
+    body { overflow: auto; }
+    .sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-height: none;
+    }
+    .side-block:last-child { grid-column: 1 / -1; }
+    .stage-wrap { height: 62vh; min-height: 420px; }
+    .detail-resizer { display: none; }
+    .detail {
+      border-left: none;
+      border-top: 1px solid var(--line);
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .topbar { flex-direction: column; align-items: stretch; }
+    .search { width: 100%; }
+    .top-actions { justify-content: stretch; }
+    .sidebar { grid-template-columns: 1fr; }
+    .brand-text h1 { font-size: 16px; }
+    .hint-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M7 8.5L3.5 12 7 15.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 8.5L20.5 12 17 15.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13.2 6.5L10.8 17.5" stroke="#99f6e4" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>C++ 模板与泛型编程 · 知识图谱</h1>
+        <p>TEMPLATE  ·  GENERIC  ·  METAPROGRAMMING</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+        <input id="search" type="search" placeholder="搜索知识点…" autocomplete="off" />
+      </div>
+      <button class="tool-btn" id="btn-fit" type="button">适应画布</button>
+      <button class="tool-btn" id="btn-reset" type="button">复位布局</button>
+      <button class="tool-btn" id="btn-clear" type="button">清除高亮</button>
+      <button class="tool-btn primary" id="btn-tour" type="button">学习路径</button>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <div class="side-block">
+      <div class="side-label"><span>知识分层</span><span id="layer-count">全部</span></div>
+      <div class="layer-list" id="layer-list"></div>
+    </div>
+    <div class="side-block">
+      <div class="side-label"><span>关系图例</span></div>
+      <div class="legend-list">
+        <div class="legend-item"><i style="background:#0d9488"></i>实现 / 属于</div>
+        <div class="legend-item"><i style="background:#2563eb"></i>机制依赖</div>
+        <div class="legend-item"><i style="background:#d97706"></i>约束 / 演进</div>
+        <div class="legend-item"><i style="background:#7c3aed"></i>模式 / 应用</div>
+      </div>
+    </div>
+    <div class="side-block">
+      <div class="side-label"><span>推荐路径</span></div>
+      <div class="path-list" id="path-list"></div>
+    </div>
+  </aside>
+
+  <main class="stage-wrap">
+    <div class="stage" id="stage"></div>
+    <div class="hint-bar" id="hint-bar">
+      <span>拖拽节点重排 · 空白处平移 · 滚轮缩放</span>
+      <span><kbd>Esc</kbd> 清除</span>
+    </div>
+  </main>
+
+  <div class="detail-resizer" id="detail-resizer" title="拖动调整右侧栏宽度" role="separator" aria-orientation="vertical" aria-label="调整右侧栏宽度"></div>
+
+  <aside class="detail" id="detail">
+    <div class="detail-empty">
+      <div class="orb">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="3" stroke="#0d9488" stroke-width="2"/>
+          <circle cx="12" cy="12" r="8" stroke="#0d9488" stroke-width="1.5" opacity=".4"/>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>选择一个知识点</h2>
+      <p>点击图谱中的节点，查看定义、面试要点、代码示意与关联关系。</p>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </aside>
+</div>
+
+<script>
+(() => {
+  const LAYERS = [
+    { id: "hub",    name: "总览",   color: "#0d9488", ring: "rgba(13,148,136,.2)", count: 0 },
+    { id: "base",   name: "基础形态", color: "#2563eb", ring: "rgba(37,99,235,.18)", count: 0 },
+    { id: "mech",   name: "核心机制", color: "#d97706", ring: "rgba(217,119,6,.18)", count: 0 },
+    { id: "const",  name: "约束选择", color: "#e11d48", ring: "rgba(225,29,72,.15)", count: 0 },
+    { id: "adv",    name: "进阶模式", color: "#7c3aed", ring: "rgba(124,58,237,.16)", count: 0 },
+  ];
+
+  const NODES = [
+    {
+      id: "generic",
+      layer: "hub",
+      title: "泛型编程",
+      en: "Generic Programming",
+      tag: "GENERIC",
+      x: 520, y: 70,
+      r: 54,
+      hub: true,
+      summary: "用「对类型参数化」写出一套可复用算法/数据结构，编译期按具体类型生成代码，零运行时虚调用开销。",
+      points: [
+        "核心思想：把类型当作参数，一次编写、多类型复用。",
+        "C++ 落地载体主要是函数模板与类模板。",
+        "代价在编译期：实例化膨胀、编译变慢、错误难读。",
+        "与 OOP 多态互补：静态多态 vs 动态多态。",
+      ],
+      code: `<span class="cm">// 同一算法，多种类型</span>
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt;
+<span class="tp">T</span> <span class="fn">max_of</span>(<span class="tp">T</span> a, <span class="tp">T</span> b) {
+  <span class="kw">return</span> a &gt; b ? a : b;
+}`,
+      card: null,
+    },
+    {
+      id: "fn_tmpl",
+      layer: "base",
+      title: "函数模板",
+      en: "Function Template",
+      tag: "FUNCTION",
+      x: 160, y: 210,
+      r: 42,
+      summary: "对函数进行类型参数化。调用时通常由实参推导模板实参，再实例化出具体函数。",
+      points: [
+        "声明：template&lt;typename T&gt;，T 是类型参数。",
+        "可重载；与普通函数一起参与重载决议。",
+        "支持显式指定：foo&lt;int&gt;(x)。",
+        "非类型参数也可用：template&lt;int N&gt;。",
+      ],
+      code: `<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt;
+<span class="kw">void</span> <span class="fn">swap_v</span>(<span class="tp">T</span>&amp; a, <span class="tp">T</span>&amp; b) {
+  <span class="tp">T</span> tmp = a; a = b; b = tmp;
+}
+<span class="fn">swap_v</span>(x, y); <span class="cm">// 推导 T</span>`,
+      card: { num: "032", slug: "032-template-instantiation" },
+    },
+    {
+      id: "cls_tmpl",
+      layer: "base",
+      title: "类模板",
+      en: "Class Template",
+      tag: "CLASS",
+      x: 880, y: 210,
+      r: 42,
+      summary: "对类进行类型参数化。成员函数在「被用到时」才实例化（lazy），可减少编译负担。",
+      points: [
+        "vector&lt;T&gt;、unique_ptr&lt;T&gt; 都是类模板。",
+        "成员函数定义常写在头文件（或显式实例化）。",
+        "可有静态成员：每个实例化类型各一份。",
+        "与函数模板不同：C++17 前类模板参数通常需显式写出。",
+      ],
+      code: `<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt;
+<span class="kw">class</span> <span class="tp">Box</span> {
+  <span class="tp">T</span> value_;
+<span class="kw">public</span>:
+  <span class="kw">explicit</span> <span class="fn">Box</span>(<span class="tp">T</span> v) : value_(v) {}
+  <span class="kw">const</span> <span class="tp">T</span>&amp; <span class="fn">get</span>() <span class="kw">const</span> { <span class="kw">return</span> value_; }
+};`,
+      card: { num: "032", slug: "032-template-instantiation" },
+    },
+    {
+      id: "ctad",
+      layer: "mech",
+      title: "类模板类型推导",
+      lines: ["类模板", "类型推导"],
+      en: "CTAD",
+      tag: "CTAD",
+      x: 590, y: 210,
+      r: 44,
+      summary: "C++17 起，构造类模板对象时可像函数模板一样从构造实参推导模板实参（Class Template Argument Deduction）。",
+      points: [
+        "写法：pair p(1, 2.0); 等价于 pair&lt;int,double&gt;。",
+        "推导依据：构造函数形参 ↔ 模板参数的对应关系。",
+        "不够用时写 deduction guide 显式教编译器。",
+        "guide 只参与推导、不生成函数；别和工厂函数混淆。",
+      ],
+      code: `<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt;
+<span class="kw">struct</span> <span class="tp">Box</span> { <span class="tp">Box</span>(<span class="tp">T</span>); };
+
+<span class="cm">// 推导指南（可选）</span>
+<span class="tp">Box</span>(<span class="kw">const char</span>*) -&gt; <span class="tp">Box</span>&lt;<span class="tp">std::string</span>&gt;;
+
+<span class="tp">Box</span> b(42);       <span class="cm">// Box&lt;int&gt;</span>
+<span class="tp">Box</span> s("hi");     <span class="cm">// Box&lt;string&gt; via guide</span>`,
+      card: { num: "026", slug: "026-auto-decltype" },
+    },
+    {
+      id: "variadic",
+      layer: "adv",
+      title: "可变参数模板",
+      lines: ["可变参数", "模板"],
+      en: "Variadic",
+      tag: "VARIADIC",
+      x: 780, y: 360,
+      r: 44,
+      summary: "参数包（pack）表示 0..N 个参数。常见展开方式：递归剥层、逗号/初始化列表、C++17 折叠表达式、index_sequence。",
+      points: [
+        "声明：typename... Ts / Ts&&... args；sizeof...(Ts) 取包长度。",
+        "递归展开：每次剥一个参数，递归到空包终止（C++11 经典写法）。",
+        "逗号/初始化列表展开：借 int[] 或 (void) 吞掉包展开的副作用（C++11）。",
+        "折叠表达式：C++17 一元/二元折叠，最简洁（(args + ...)、(f(args), ...)）。",
+        "index_sequence：先展开成 0..N-1 下标，再按下标访问 tuple 等。",
+      ],
+      code: `<span class="cm">// ===== 1. 递归展开（C++11）=====</span>
+<span class="kw">void</span> <span class="fn">print_all</span>() {}
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>, <span class="kw">typename</span>... <span class="tp">Rest</span>&gt;
+<span class="kw">void</span> <span class="fn">print_all</span>(<span class="kw">const</span> <span class="tp">T</span>&amp; x, <span class="kw">const</span> <span class="tp">Rest</span>&amp;... rest) {
+  <span class="fn">use</span>(x);
+  <span class="fn">print_all</span>(rest...);
+}
+
+<span class="cm">// ===== 2. 逗号 / 初始化列表展开（C++11）=====</span>
+<span class="kw">template</span>&lt;<span class="kw">typename</span>... <span class="tp">Ts</span>&gt;
+<span class="kw">void</span> <span class="fn">call_each</span>(<span class="tp">Ts</span>&amp;&amp;... args) {
+  <span class="kw">int</span> unused[] = {0, (<span class="fn">use</span>(args), 0)...};
+  (<span class="kw">void</span>)unused;
+}
+
+<span class="cm">// ===== 3. 折叠表达式（C++17）=====</span>
+<span class="kw">template</span>&lt;<span class="kw">typename</span>... <span class="tp">Ts</span>&gt;
+<span class="kw">auto</span> <span class="fn">sum</span>(<span class="tp">Ts</span>... xs) {
+  <span class="kw">return</span> (xs + ...);           <span class="cm">// 一元右折</span>
+}
+<span class="kw">template</span>&lt;<span class="kw">typename</span>... <span class="tp">Ts</span>&gt;
+<span class="kw">void</span> <span class="fn">call_fold</span>(<span class="tp">Ts</span>&amp;&amp;... args) {
+  (<span class="fn">use</span>(args), ...);           <span class="cm">// 逗号折叠</span>
+}
+
+<span class="cm">// ===== 4. index_sequence 展开 =====</span>
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">Tuple</span>, <span class="tp">std</span>::<span class="tp">size_t</span>... <span class="tp">I</span>&gt;
+<span class="kw">void</span> <span class="fn">print_tuple_impl</span>(<span class="kw">const</span> <span class="tp">Tuple</span>&amp; t, <span class="tp">std</span>::<span class="tp">index_sequence</span>&lt;<span class="tp">I</span>...&gt;) {
+  (<span class="fn">use</span>(<span class="tp">std</span>::<span class="fn">get</span>&lt;<span class="tp">I</span>&gt;(t)), ...);
+}
+<span class="kw">template</span>&lt;<span class="kw">typename</span>... <span class="tp">Ts</span>&gt;
+<span class="kw">void</span> <span class="fn">print_tuple</span>(<span class="kw">const</span> <span class="tp">std</span>::<span class="tp">tuple</span>&lt;<span class="tp">Ts</span>...&gt;&amp; t) {
+  <span class="fn">print_tuple_impl</span>(t, <span class="tp">std</span>::<span class="fn">index_sequence_for</span>&lt;<span class="tp">Ts</span>...&gt;{});
+}`,
+      card: { num: "035", slug: "035-variadic-templates" },
+    },
+    {
+      id: "deduction",
+      layer: "mech",
+      title: "函数模板推导",
+      lines: ["函数模板", "类型推导"],
+      en: "Type Deduction",
+      tag: "DEDUCE",
+      x: 450, y: 210,
+      r: 44,
+      summary: "函数模板调用时，编译器按 ParamType 形态从实参推导 T。规则与 auto 高度同源；推导失败则该候选出局（SFINAE）。",
+      points: [
+        "T&：只收左值；实参带 const 则 T 也会带上。右值直接编译错误。",
+        "const T&：左/右值都能绑；const 被 Param 吸收，推出的 T 是纯净类型。",
+        "T&&：万能引用——左值推成 T=U&（折叠为 U&），右值推成 T=U / Param=U&&。",
+        "const T&&：不是万能引用，拒绝左值；虽收右值但带 const，难以移动资源。",
+        "T 按值：剥离引用与顶层 const/volatile，得到独立副本类型。",
+      ],
+      table: `<div class="rule-table-wrap"><table class="rule-table">
+<thead>
+<tr>
+  <th>ParamType</th>
+  <th>左值 int x</th>
+  <th>const int cx</th>
+  <th>右值 42</th>
+  <th>核心说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td class="form">T&amp;</td>
+  <td class="mono">T=int<br>Param=int&amp;</td>
+  <td class="mono">T=const int<br>Param=const int&amp;</td>
+  <td class="err">编译报错</td>
+  <td class="note">非常量左值引用，只收左值；实参 const 会继承给 T。</td>
+</tr>
+<tr>
+  <td class="form">const T&amp;</td>
+  <td class="mono">T=int<br>Param=const int&amp;</td>
+  <td class="mono">T=int<br>Param=const int&amp;</td>
+  <td class="mono">T=int<br>Param=const int&amp;</td>
+  <td class="note">通吃左/右值；const 被 Param 吸收，T 为纯净类型。</td>
+</tr>
+<tr>
+  <td class="form">T&amp;&amp;</td>
+  <td class="mono">T=int&amp;<br>Param=int&amp;</td>
+  <td class="mono">T=const int&amp;<br>Param=const int&amp;</td>
+  <td class="mono">T=int<br>Param=int&amp;&amp;</td>
+  <td class="note">万能引用：左值触发引用折叠，右值保持右值引用。</td>
+</tr>
+<tr>
+  <td class="form">const T&amp;&amp;</td>
+  <td class="err">编译报错</td>
+  <td class="err">编译报错</td>
+  <td class="mono">T=int<br>Param=const int&amp;&amp;</td>
+  <td class="note">丧失万能引用，拒左值；带 const 难以移动。</td>
+</tr>
+<tr>
+  <td class="form">T</td>
+  <td class="mono">T=int<br>Param=int</td>
+  <td class="mono">T=int<br>Param=int</td>
+  <td class="mono">T=int<br>Param=int</td>
+  <td class="note">按值传递：剥引用与顶层 const/volatile，独立副本。</td>
+</tr>
+</tbody>
+</table></div>`,
+      code: `<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt; <span class="kw">void</span> <span class="fn">f_ref</span>(<span class="tp">T</span>&amp;);
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt; <span class="kw">void</span> <span class="fn">f_cref</span>(<span class="kw">const</span> <span class="tp">T</span>&amp;);
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt; <span class="kw">void</span> <span class="fn">f_fwd</span>(<span class="tp">T</span>&amp;&amp;);      <span class="cm">// 万能引用</span>
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt; <span class="kw">void</span> <span class="fn">f_crval</span>(<span class="kw">const</span> <span class="tp">T</span>&amp;&amp;);
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt; <span class="kw">void</span> <span class="fn">f_val</span>(<span class="tp">T</span>);
+
+<span class="kw">int</span> x = 1;
+<span class="kw">const int</span> cx = 2;
+
+<span class="cm">// ---- T&amp;：只收左值 ----</span>
+<span class="fn">f_ref</span>(x);    <span class="cm">// T=int,       Param=int&amp;</span>
+<span class="fn">f_ref</span>(cx);   <span class="cm">// T=const int, Param=const int&amp;</span>
+<span class="cm">// f_ref(42);  // 编译报错：不能绑右值</span>
+
+<span class="cm">// ---- const T&amp;：通吃 ----</span>
+<span class="fn">f_cref</span>(x);   <span class="cm">// T=int, Param=const int&amp;</span>
+<span class="fn">f_cref</span>(cx);  <span class="cm">// T=int, Param=const int&amp;</span>
+<span class="fn">f_cref</span>(42);  <span class="cm">// T=int, Param=const int&amp;</span>
+
+<span class="cm">// ---- T&amp;&amp;：万能引用 ----</span>
+<span class="fn">f_fwd</span>(x);    <span class="cm">// T=int&amp;,       Param=int&amp;</span>
+<span class="fn">f_fwd</span>(cx);   <span class="cm">// T=const int&amp;, Param=const int&amp;</span>
+<span class="fn">f_fwd</span>(42);   <span class="cm">// T=int,        Param=int&amp;&amp;</span>
+
+<span class="cm">// ---- const T&amp;&amp;：拒左值 ----</span>
+<span class="cm">// f_crval(x);  // 编译报错</span>
+<span class="cm">// f_crval(cx); // 编译报错</span>
+<span class="fn">f_crval</span>(42); <span class="cm">// T=int, Param=const int&amp;&amp;</span>
+
+<span class="cm">// ---- T 按值：剥引用/顶层 const ----</span>
+<span class="fn">f_val</span>(x);    <span class="cm">// T=int, Param=int</span>
+<span class="fn">f_val</span>(cx);   <span class="cm">// T=int, Param=int</span>
+<span class="fn">f_val</span>(42);   <span class="cm">// T=int, Param=int</span>`,
+      card: { num: "026", slug: "026-auto-decltype" },
+    },
+    {
+      id: "inst",
+      layer: "mech",
+      title: "实例化",
+      en: "Instantiation",
+      tag: "INST",
+      x: 520, y: 470,
+      r: 42,
+      summary: "编译器用具体实参替换模板参数，生成真实的类/函数。隐式实例化发生在「需要完整定义」时。",
+      points: [
+        "隐式：用到才生成；显式：template class Vec&lt;int&gt;。",
+        "函数模板：调用时实例化；类模板成员按需。",
+        "有特化时先匹配最特化的版本，再按该定义生成代码。",
+        "错误常在实例化点爆出，而非模板定义处。",
+      ],
+      code: `<span class="cm">// 调用触发隐式实例化</span>
+<span class="fn">max_of</span>&lt;<span class="kw">int</span>&gt;(1, 2);
+<span class="cm">// 显式实例化声明/定义</span>
+<span class="kw">extern template class</span> <span class="tp">std::vector</span>&lt;<span class="kw">int</span>&gt;;`,
+      card: { num: "032", slug: "032-template-instantiation" },
+    },
+    {
+      id: "spec",
+      layer: "mech",
+      title: "特化",
+      en: "Specialization",
+      tag: "SPEC",
+      x: 260, y: 360,
+      r: 42,
+      summary: "为特定实参提供定制实现。全特化适用于函数/类；偏特化仅适用于类模板。函数全特化按普通函数遵守 ODR。",
+      points: [
+        "全特化：所有参数钉死；偏特化：部分固定（仅类模板），如 IsPtr&lt;T*&gt;。",
+        "函数模板不能偏特化，用重载或类模板包装。",
+        "ODR：函数全特化定义只能一份——放唯一 .cpp，或头文件里加 inline。",
+        "类模板特化/类内成员定义可放 .h（多 TU 相同定义可合并）；声明可重复，定义默认唯一。",
+      ],
+      code: `<span class="cm">// ---- 类偏特化：定义可放头文件 ----</span>
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt;
+<span class="kw">struct</span> <span class="tp">IsPtr</span> : <span class="tp">false_type</span> {};
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt;
+<span class="kw">struct</span> <span class="tp">IsPtr</span>&lt;<span class="tp">T</span>*&gt; : <span class="tp">true_type</span> {};
+
+<span class="cm">// ---- 函数全特化：注意 ODR ----</span>
+<span class="cm">// box.h  — 只声明</span>
+<span class="kw">template</span>&lt;&gt; <span class="kw">void</span> <span class="fn">print</span>&lt;<span class="kw">int</span>&gt;(<span class="kw">const int</span>&amp;);
+<span class="cm">// box.cpp — 唯一定义</span>
+<span class="kw">template</span>&lt;&gt; <span class="kw">void</span> <span class="fn">print</span>&lt;<span class="kw">int</span>&gt;(<span class="kw">const int</span>&amp; x) { <span class="cm">/* ... */</span> }
+<span class="cm">// 或头文件：template&lt;&gt; inline void print&lt;int&gt;(...);</span>`,
+      card: { num: "033", slug: "033-template-specialization" },
+    },
+    {
+      id: "sfinae",
+      layer: "const",
+      title: "SFINAE",
+      en: "Substitution Failure",
+      tag: "SFINAE",
+      x: 520, y: 780,
+      r: 42,
+      summary: "Substitution Failure Is Not An Error：替换失败只让该模板候选出局，不直接让程序非法。",
+      points: [
+        "发生在模板实参替换阶段，早于硬错误。",
+        "支撑「检测某类型是否有某接口」。",
+        "与重载决议配合，实现编译期分支选择。",
+        "错误信息难读；C++20 Concepts 是更清晰替代。",
+      ],
+      code: `<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt;
+<span class="kw">auto</span> <span class="fn">serialize</span>(<span class="kw">const</span> <span class="tp">T</span>&amp; x)
+  -&gt; <span class="kw">decltype</span>(x.<span class="fn">to_string</span>(), <span class="kw">void</span>()) {
+  x.<span class="fn">to_string</span>();
+}`,
+      card: { num: "034", slug: "034-sfinae-enable-if" },
+    },
+    {
+      id: "enable_if",
+      layer: "const",
+      title: "enable_if",
+      en: "std::enable_if",
+      tag: "ENABLE_IF",
+      x: 260, y: 700,
+      r: 42,
+      summary: "靠类模板偏特化实现的 SFINAE 开关：B==true 时有 type；B==false 时无 type，替换失败从而丢掉候选。",
+      points: [
+        "实现：主模板无 type；偏特化 enable_if&lt;true, T&gt; 才提供 type = T。",
+        "B 来自谓词，如 is_integral_v&lt;T&gt;；为 true 才匹配偏特化。",
+        "用法：返回类型 / 模板默认参数 / 函数参数哑元；C++14 用 enable_if_t。",
+        "现代代码优先 Concepts / requires。",
+      ],
+      code: `<span class="cm">// ===== enable_if 原理（简化）=====</span>
+<span class="cm">// 主模板：任意 B，没有 type</span>
+<span class="kw">template</span>&lt;<span class="kw">bool</span> B, <span class="kw">typename</span> <span class="tp">T</span> = <span class="kw">void</span>&gt;
+<span class="kw">struct</span> <span class="tp">enable_if</span> {};
+
+<span class="cm">// 偏特化：仅当 B==true，才有 type</span>
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt;
+<span class="kw">struct</span> <span class="tp">enable_if</span>&lt;<span class="kw">true</span>, <span class="tp">T</span>&gt; {
+  <span class="kw">using</span> <span class="tp">type</span> = <span class="tp">T</span>;
+};
+
+<span class="kw">template</span>&lt;<span class="kw">bool</span> B, <span class="kw">typename</span> <span class="tp">T</span> = <span class="kw">void</span>&gt;
+<span class="kw">using</span> <span class="tp">enable_if_t</span> = <span class="kw">typename</span> <span class="tp">enable_if</span>&lt;B, <span class="tp">T</span>&gt;::<span class="tp">type</span>;
+
+<span class="cm">// is_integral_v&lt;int&gt; → true → 走偏特化 → 有 type</span>
+<span class="cm">// is_integral_v&lt;double&gt; → false → 主模板 → 无 type → SFINAE</span>
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt;
+<span class="tp">enable_if_t</span>&lt;<span class="tp">std::is_integral_v</span>&lt;<span class="tp">T</span>&gt;, <span class="tp">T</span>&gt;
+<span class="fn">twice</span>(<span class="tp">T</span> x) { <span class="kw">return</span> x * 2; }`,
+      card: { num: "034", slug: "034-sfinae-enable-if" },
+    },
+    {
+      id: "traits",
+      layer: "const",
+      title: "type_traits",
+      en: "Type Traits",
+      tag: "TRAITS",
+      x: 150, y: 510,
+      r: 42,
+      summary: "编译期类型属性查询与变换库：判断、修饰剥离、条件类型选择等。",
+      points: [
+        "谓词：is_pointer、is_base_of、is_invocable。",
+        "变换：remove_cvref_t、decay_t、underlying_type。",
+        "选择：conditional_t、void_t（检测利器）。",
+        "是 enable_if / 元编程 / Concepts 的原料。",
+      ],
+      code: `<span class="kw">using</span> <span class="tp">Raw</span> = <span class="tp">std::remove_cvref_t</span>&lt;<span class="tp">T</span>&gt;;
+<span class="kw">static_assert</span>(<span class="tp">std::is_trivially_copyable_v</span>&lt;<span class="tp">Raw</span>&gt;);`,
+      card: { num: "034", slug: "034-sfinae-enable-if" },
+    },
+    {
+      id: "concepts",
+      layer: "const",
+      title: "Concepts",
+      en: "C++20 Concepts",
+      tag: "CONCEPTS",
+      x: 100, y: 800,
+      r: 42,
+      summary: "对模板参数施加具名约束。替换失败变成清晰的「不满足 concept」，可读性远好于 SFINAE。",
+      points: [
+        "concept 是编译期布尔谓词的具名封装。",
+        "requires 子句 / 缩写函数模板写法。",
+        "可约束类型、表达式、嵌套要求。",
+        "部分场景仍要 traits；二者常组合使用。",
+      ],
+      code: `<span class="kw">template</span>&lt;<span class="tp">std::integral</span> <span class="tp">T</span>&gt;
+<span class="tp">T</span> <span class="fn">twice</span>(<span class="tp">T</span> x) { <span class="kw">return</span> x * 2; }
+
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">T</span>&gt;
+  <span class="kw">requires</span> <span class="tp">std::sortable</span>&lt;<span class="tp">T</span>&gt;
+<span class="kw">void</span> <span class="fn">sort_range</span>(<span class="tp">T</span>&amp;);`,
+      card: { num: "030", slug: "030-concepts" },
+    },
+    {
+      id: "meta",
+      layer: "adv",
+      title: "模板元编程",
+      lines: ["模板", "元编程"],
+      en: "TMP",
+      tag: "TMP",
+      x: 760, y: 780,
+      r: 44,
+      summary: "把模板实例化当作「编译期计算」：用特化做分支，用递归/包展开做循环，产出类型或常量。",
+      points: [
+        "经典：阶乘、类型列表、生成式 if（特化）。",
+        "现代：constexpr 函数 + consteval 更直观。",
+        "TMP 仍擅长：类型计算、接口探测、静态分发。",
+        "与运行期算法对照：同样逻辑，不同执行时机。",
+      ],
+      code: `<span class="kw">template</span>&lt;<span class="kw">int</span> N&gt;
+<span class="kw">struct</span> <span class="tp">Fact</span> {
+  <span class="kw">static</span> <span class="kw">constexpr int</span> value =
+    N * <span class="tp">Fact</span>&lt;N-1&gt;::value;
+};
+<span class="kw">template</span>&lt;&gt; <span class="kw">struct</span> <span class="tp">Fact</span>&lt;0&gt; {
+  <span class="kw">static</span> <span class="kw">constexpr int</span> value = 1;
+};`,
+      card: { num: "036", slug: "036-template-metaprogramming" },
+    },
+    {
+      id: "crtp",
+      layer: "adv",
+      title: "CRTP",
+      en: "Curious Recurring",
+      tag: "CRTP",
+      x: 980, y: 360,
+      r: 42,
+      summary: "基类模板参数是派生类自己：Base&lt;Derived&gt;。实现静态多态，无虚表，可做混入与接口注入。",
+      points: [
+        "基类 static_cast 到 Derived 调实现。",
+        "典型用途：计数器、表达式模板、链式接口。",
+        "对比虚函数：编译期绑定，可内联。",
+        "注意：不要在基类构造期调派生行为。",
+      ],
+      code: `<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">D</span>&gt;
+<span class="kw">struct</span> <span class="tp">Printable</span> {
+  <span class="kw">void</span> <span class="fn">print</span>() {
+    <span class="kw">static_cast</span>&lt;<span class="tp">D</span>*&gt;(<span class="kw">this</span>)-&gt;<span class="fn">impl</span>();
+  }
+};
+<span class="kw">struct</span> <span class="tp">Doc</span> : <span class="tp">Printable</span>&lt;<span class="tp">Doc</span>&gt; {
+  <span class="kw">void</span> <span class="fn">impl</span>() { <span class="cm">/* ... */</span> }
+};`,
+      card: { num: "037", slug: "037-crtp" },
+    },
+  ];
+
+  const EDGES = [
+    { from: "generic", to: "fn_tmpl", kind: "impl", label: "实现载体" },
+    { from: "generic", to: "cls_tmpl", kind: "impl", label: "实现载体" },
+    { from: "fn_tmpl", to: "variadic", kind: "adv", label: "参数包" },
+    { from: "cls_tmpl", to: "variadic", kind: "adv", label: "参数包" },
+    { from: "fn_tmpl", to: "deduction", kind: "mech", label: "调用时" },
+    { from: "cls_tmpl", to: "ctad", kind: "mech", label: "C++17" },
+    { from: "ctad", to: "inst", kind: "mech", label: "推导后" },
+    { from: "deduction", to: "inst", kind: "mech", label: "推导后" },
+    { from: "fn_tmpl", to: "inst", kind: "mech", label: "生成代码" },
+    { from: "cls_tmpl", to: "inst", kind: "mech", label: "生成代码" },
+    { from: "fn_tmpl", to: "spec", kind: "mech", label: "仅全特化" },
+    { from: "cls_tmpl", to: "spec", kind: "mech", label: "全/偏特化" },
+    { from: "spec", to: "inst", kind: "mech", label: "匹配后生成" },
+    { from: "inst", to: "sfinae", kind: "const", label: "替换失败" },
+    { from: "sfinae", to: "enable_if", kind: "const", label: "工具化" },
+    { from: "spec", to: "enable_if", kind: "mech", label: "偏特化实现" },
+    { from: "traits", to: "enable_if", kind: "const", label: "谓词输入" },
+    { from: "traits", to: "spec", kind: "mech", label: "靠特化实现" },
+    { from: "enable_if", to: "concepts", kind: "const", label: "演进替代" },
+    { from: "spec", to: "meta", kind: "adv", label: "编译期分支" },
+    { from: "traits", to: "meta", kind: "adv", label: "类型计算" },
+    { from: "variadic", to: "meta", kind: "adv", label: "包展开循环" },
+    { from: "cls_tmpl", to: "crtp", kind: "adv", label: "静态多态" },
+  ];
+
+  const PATHS = [
+    {
+      id: "beginner",
+      title: "入门主线",
+      desc: "泛型 → 模板与推导 → 特化/可变参/CRTP → 实例化",
+      nodes: ["generic", "fn_tmpl", "deduction", "ctad", "cls_tmpl", "spec", "variadic", "inst"],
+    },
+    {
+      id: "constraints",
+      title: "约束演进",
+      desc: "traits → enable_if → SFINAE → Concepts",
+      nodes: ["traits", "enable_if", "sfinae", "concepts"],
+    },
+    {
+      id: "advanced",
+      title: "进阶模式",
+      desc: "特化 / 可变参 / traits → 模板元编程",
+      nodes: ["spec", "variadic", "traits", "meta"],
+    },
+  ];
+
+  const EDGE_COLOR = {
+    impl: "#0d9488",
+    mech: "#2563eb",
+    const: "#d97706",
+    adv: "#7c3aed",
+  };
+
+  // count layers + remember home positions
+  for (const n of NODES) {
+    const L = LAYERS.find(l => l.id === n.layer);
+    if (L) L.count++;
+    n.homeX = n.x;
+    n.homeY = n.y;
+  }
+
+  const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
+  let activeLayer = "all";
+  let selectedId = null;
+  let pathHighlight = null;
+  let searchQuery = "";
+
+  // camera / drag
+  const cam = { x: 0, y: 0, k: 1 };
+  let panning = false;
+  let nodeDrag = null; // { id, el, n, moved, originX, originY }
+  let last = { x: 0, y: 0 };
+
+  const stage = document.getElementById("stage");
+  const detail = document.getElementById("detail");
+  const detailBody = document.getElementById("detail-body");
+  const layerList = document.getElementById("layer-list");
+  const pathList = document.getElementById("path-list");
+  const layerCount = document.getElementById("layer-count");
+  const hintBar = document.getElementById("hint-bar");
+
+  // SVG setup
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("xmlns", svgNS);
+  const defs = document.createElementNS(svgNS, "defs");
+  defs.innerHTML = `
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <radialGradient id="hubGrad" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="55%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#115e59"/>
+    </radialGradient>
+  `;
+  svg.appendChild(defs);
+
+  const gWorld = document.createElementNS(svgNS, "g");
+  gWorld.setAttribute("id", "world");
+  const gEdges = document.createElementNS(svgNS, "g");
+  const gEdgeLabels = document.createElementNS(svgNS, "g");
+  const gNodes = document.createElementNS(svgNS, "g");
+  gWorld.append(gEdges, gEdgeLabels, gNodes);
+  svg.appendChild(gWorld);
+  stage.appendChild(svg);
+
+  function layerColor(id) {
+    return LAYERS.find(l => l.id === id)?.color || "#64748b";
+  }
+
+  function shortenEdge(x1, y1, x2, y2, r1, r2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len;
+    return {
+      x1: x1 + ux * (r1 + 2),
+      y1: y1 + uy * (r1 + 2),
+      x2: x2 - ux * (r2 + 6),
+      y2: y2 - uy * (r2 + 6),
+    };
+  }
+
+  function layoutEdge(e) {
+    const a = byId[e.from], b = byId[e.to];
+    const s = shortenEdge(a.x, a.y, b.x, b.y, a.r, b.r);
+    const midX = (s.x1 + s.x2) / 2;
+    const midY = (s.y1 + s.y2) / 2 - 18;
+    e.el.setAttribute("d", `M ${s.x1} ${s.y1} Q ${midX} ${midY} ${s.x2} ${s.y2}`);
+    if (e.labelText) {
+      e.labelText.setAttribute("x", midX);
+      e.labelText.setAttribute("y", midY - 2);
+    }
+  }
+
+  function layoutEdgesForNode(id) {
+    for (const e of edgeEls) {
+      if (e.from === id || e.to === id) layoutEdge(e);
+    }
+  }
+
+  function setNodePos(n, el, x, y) {
+    n.x = x;
+    n.y = y;
+    el.setAttribute("transform", `translate(${x},${y})`);
+    layoutEdgesForNode(n.id);
+  }
+
+  function clientToWorld(clientX, clientY) {
+    const rect = stage.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left - cam.x) / cam.k,
+      y: (clientY - rect.top - cam.y) / cam.k,
+    };
+  }
+
+  // build edges
+  const edgeEls = EDGES.map(e => {
+    const path = document.createElementNS(svgNS, "path");
+    path.setAttribute("class", "edge");
+    path.dataset.from = e.from;
+    path.dataset.to = e.to;
+    const c = EDGE_COLOR[e.kind] || "#94a3b8";
+    path.style.stroke = c;
+    path.style.setProperty("--edge-c", c);
+    gEdges.appendChild(path);
+
+    const labelG = document.createElementNS(svgNS, "g");
+    labelG.setAttribute("class", "edge-label-g");
+    labelG.dataset.from = e.from;
+    labelG.dataset.to = e.to;
+
+    const labelText = document.createElementNS(svgNS, "text");
+    labelText.setAttribute("text-anchor", "middle");
+    labelText.setAttribute("dominant-baseline", "middle");
+    labelText.textContent = e.label;
+    labelG.appendChild(labelText);
+    gEdgeLabels.appendChild(labelG);
+
+    const item = { ...e, el: path, labelEl: labelG, labelText, color: c };
+    layoutEdge(item);
+    return item;
+  });
+
+  function estimateTextWidth(str, fontSize) {
+    let w = 0;
+    for (const ch of str) {
+      w += /[\u3400-\u9fff]/.test(ch) ? fontSize : fontSize * 0.62;
+    }
+    return w;
+  }
+
+  function wrapTitle(title) {
+    if (title.length <= 4) return [title];
+    const mid = Math.ceil(title.length / 2);
+    return [title.slice(0, mid), title.slice(mid)];
+  }
+
+  function buildNodeLabel(n) {
+    const margin = 8;
+    const maxW = (n.r - margin) * 1.7;
+    let lines = n.lines ? [...n.lines] : [n.title];
+    let fontSize = n.hub ? 14 : 12;
+
+    for (let guard = 0; guard < 10; guard++) {
+      const widest = Math.max(...lines.map(l => estimateTextWidth(l, fontSize)));
+      if (widest <= maxW) break;
+      if (lines.length === 1 && n.title.length >= 4) {
+        lines = wrapTitle(n.title);
+        continue;
+      }
+      fontSize = Math.max(9, fontSize - 0.5);
+    }
+
+    const tag = (n.tag || n.en || "").toUpperCase();
+    let tagSize = n.hub ? 9 : 8;
+    while (estimateTextWidth(tag, tagSize) > maxW && tagSize > 6.5) tagSize -= 0.5;
+
+    const lineH = fontSize + 1.5;
+    const hasTag = !!tag;
+    const titleBlockH = (lines.length - 1) * lineH;
+    const blockH = titleBlockH + (hasTag ? tagSize + 5 : 0);
+    const titleTop = -blockH / 2 + fontSize * 0.35;
+
+    const titleEl = document.createElementNS(svgNS, "text");
+    titleEl.setAttribute("class", "node-title");
+    titleEl.setAttribute("text-anchor", "middle");
+    titleEl.setAttribute("font-size", String(fontSize));
+    if (n.hub) titleEl.style.fill = "#fff";
+
+    lines.forEach((line, i) => {
+      const ts = document.createElementNS(svgNS, "tspan");
+      ts.setAttribute("x", "0");
+      ts.setAttribute("y", String(titleTop + i * lineH));
+      ts.textContent = line;
+      titleEl.appendChild(ts);
+    });
+
+    const enEl = document.createElementNS(svgNS, "text");
+    enEl.setAttribute("class", "node-en");
+    enEl.setAttribute("text-anchor", "middle");
+    enEl.setAttribute("font-size", String(tagSize));
+    enEl.setAttribute("y", String(titleTop + titleBlockH + tagSize + 4));
+    enEl.textContent = tag;
+    if (n.hub) enEl.style.fill = "rgba(255,255,255,0.78)";
+
+    return { titleEl, enEl };
+  }
+
+  function tightenLabels(list) {
+    for (const { n, el } of list) {
+      const r = n.r;
+      const margin = 7;
+      const texts = [...el.querySelectorAll("text")];
+      for (let k = 0; k < 8; k++) {
+        let overflow = false;
+        for (const t of texts) {
+          const b = t.getBBox();
+          const corners = [
+            [b.x, b.y], [b.x + b.width, b.y],
+            [b.x, b.y + b.height], [b.x + b.width, b.y + b.height],
+          ];
+          if (corners.some(([x, y]) => Math.hypot(x, y) > r - margin)) {
+            overflow = true;
+            const fs = parseFloat(t.getAttribute("font-size") || "12") - 0.5;
+            if (fs < 7) continue;
+            t.setAttribute("font-size", String(fs));
+          }
+        }
+        if (!overflow) break;
+      }
+    }
+  }
+
+  // build nodes
+  const nodeEls = NODES.map(n => {
+    const g = document.createElementNS(svgNS, "g");
+    g.setAttribute("class", "node" + (n.hub ? " hub" : ""));
+    g.dataset.id = n.id;
+    g.style.setProperty("--node-c", layerColor(n.layer));
+    g.setAttribute("transform", `translate(${n.x},${n.y})`);
+
+    const glow = document.createElementNS(svgNS, "circle");
+    glow.setAttribute("class", "glow");
+    glow.setAttribute("r", n.r + 14);
+
+    const ring = document.createElementNS(svgNS, "circle");
+    ring.setAttribute("class", "ring");
+    ring.setAttribute("r", n.r + 7);
+
+    const body = document.createElementNS(svgNS, "circle");
+    body.setAttribute("class", "body");
+    body.setAttribute("r", n.r);
+    body.setAttribute("filter", "url(#soft)");
+    if (n.hub) {
+      body.setAttribute("fill", "url(#hubGrad)");
+      body.setAttribute("stroke", "#99f6e4");
+      body.setAttribute("stroke-width", "2");
+    } else {
+      body.setAttribute("fill", "#ffffff");
+      body.setAttribute("stroke", layerColor(n.layer));
+      body.setAttribute("stroke-width", "2.5");
+    }
+
+    const { titleEl, enEl } = buildNodeLabel(n);
+    g.append(glow, ring, body, titleEl, enEl);
+    gNodes.appendChild(g);
+
+    g.addEventListener("mouseenter", () => {
+      if (!nodeDrag) hoverNode(n.id, true);
+    });
+    g.addEventListener("mouseleave", () => {
+      if (!nodeDrag) hoverNode(n.id, false);
+    });
+    g.addEventListener("pointerdown", (ev) => {
+      if (ev.button != null && ev.button !== 0) return;
+      ev.stopPropagation();
+      ev.preventDefault();
+      // 先置顶再 capture，避免拖拽中重排丢掉指针捕获
+      gNodes.appendChild(g);
+      const world = clientToWorld(ev.clientX, ev.clientY);
+      nodeDrag = {
+        id: n.id,
+        el: g,
+        n,
+        moved: false,
+        grabDX: n.x - world.x,
+        grabDY: n.y - world.y,
+        startX: ev.clientX,
+        startY: ev.clientY,
+        pointerId: ev.pointerId,
+      };
+      panning = false;
+      g.classList.add("dragging");
+      g.classList.remove("quiet");
+      // 在 stage 上捕获，节点未选中时拖出 hit 区也不会断
+      stage.setPointerCapture(ev.pointerId);
+    });
+
+    return { n, el: g };
+  });
+
+  // 字体就绪后再实测收缩，避免首次测量不准
+  const runTighten = () => tightenLabels(nodeEls);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(runTighten);
+  } else {
+    requestAnimationFrame(runTighten);
+  }
+
+  function neighborsOf(id) {
+    const set = new Set([id]);
+    for (const e of EDGES) {
+      if (e.from === id) set.add(e.to);
+      if (e.to === id) set.add(e.from);
+    }
+    return set;
+  }
+
+  function visibleIds() {
+    let ids = new Set(NODES.map(n => n.id));
+    if (activeLayer !== "all") {
+      ids = new Set(NODES.filter(n => n.layer === activeLayer || n.layer === "hub").map(n => n.id));
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      ids = new Set([...ids].filter(id => {
+        const n = byId[id];
+        return n.title.toLowerCase().includes(q)
+          || n.en.toLowerCase().includes(q)
+          || n.summary.toLowerCase().includes(q);
+      }));
+    }
+    return ids;
+  }
+
+  function applyVisualState(hoverId = null) {
+    const vis = visibleIds();
+    const focus = selectedId || hoverId;
+    const hot = focus ? neighborsOf(focus) : null;
+    const pathSet = pathHighlight ? new Set(pathHighlight) : null;
+    const focusing = !!(focus || pathSet);
+
+    stage.classList.toggle("focus-on", focusing);
+    stage.classList.toggle("path-on", !!pathSet);
+
+    for (const { n, el } of nodeEls) {
+      const inVis = vis.has(n.id);
+      const inPath = !pathSet || pathSet.has(n.id);
+      const inHot = !hot || hot.has(n.id);
+      const isQuiet = !inVis || !inPath || (hot && !inHot);
+      const isRelated = !!(hot && hot.has(n.id) && n.id !== focus);
+      const isSelected = n.id === selectedId || (!selectedId && n.id === hoverId);
+
+      el.classList.toggle("quiet", isQuiet);
+      el.classList.toggle("related", isRelated && !isQuiet);
+      el.classList.toggle("selected", isSelected && inVis);
+      el.classList.toggle("on-path", !!(pathSet && pathSet.has(n.id)));
+      el.style.display = inVis ? "" : "none";
+    }
+
+    for (const e of edgeEls) {
+      const bothVis = vis.has(e.from) && vis.has(e.to);
+      const bothPath = !pathSet || (pathSet.has(e.from) && pathSet.has(e.to));
+      const isHot = !!(hot && bothVis && bothPath
+        && hot.has(e.from) && hot.has(e.to)
+        && (e.from === focus || e.to === focus));
+      const isQuiet = !bothVis || !bothPath || (hot && !isHot);
+      const onPath = !!(pathSet && pathSet.has(e.from) && pathSet.has(e.to));
+
+      e.el.classList.toggle("quiet", isQuiet);
+      e.el.classList.toggle("hot", isHot);
+      e.el.classList.toggle("flow", isHot);
+      e.el.classList.toggle("on-path", onPath && bothVis);
+      e.el.style.display = bothVis ? "" : "none";
+      // hot edges keep their semantic color; quiet edges already styled via CSS
+      if (isHot) e.el.style.stroke = e.color;
+      e.labelEl.classList.toggle("show", isHot);
+      e.labelEl.style.display = bothVis ? "" : "none";
+    }
+  }
+
+  function hoverNode(id, on) {
+    if (selectedId) return;
+    applyVisualState(on ? id : null);
+  }
+
+  function selectNode(id, { keepPath = false } = {}) {
+    selectedId = id;
+    if (!keepPath) pathHighlight = null;
+    renderDetail(byId[id]);
+    detail.classList.add("has-selection");
+    applyVisualState();
+    hintBar.style.opacity = "0";
+  }
+
+  function clearSelection() {
+    selectedId = null;
+    pathHighlight = null;
+    detail.classList.remove("has-selection");
+    applyVisualState();
+    hintBar.style.opacity = "1";
+    document.querySelectorAll(".path-chip").forEach(c => {
+      c.style.borderColor = "";
+    });
+  }
+
+  function cardLinks(card) {
+    const num = card.num;
+    let slug = card.slug;
+    if (!slug && card.href) {
+      slug = card.href.split("/")[0];
+    }
+    if (!slug) return null;
+    return {
+      card: `${slug}/${num}-cpp-interview-card.html`,
+      followup: `${slug}/${num}-cpp-interview-followup.html`,
+    };
+  }
+
+  function renderDetail(n) {
+    const color = layerColor(n.layer);
+    const layerName = LAYERS.find(l => l.id === n.layer)?.name || "";
+    const rels = EDGES.filter(e => e.from === n.id || e.to === n.id).map(e => {
+      const other = e.from === n.id ? e.to : e.from;
+      const outbound = e.from === n.id;
+      return { other: byId[other], label: e.label, outbound };
+    });
+
+    detailBody.innerHTML = `
+      <div class="detail-head">
+        <div class="detail-badge" style="background:${color}">${n.title.slice(0, 1)}</div>
+        <div>
+          <h2>${n.title}</h2>
+          <div class="en">${n.en}</div>
+        </div>
+      </div>
+      <div class="pill-row">
+        <span class="pill layer">${layerName}</span>
+        ${n.card ? `<span class="pill card">卡片 #${n.card.num}</span>` : ""}
+        <span class="pill">${rels.length} 条关联</span>
+      </div>
+      <p class="desc">${n.summary}</p>
+      <div class="section-title">面试要点</div>
+      <ul class="points">
+        ${n.points.map((p, i) => `<li data-n="${String(i + 1).padStart(2, "0")}">${p}</li>`).join("")}
+      </ul>
+      ${n.table ? `<div class="section-title">推导对照表</div>${n.table}` : ""}
+      <div class="section-title">代码示意</div>
+      <div class="code-window">
+        <div class="code-chrome">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+          <span class="code-file">${n.id.replace(/_/g, "-")}.cpp</span>
+        </div>
+        <div class="code">${n.code}</div>
+      </div>
+      <div class="section-title">关联节点</div>
+      <div class="rel-list">
+        ${rels.map(r => `
+          <button class="rel-chip" data-goto="${r.other.id}" type="button">
+            <span class="dir">${r.outbound ? "通向" : "来自"} · ${r.label}</span>
+            ${r.other.title}
+          </button>`).join("")}
+      </div>
+      ${(() => {
+        const links = n.card && cardLinks(n.card);
+        if (!links) return "";
+        return `
+        <div class="section-title">系列卡片 #${n.card.num}</div>
+        <div class="card-links">
+          <a class="link-card card-ans" href="${links.card}" target="_blank" rel="noopener">
+            <span class="link-kicker">Answer</span>
+            参考回答
+            <small>card · 面试话术</small>
+          </a>
+          <a class="link-card card-fu" href="${links.followup}" target="_blank" rel="noopener">
+            <span class="link-kicker">Follow-up</span>
+            追问清单
+            <small>followup · 深挖题</small>
+          </a>
+        </div>`;
+      })()}
+    `;
+
+    detailBody.querySelectorAll("[data-goto]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.goto;
+        const keepPath = !!(pathHighlight && pathHighlight.includes(id));
+        selectNode(id, { keepPath });
+      });
+    });
+  }
+
+  // layers UI
+  function renderLayers() {
+    layerList.innerHTML = "";
+    const allBtn = document.createElement("button");
+    allBtn.className = "layer-btn" + (activeLayer === "all" ? " active" : "");
+    allBtn.type = "button";
+    allBtn.innerHTML = `<span class="swatch" style="background:#0f172a;--swatch-ring:rgba(15,23,42,.12)"></span>全部显示<span class="meta">${NODES.length}</span>`;
+    allBtn.addEventListener("click", () => setLayer("all"));
+    layerList.appendChild(allBtn);
+
+    for (const L of LAYERS) {
+      const btn = document.createElement("button");
+      btn.className = "layer-btn" + (activeLayer === L.id ? " active" : "");
+      btn.type = "button";
+      btn.innerHTML = `<span class="swatch" style="background:${L.color};--swatch-ring:${L.ring}"></span>${L.name}<span class="meta">${L.count}</span>`;
+      btn.addEventListener("click", () => setLayer(L.id));
+      layerList.appendChild(btn);
+    }
+  }
+
+  function setLayer(id) {
+    activeLayer = id;
+    pathHighlight = null;
+    layerCount.textContent = id === "all" ? "全部" : LAYERS.find(l => l.id === id).name;
+    renderLayers();
+    applyVisualState();
+  }
+
+  // paths UI
+  PATHS.forEach((p, i) => {
+    const btn = document.createElement("button");
+    btn.className = "path-chip";
+    btn.type = "button";
+    btn.innerHTML = `<span class="num">${i + 1}</span><div><strong>${p.title}</strong><span>${p.desc}</span></div>`;
+    btn.addEventListener("click", () => {
+      pathHighlight = p.nodes;
+      document.querySelectorAll(".path-chip").forEach(c => { c.style.borderColor = ""; });
+      btn.style.borderColor = "#0d9488";
+      selectNode(p.nodes[0], { keepPath: true });
+    });
+    pathList.appendChild(btn);
+  });
+
+  // camera
+  function applyCam() {
+    gWorld.setAttribute("transform", `translate(${cam.x},${cam.y}) scale(${cam.k})`);
+  }
+
+  function fitView() {
+    const pad = 80;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const n of NODES) {
+      minX = Math.min(minX, n.x - n.r);
+      minY = Math.min(minY, n.y - n.r);
+      maxX = Math.max(maxX, n.x + n.r);
+      maxY = Math.max(maxY, n.y + n.r);
+    }
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    const bw = maxX - minX + pad * 2;
+    const bh = maxY - minY + pad * 2;
+    const k = Math.min(w / bw, h / bh, 1.35);
+    cam.k = k;
+    cam.x = (w - bw * k) / 2 - (minX - pad) * k;
+    cam.y = (h - bh * k) / 2 - (minY - pad) * k;
+    applyCam();
+  }
+
+  function resetLayout() {
+    for (const { n, el } of nodeEls) {
+      setNodePos(n, el, n.homeX, n.homeY);
+    }
+    fitView();
+  }
+
+  function endNodeDrag() {
+    if (!nodeDrag) return;
+    const { el, n, pointerId } = nodeDrag;
+    el.classList.remove("dragging");
+    try { stage.releasePointerCapture(pointerId); } catch (_) {}
+    nodeDrag = null;
+    const keepPath = !!(pathHighlight && pathHighlight.includes(n.id));
+    selectNode(n.id, { keepPath });
+  }
+
+  stage.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".node") || nodeDrag) return;
+    panning = true;
+    stage.classList.add("dragging");
+    last = { x: e.clientX, y: e.clientY };
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (nodeDrag) {
+      e.preventDefault();
+      const dx = e.clientX - nodeDrag.startX;
+      const dy = e.clientY - nodeDrag.startY;
+      if (!nodeDrag.moved && Math.hypot(dx, dy) > 4) nodeDrag.moved = true;
+      if (!nodeDrag.moved) return;
+      const world = clientToWorld(e.clientX, e.clientY);
+      setNodePos(
+        nodeDrag.n,
+        nodeDrag.el,
+        world.x + nodeDrag.grabDX,
+        world.y + nodeDrag.grabDY
+      );
+      return;
+    }
+    if (!panning) return;
+    cam.x += e.clientX - last.x;
+    cam.y += e.clientY - last.y;
+    last = { x: e.clientX, y: e.clientY };
+    applyCam();
+  });
+  stage.addEventListener("pointerup", (e) => {
+    if (nodeDrag) {
+      endNodeDrag();
+      return;
+    }
+    panning = false;
+    stage.classList.remove("dragging");
+    try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+  });
+  stage.addEventListener("pointercancel", (e) => {
+    if (nodeDrag) {
+      endNodeDrag();
+      return;
+    }
+    panning = false;
+    stage.classList.remove("dragging");
+    try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+  });
+  stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const rect = stage.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const prev = cam.k;
+    const next = Math.min(2.2, Math.max(0.45, cam.k * (e.deltaY < 0 ? 1.08 : 0.92)));
+    const wx = (mx - cam.x) / prev;
+    const wy = (my - cam.y) / prev;
+    cam.k = next;
+    cam.x = mx - wx * next;
+    cam.y = my - wy * next;
+    applyCam();
+  }, { passive: false });
+
+  document.getElementById("btn-fit").addEventListener("click", fitView);
+  document.getElementById("btn-reset").addEventListener("click", resetLayout);
+  document.getElementById("btn-clear").addEventListener("click", clearSelection);
+  document.getElementById("btn-tour").addEventListener("click", () => {
+    pathList.querySelector(".path-chip")?.click();
+  });
+  document.getElementById("search").addEventListener("input", (e) => {
+    searchQuery = e.target.value.trim();
+    applyVisualState();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") clearSelection();
+  });
+
+  // 右侧栏拖拽改宽
+  (function setupDetailResize() {
+    const appEl = document.querySelector(".app");
+    const handle = document.getElementById("detail-resizer");
+    if (!appEl || !handle) return;
+
+    const MIN_W = 280;
+    const MAX_W = 720;
+    const KEY = "kg-detail-w";
+
+    const saved = Number(localStorage.getItem(KEY));
+    if (Number.isFinite(saved) && saved >= MIN_W && saved <= MAX_W) {
+      appEl.style.setProperty("--detail-w", `${saved}px`);
+    }
+
+    let resizing = false;
+
+    const applyWidth = (clientX) => {
+      const rect = appEl.getBoundingClientRect();
+      let w = rect.right - clientX;
+      w = Math.min(MAX_W, Math.max(MIN_W, w));
+      appEl.style.setProperty("--detail-w", `${w}px`);
+      return w;
+    };
+
+    handle.addEventListener("pointerdown", (e) => {
+      if (window.matchMedia("(max-width: 1100px)").matches) return;
+      e.preventDefault();
+      resizing = true;
+      handle.classList.add("is-dragging");
+      document.body.classList.add("is-resizing-detail");
+      handle.setPointerCapture(e.pointerId);
+      applyWidth(e.clientX);
+    });
+
+    handle.addEventListener("pointermove", (e) => {
+      if (!resizing) return;
+      applyWidth(e.clientX);
+    });
+
+    const endResize = (e) => {
+      if (!resizing) return;
+      resizing = false;
+      handle.classList.remove("is-dragging");
+      document.body.classList.remove("is-resizing-detail");
+      const w = applyWidth(e.clientX);
+      localStorage.setItem(KEY, String(Math.round(w)));
+      fitView();
+    };
+
+    handle.addEventListener("pointerup", endResize);
+    handle.addEventListener("pointercancel", endResize);
+
+    handle.addEventListener("dblclick", () => {
+      appEl.style.setProperty("--detail-w", "360px");
+      localStorage.setItem(KEY, "360");
+      fitView();
+    });
+  })();
+
+  window.addEventListener("resize", () => fitView());
+
+  renderLayers();
+  applyVisualState();
+  requestAnimationFrame(() => {
+    fitView();
+    // gentle entrance: select hub after brief delay
+    setTimeout(() => selectNode("generic"), 400);
+  });
+})();
+</script>
+</body>
+</html>

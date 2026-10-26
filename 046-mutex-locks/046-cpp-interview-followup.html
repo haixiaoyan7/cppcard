@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ 面试口袋卡片 · 面试官继续问 #046 · 9:16</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --blue: #3d5afe;
+    --blue-deep: #3949ab;
+    --navy: #283593;
+    --ink: #1f232c;
+    --ink-soft: #4a4f5a;
+    --gray: #9aa0ac;
+    --gray-light: #c4c9d4;
+    --panel-bg: #ffffff;
+    --item-bg-1: #f8f9fb;
+    --item-bg-2: #f2f4f8;
+    --page-bg: #e9ebf0;
+    --line: #e8eaef;
+    --accent-1: #7c9cff;
+    --accent-2: #5b7ef5;
+    --accent-3: #4566e0;
+    --accent-4: #3654cc;
+    --accent-5: #283db8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB",
+      "Helvetica Neue", Arial, sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 88px 16px 32px;
+  }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    padding: 12px 16px;
+    background: rgba(24, 28, 44, 0.92);
+    backdrop-filter: blur(6px);
+    color: #fff;
+  }
+  .btn {
+    border: none; cursor: pointer;
+    background: linear-gradient(135deg, #4c6ef5, #3b5bdb);
+    color: #fff; font-size: 14px; font-weight: 600; letter-spacing: 1px;
+    padding: 10px 20px; border-radius: 10px;
+    box-shadow: 0 6px 16px rgba(61, 90, 254, 0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(61, 90, 254, 0.5); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+  .hint { font-size: 12px; color: #b9c0d6; letter-spacing: 0.5px; }
+
+  /* ---------- 9:16 canvas ---------- */
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame {
+    width: 720px;
+    height: 1280px;
+    background: var(--page-bg);
+    padding: 20px;
+  }
+  .panel {
+    width: 100%;
+    height: 100%;
+    background: var(--panel-bg);
+    border: 1px solid #e2e5ec;
+    border-radius: 22px;
+    padding: 36px 40px 28px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 18px 44px rgba(40, 55, 100, 0.10);
+  }
+
+  /* ---------- Header ---------- */
+  .brand { display: flex; align-items: center; gap: 16px; }
+  .logo { width: 56px; height: 56px; flex-shrink: 0; }
+  .logo svg { width: 100%; height: 100%; display: block; }
+  .brand-title { flex: 1; }
+  .brand-title .en {
+    font-size: 20px; font-weight: 700; letter-spacing: 1.5px; color: var(--ink);
+  }
+  .brand-title .cn {
+    margin-top: 4px; font-size: 13px; color: var(--gray); letter-spacing: 3px;
+  }
+  .brand-no { text-align: right; }
+  .brand-no .num {
+    font-size: 28px; font-weight: 800; color: var(--blue-deep); letter-spacing: 1px;
+  }
+  .brand-no .tag {
+    margin-top: 4px; font-size: 12px; color: var(--gray); letter-spacing: 2px;
+  }
+
+  .divider { height: 1px; background: var(--line); margin: 20px 0; }
+
+  /* ---------- Section title ---------- */
+  .section {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 24px;
+  }
+  .sec-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #4c6ef5 0%, #3b5bdb 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 16px rgba(59, 91, 219, 0.25);
+    flex-shrink: 0;
+  }
+  .sec-icon svg { width: 26px; height: 26px; display: block; }
+  .section .texts .cn {
+    font-size: 22px; font-weight: 800; letter-spacing: 1px; color: var(--ink);
+  }
+  .section .texts .en {
+    margin-top: 4px; font-size: 12px; color: var(--gray); letter-spacing: 2.5px;
+  }
+  .section .difficulty-hint {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--gray-light);
+    letter-spacing: 1px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section .difficulty-hint .arrow-up {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, var(--accent-1), var(--accent-5));
+  }
+
+  /* ---------- Question list ---------- */
+  .list {
+    flex: 1; min-height: 0;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .item {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    border-radius: 16px;
+    overflow: hidden;
+    min-height: 0;
+    position: relative;
+  }
+  .item:nth-child(odd) { background: var(--item-bg-1); }
+  .item:nth-child(even) { background: var(--item-bg-2); }
+  .item:first-child {
+    box-shadow: 0 8px 24px rgba(61, 90, 254, 0.10);
+  }
+
+  .item .bar {
+    width: 6px;
+    flex-shrink: 0;
+    border-radius: 3px 0 0 3px;
+  }
+  .item:nth-child(1) .bar { background: var(--accent-1); }
+  .item:nth-child(2) .bar { background: var(--accent-2); }
+  .item:nth-child(3) .bar { background: var(--accent-3); }
+  .item:nth-child(4) .bar { background: var(--accent-4); }
+  .item:nth-child(5) .bar { background: var(--accent-5); }
+
+  .item-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 20px 24px;
+    gap: 18px;
+  }
+
+  .item-num {
+    width: 52px; flex-shrink: 0;
+    font-size: 28px; font-weight: 800;
+    color: var(--blue-deep);
+    opacity: 0.7;
+    text-align: center;
+  }
+  .item:first-child .item-num {
+    opacity: 1;
+    font-size: 32px;
+  }
+
+  .item-content { flex: 1; min-width: 0; }
+  .item-content .q {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.4;
+    letter-spacing: 0.3px;
+  }
+  .item:first-child .item-content .q {
+    font-size: 20px;
+  }
+  .item-content .q code {
+    font-family: "SFMono-Regular", "Consolas", "Menlo", monospace;
+    font-size: 16px;
+    background: rgba(61, 90, 254, 0.08);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .item-content .desc {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--gray);
+    letter-spacing: 0.3px;
+    line-height: 1.5;
+  }
+
+  .item-meta {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding-right: 4px;
+    min-width: 52px;
+  }
+  .item-card-ref {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: "SFMono-Regular", "Consolas", "Menlo", monospace;
+    color: var(--blue);
+    background: rgba(61, 90, 254, 0.08);
+    padding: 3px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+  }
+  .item-stars {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .item-stars .star {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #d0d5e0;
+  }
+  .item-stars .star.active { background: var(--blue); }
+
+  /* ---------- Next hint ---------- */
+  .next-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+    padding: 14px 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f0f3ff, #e8ecfa);
+  }
+  .next-hint .text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--blue-deep);
+    letter-spacing: 2px;
+  }
+  .next-hint .arrow {
+    font-size: 18px;
+    color: var(--blue);
+  }
+
+  /* ---------- Footer ---------- */
+  .foot-divider { height: 1px; background: var(--line); margin: 16px 0 12px; }
+  .footer { display: flex; align-items: center; justify-content: space-between; }
+  .footer .slogan { font-size: 12px; color: var(--gray); letter-spacing: 3px; }
+  .footer .stars { color: var(--blue); font-size: 15px; letter-spacing: 5px; }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportBtn" class="btn">⬇ 导出 9:16 图片 (PNG)</button>
+    <span class="hint">画布 720 × 1280 · 导出为 2× 高清 (1440 × 2560)</span>
+  </div>
+
+  <div class="viewport" id="viewport">
+    <div class="stage" id="stage">
+      <div class="frame" id="frame">
+        <div class="panel">
+
+          <!-- Header -->
+          <div class="brand">
+            <div class="logo" aria-label="C++">
+              <svg class="cpp-logo" width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img">
+                <title>C++</title>
+                <defs>
+                  <linearGradient id="cppBadge" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#4c6ef5" />
+                    <stop offset="1" stop-color="#3b5bdb" />
+                  </linearGradient>
+                </defs>
+                <path d="M26 6 H74 A20 20 0 0 1 94 26 V74 A20 20 0 0 1 74 94 H26 L6 74 V26 A20 20 0 0 1 26 6 Z" fill="url(#cppBadge)" />
+                <path d="M6 74 L26 94 H16 A10 10 0 0 1 6 84 Z" fill="#6f8dfb" />
+                <path d="M48.6 36.2 A18 18 0 1 0 48.6 63.8" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" />
+                <g fill="#ffffff">
+                  <rect x="58" y="48" width="12" height="4" rx="1.6" />
+                  <rect x="62" y="44" width="4" height="12" rx="1.6" />
+                  <rect x="72" y="48" width="12" height="4" rx="1.6" />
+                  <rect x="76" y="44" width="4" height="12" rx="1.6" />
+                </g>
+              </svg>
+            </div>
+            <div class="brand-title">
+              <div class="en">C++ INTERVIEW CARD</div>
+              <div class="cn">面试口袋卡片</div>
+            </div>
+            <div class="brand-no">
+              <div class="num">#046</div>
+              <div class="tag">并发多线程 CONCURRENCY</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Section title -->
+          <div class="section">
+            <div class="sec-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none">
+                <path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7l-4 4V6a2 2 0 0 1 2-2z" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="8.5" cy="11" r="1.2" fill="#ffffff"/>
+                <circle cx="12" cy="11" r="1.2" fill="#ffffff"/>
+                <circle cx="15.5" cy="11" r="1.2" fill="#ffffff"/>
+              </svg>
+            </div>
+            <div class="texts">
+              <div class="cn">面试官继续问</div>
+              <div class="en">FOLLOW-UP QUESTIONS</div>
+            </div>
+            <div class="difficulty-hint">
+              <div class="arrow-up"></div>
+              难度递增
+            </div>
+          </div>
+
+          <!-- Question list -->
+          <div class="list">
+            <div class="item">
+              <div class="bar"></div>
+              <div class="item-body">
+                <div class="item-num">01</div>
+                <div class="item-content">
+                  <div class="q"><code>lock_guard</code> 在什么时候释放锁？</div>
+                  <div class="desc">答：对象离开作用域析构时自动释放。</div>
+                </div>
+                <div class="item-meta">
+                  <div class="item-stars">
+                    <div class="star active"></div>
+                    <div class="star"></div>
+                    <div class="star"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="item">
+              <div class="bar"></div>
+              <div class="item-body">
+                <div class="item-num">02</div>
+                <div class="item-content">
+                  <div class="q"><code>defer_lock</code> 和 <code>adopt_lock</code> 有何区别？</div>
+                  <div class="desc">答：前者暂不加锁，后者接管已持有的锁。</div>
+                </div>
+                <div class="item-meta">
+                  <div class="item-stars">
+                    <div class="star active"></div>
+                    <div class="star"></div>
+                    <div class="star"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="item">
+              <div class="bar"></div>
+              <div class="item-body">
+                <div class="item-num">03</div>
+                <div class="item-content">
+                  <div class="q">如何判断 <code>unique_lock</code> 当前是否持锁？</div>
+                  <div class="desc">答：调用 owns_lock() 或转换为 bool。</div>
+                </div>
+                <div class="item-meta">
+                  <div class="item-stars">
+                    <div class="star active"></div>
+                    <div class="star active"></div>
+                    <div class="star"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="item">
+              <div class="bar"></div>
+              <div class="item-body">
+                <div class="item-num">04</div>
+                <div class="item-content">
+                  <div class="q"><code>unique_lock::release()</code> 与 <code>unlock()</code> 有何区别？</div>
+                  <div class="desc">答：release 仅脱离 mutex，不会实际解锁。</div>
+                </div>
+                <div class="item-meta">
+                  <div class="item-stars">
+                    <div class="star active"></div>
+                    <div class="star active"></div>
+                    <div class="star"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="item">
+              <div class="bar"></div>
+              <div class="item-body">
+                <div class="item-num">05</div>
+                <div class="item-content">
+                  <div class="q">不命名临时 <code>lock_guard</code> 有什么风险？</div>
+                  <div class="desc">答：完整表达式结束即析构，锁会立即释放。</div>
+                </div>
+                <div class="item-meta">
+                  <div class="item-stars">
+                    <div class="star active"></div>
+                    <div class="star active"></div>
+                    <div class="star active"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next card hint -->
+          <div class="next-hint">
+            <span class="text">答案仅供参考 · 重在讲清思路</span>
+            <span class="arrow">→</span>
+          </div>
+
+          <!-- Footer -->
+          <div class="foot-divider"></div>
+          <div class="footer">
+            <div class="slogan">MAKE EACH ANSWER COUNT.</div>
+            <div class="stars">★ ★</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var frame = document.getElementById('frame');
+      var stage = document.getElementById('stage');
+      var viewport = document.getElementById('viewport');
+      var btn = document.getElementById('exportBtn');
+      var W = 720, H = 1280;
+
+      function fit() {
+        var availW = window.innerWidth - 32;
+        var availH = window.innerHeight - 88 - 32;
+        var scale = Math.min(1, availW / W, availH / H);
+        stage.style.transform = 'scale(' + scale + ')';
+        viewport.style.width = (W * scale) + 'px';
+        viewport.style.height = (H * scale) + 'px';
+      }
+      window.addEventListener('resize', fit);
+      fit();
+
+      function nextFrame() {
+        return new Promise(function (resolve) {
+          requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+        });
+      }
+
+      btn.addEventListener('click', async function () {
+        if (typeof html2canvas !== 'function') {
+          alert('html2canvas 尚未加载（可能网络受限）。请联网后重试，或直接对下方卡片使用系统截图。');
+          return;
+        }
+        var label = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '正在导出…';
+
+        stage.style.transform = 'none';
+        viewport.style.width = W + 'px';
+        viewport.style.height = H + 'px';
+        await nextFrame();
+
+        try {
+          var canvas = await html2canvas(frame, {
+            scale: 2,
+            backgroundColor: '#e9ebf0',
+            useCORS: true,
+            logging: false,
+            width: W,
+            height: H,
+            windowWidth: W,
+            windowHeight: H
+          });
+          var link = document.createElement('a');
+          link.download = '046-cpp-interview-followup.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        } catch (err) {
+          alert('导出失败：' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = label;
+          fit();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

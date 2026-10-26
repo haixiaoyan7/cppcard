@@ -1,0 +1,2783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ 并发与多线程 · 知识图谱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0c1222;
+    --ink-soft: #1a2438;
+    --paper: #f3f6fb;
+    --panel: rgba(255, 255, 255, 0.92);
+    --panel-solid: #ffffff;
+    --line: #d5deec;
+    --muted: #6b7a94;
+    --text: #1e2a3f;
+    --cyan: #0d9488;
+    --cyan-deep: #0f766e;
+    --cyan-soft: #ccfbf1;
+    --amber: #d97706;
+    --amber-soft: #fef3c7;
+    --blue: #2563eb;
+    --blue-soft: #dbeafe;
+    --rose: #e11d48;
+    --rose-soft: #ffe4e6;
+    --violet: #7c3aed;
+    --violet-soft: #ede9fe;
+    --shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    color: var(--text);
+    font-family: "Noto Sans SC", "DM Sans", sans-serif;
+    background: var(--paper);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 80% 50% at 10% -10%, rgba(13, 148, 136, 0.14), transparent 50%),
+      radial-gradient(ellipse 60% 40% at 90% 0%, rgba(37, 99, 235, 0.10), transparent 45%),
+      radial-gradient(ellipse 50% 40% at 70% 100%, rgba(217, 119, 6, 0.08), transparent 50%),
+      linear-gradient(165deg, #eef2f8 0%, #f5f7fb 40%, #e8eef6 100%);
+  }
+
+  .app {
+    --detail-w: 360px;
+    display: grid;
+    grid-template-columns: 280px 1fr 6px var(--detail-w);
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    gap: 0;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 16px 28px;
+    border-bottom: 1px solid rgba(213, 222, 236, 0.8);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px);
+    z-index: 20;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background:
+      linear-gradient(145deg, #0d9488 0%, #0f766e 55%, #115e59 100%);
+    box-shadow: 0 8px 20px rgba(13, 148, 136, 0.35);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .brand-mark svg { width: 22px; height: 22px; }
+
+  .brand-text h1 {
+    font-family: "DM Sans", "Noto Sans SC", sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .brand-text p {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .search {
+    position: relative;
+    width: min(280px, 36vw);
+  }
+
+  .search input {
+    width: 100%;
+    height: 40px;
+    padding: 0 14px 0 40px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    font: 500 13px/1 "Noto Sans SC", sans-serif;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .search input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  }
+
+  .search svg {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .tool-btn {
+    height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    font: 600 12px/1 "Noto Sans SC", sans-serif;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  }
+
+  .tool-btn:hover {
+    background: #f8fafc;
+    border-color: #b8c5d8;
+  }
+
+  .tool-btn:active { transform: scale(0.97); }
+
+  .tool-btn.primary {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.28);
+  }
+
+  .tool-btn.primary:hover { filter: brightness(1.05); }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    padding: 22px 18px 28px;
+    border-right: 1px solid rgba(213, 222, 236, 0.8);
+    background: rgba(255, 255, 255, 0.55);
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  .side-block + .side-block { margin-top: 28px; }
+
+  .side-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .layer-list, .legend-list, .path-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .layer-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--text);
+    font: 500 13px/1.3 "Noto Sans SC", sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .layer-btn:hover { background: rgba(255, 255, 255, 0.8); }
+
+  .layer-btn.active {
+    background: #fff;
+    border-color: var(--line);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  }
+
+  .layer-btn .swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px var(--swatch-ring);
+  }
+
+  .layer-btn .meta {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    font-family: "DM Sans", sans-serif;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .legend-item i {
+    width: 28px;
+    height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .path-chip {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    text-align: left;
+    width: 100%;
+    font: inherit;
+    color: inherit;
+  }
+
+  .path-chip:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 6px 18px rgba(13, 148, 136, 0.1);
+  }
+
+  .path-chip .num {
+    width: 22px;
+    height: 22px;
+    border-radius: 8px;
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+    font: 700 11px/22px "DM Sans", sans-serif;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .path-chip strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+
+  .path-chip span {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  /* ── Graph stage ── */
+  .stage-wrap {
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .stage {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .stage.dragging { cursor: grabbing; }
+
+  .stage svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .edge {
+    fill: none;
+    stroke: #c5d0e0;
+    stroke-width: 1.5;
+    opacity: 0.7;
+    transition: opacity 0.25s ease, stroke 0.25s ease, stroke-width 0.25s ease;
+  }
+
+  /* 焦点模式：无关边变细、变浅灰，不消失 */
+  .stage.focus-on .edge.quiet {
+    stroke: #dde4ef;
+    stroke-width: 1;
+    opacity: 0.45;
+  }
+
+  .edge.hot {
+    opacity: 1;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+  }
+
+  .edge.hot.flow {
+    stroke-dasharray: 6 10;
+    animation: edge-flow 1.1s linear infinite;
+  }
+
+  @keyframes edge-flow {
+    to { stroke-dashoffset: -16; }
+  }
+
+  .edge-label-g {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .edge-label-g.show { opacity: 1; }
+
+  .edge-label-g text {
+    font-size: 10px;
+    fill: #64748b;
+    font-family: "DM Sans", "Noto Sans SC", sans-serif;
+    font-weight: 600;
+  }
+
+  .node {
+    cursor: grab;
+  }
+
+  .node.dragging {
+    cursor: grabbing;
+  }
+
+  .node.dragging .body {
+    filter: drop-shadow(0 8px 18px rgba(13, 148, 136, 0.28));
+  }
+
+  .node .glow {
+    fill: #0d9488;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .node .ring {
+    fill: none;
+    stroke: #0d9488;
+    stroke-width: 1.75;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .node .body {
+    transition: fill 0.22s ease, stroke 0.22s ease, stroke-width 0.22s ease, filter 0.22s ease;
+  }
+
+  .node-title {
+    font-family: "Noto Sans SC", "DM Sans", sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    fill: var(--ink);
+    pointer-events: none;
+    transition: fill 0.22s ease;
+  }
+
+  .node-en {
+    font-family: "DM Sans", sans-serif;
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    fill: var(--muted);
+    pointer-events: none;
+    text-transform: uppercase;
+    transition: fill 0.22s ease;
+  }
+
+  .node.hub .node-title { font-size: 14px; fill: #fff; }
+  .node.hub .node-en { fill: rgba(255, 255, 255, 0.78); font-size: 9px; }
+
+  /* 关联：细虚线青环，描边改青色 */
+  .node.related .ring {
+    opacity: 0.7;
+    stroke-dasharray: 3.5 3.5;
+  }
+  .node.related:not(.hub) .body {
+    stroke: #0d9488 !important;
+    stroke-width: 2.2;
+  }
+
+  /* 选中：统一青色描边 + 轻投影 */
+  .node.selected .glow { opacity: 0.08; }
+  .node.selected .ring {
+    opacity: 1;
+    stroke-width: 1.8;
+    stroke-dasharray: none;
+  }
+  .node.selected:not(.hub) .body {
+    fill: #f0fdfa;
+    stroke: #0d9488 !important;
+    stroke-width: 2.6;
+    filter: drop-shadow(0 4px 12px rgba(13, 148, 136, 0.18));
+  }
+  .node.selected.hub .body {
+    filter: drop-shadow(0 6px 16px rgba(13, 148, 136, 0.32));
+  }
+
+  /* 无关：压低描边与英文，中文仍可读 */
+  .stage.focus-on .node.quiet:not(.hub) .body {
+    fill: #f8fafc;
+    stroke: #dbe2ec;
+    stroke-width: 1.4;
+    filter: none;
+  }
+  .stage.focus-on .node.quiet .node-title { fill: #a0aec0; }
+  .stage.focus-on .node.quiet .node-en { fill: #d0d7e2; }
+  .stage.focus-on .node.quiet.hub .body { opacity: 0.5; }
+  .stage.focus-on .node.quiet .glow,
+  .stage.focus-on .node.quiet .ring { opacity: 0 !important; }
+
+  .stage.path-on .node.on-path:not(.quiet):not(.selected):not(.hub) .body {
+    stroke-width: 2.4;
+  }
+  .edge.on-path:not(.hot) {
+    opacity: 0.8;
+    stroke-width: 1.9;
+  }
+
+  .hint-bar {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: rgba(12, 18, 34, 0.88);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 12px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 12px 32px rgba(12, 18, 34, 0.25);
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .hint-bar kbd {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #fff;
+  }
+
+  /* ── Detail panel ── */
+  .detail-resizer {
+    position: relative;
+    z-index: 15;
+    cursor: col-resize;
+    background: transparent;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .detail-resizer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+    background: rgba(213, 222, 236, 0.95);
+    transition: background 0.15s, width 0.15s, box-shadow 0.15s;
+  }
+
+  .detail-resizer::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 36px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: #c5d0e0;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+  }
+
+  .detail-resizer:hover::before,
+  .detail-resizer.is-dragging::before {
+    width: 2px;
+    background: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .detail-resizer:hover::after,
+  .detail-resizer.is-dragging::after {
+    opacity: 1;
+    background: var(--cyan);
+  }
+
+  body.is-resizing-detail {
+    cursor: col-resize;
+    user-select: none;
+  }
+
+  body.is-resizing-detail * {
+    cursor: col-resize !important;
+  }
+
+  .detail {
+    border-left: none;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(12px);
+    overflow-y: auto;
+    padding: 0;
+    z-index: 10;
+    min-width: 0;
+  }
+
+  .detail-empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 28px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .detail-empty .orb {
+    width: 72px;
+    height: 72px;
+    border-radius: 24px;
+    margin-bottom: 18px;
+    background:
+      linear-gradient(145deg, var(--cyan-soft), var(--blue-soft));
+    display: grid;
+    place-items: center;
+  }
+
+  .detail-empty h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .detail-empty p {
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 240px;
+  }
+
+  .detail-body { display: none; padding: 24px 22px 36px; }
+  .detail.has-selection .detail-empty { display: none; }
+  .detail.has-selection .detail-body { display: block; }
+
+  .detail-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .detail-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font: 700 14px/1 "DM Sans", sans-serif;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .detail-head h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  .detail-head .en {
+    margin-top: 4px;
+    font-family: "DM Sans", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .pill {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: var(--muted);
+  }
+
+  .pill.layer { background: var(--cyan-soft); color: var(--cyan-deep); }
+  .pill.card { background: var(--blue-soft); color: var(--blue); }
+
+  .section-title {
+    margin: 22px 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .detail-body p.desc {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .points {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .points li {
+    position: relative;
+    padding: 12px 14px 12px 36px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .points li::before {
+    content: attr(data-n);
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+    font: 700 10px/18px "DM Sans", sans-serif;
+    text-align: center;
+  }
+
+  .causal {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .causal .cell {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: 10px;
+    padding: 11px 13px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--line);
+  }
+
+  .causal .cell .k {
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .causal .cell.why .k { background: var(--blue-soft); color: var(--blue); }
+  .causal .cell.cost .k { background: var(--amber-soft); color: var(--amber); }
+
+  .causal .cell p {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .trap {
+    margin-top: 10px;
+    padding: 11px 14px;
+    border-left: 3px solid var(--rose);
+    border-radius: 0 12px 12px 0;
+    background: var(--rose-soft);
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+
+  .trap .k {
+    font-weight: 700;
+    color: var(--rose);
+    margin-right: 6px;
+  }
+
+  .rule-table-wrap {
+    margin-top: 4px;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #e8eef6;
+    background: #fff;
+  }
+
+  .rule-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+
+  .rule-table th,
+  .rule-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #eef2f7;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .rule-table th {
+    background: #f8fafc;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .rule-table tr:last-child td { border-bottom: none; }
+
+  .rule-table .form {
+    font-family: "SF Mono", Menlo, "JetBrains Mono", monospace;
+    font-weight: 700;
+    color: var(--cyan-deep);
+    white-space: nowrap;
+  }
+
+  .rule-table .mono {
+    font-family: "SF Mono", Menlo, "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #334155;
+  }
+
+  .rule-table .err {
+    color: #e11d48;
+    font-weight: 700;
+  }
+
+  .rule-table .note {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .code-window {
+    margin-top: 4px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #1f1f24;
+    border: 1px solid #2c2c34;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+  }
+
+  .code-chrome {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 14px 8px;
+    background: linear-gradient(180deg, #2a2a30 0%, #232328 100%);
+    border-bottom: 1px solid #18181c;
+  }
+
+  .code-chrome .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.25);
+  }
+
+  .code-chrome .dot.red { background: #ff5f57; }
+  .code-chrome .dot.yellow { background: #febc2e; }
+  .code-chrome .dot.green { background: #28c840; }
+
+  .code-chrome .code-file {
+    margin-left: 8px;
+    font-family: "SF Mono", Menlo, Monaco, "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: #9a9aa2;
+    letter-spacing: 0.02em;
+  }
+
+  .code {
+    margin: 0;
+    padding: 14px 16px 16px;
+    background: #1f1f24;
+    color: #dfdfe0;
+    font-family: "SF Mono", Menlo, Monaco, "Cascadia Code", "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  /* Xcode Dark Default 语法色 */
+  .code .kw { color: #ff7ab2; }   /* keyword */
+  .code .tp { color: #6bdfff; }   /* type / system type */
+  .code .fn { color: #a8e6a1; }   /* function / declaration */
+  .code .cm { color: #6c7986; }   /* comment */
+  .code .str { color: #ff8170; }  /* string */
+  .code .num { color: #d0a8ff; }  /* number / constant */
+
+  .rel-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rel-chip {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .rel-chip:hover {
+    border-color: var(--cyan);
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+  }
+
+  .rel-chip .dir {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .card-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .link-card {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform 0.12s, border-color 0.15s, background 0.15s;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--text);
+  }
+
+  .link-card:hover { transform: translateY(-1px); }
+
+  .link-card.card-ans {
+    background: linear-gradient(135deg, #eff6ff, #f8fbff);
+    border-color: #dbeafe;
+    color: var(--blue);
+  }
+
+  .link-card.card-fu {
+    background: linear-gradient(135deg, #f0fdfa, #f7fffc);
+    border-color: #ccfbf1;
+    color: var(--cyan-deep);
+  }
+
+  .link-card.card-sheet {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #faf5ff, #fdfbff);
+    border-color: var(--violet-soft);
+    color: var(--violet);
+  }
+
+  .link-card .link-kicker {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .link-card small {
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1100px) {
+    .app {
+      --detail-w: auto;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto 1fr auto;
+      height: auto;
+      min-height: 100vh;
+      overflow: auto;
+    }
+    body { overflow: auto; }
+    .sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-height: none;
+    }
+    .side-block:last-child { grid-column: 1 / -1; }
+    .stage-wrap { height: 62vh; min-height: 420px; }
+    .detail-resizer { display: none; }
+    .detail {
+      border-left: none;
+      border-top: 1px solid var(--line);
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .topbar { flex-direction: column; align-items: stretch; }
+    .search { width: 100%; }
+    .top-actions { justify-content: stretch; }
+    .sidebar { grid-template-columns: 1fr; }
+    .brand-text h1 { font-size: 16px; }
+    .hint-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M4 6h16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <path d="M4 12h16" stroke="#99f6e4" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
+          <path d="M4 18h16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="9" cy="6" r="2" fill="#0f766e" stroke="#fff" stroke-width="1.6"/>
+          <circle cx="15" cy="12" r="2" fill="#0f766e" stroke="#99f6e4" stroke-width="1.6"/>
+          <circle cx="7" cy="18" r="2" fill="#0f766e" stroke="#fff" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>C++ 并发与多线程 · 知识图谱</h1>
+        <p>CONCURRENCY  ·  SYNCHRONIZATION  ·  MEMORY MODEL</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+        <input id="search" type="search" placeholder="搜索知识点…" autocomplete="off" />
+      </div>
+      <a class="tool-btn" href="concurrency.html" target="_blank" rel="noopener">来龙去脉 Cheatsheet</a>
+      <button class="tool-btn" id="btn-fit" type="button">适应画布</button>
+      <button class="tool-btn" id="btn-reset" type="button">复位布局</button>
+      <button class="tool-btn" id="btn-clear" type="button">清除高亮</button>
+      <button class="tool-btn primary" id="btn-tour" type="button">学习路径</button>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <div class="side-block">
+      <div class="side-label"><span>知识分层</span><span id="layer-count">全部</span></div>
+      <div class="layer-list" id="layer-list"></div>
+    </div>
+    <div class="side-block">
+      <div class="side-label"><span>关系图例</span></div>
+      <div class="legend-list">
+        <div class="legend-item"><i style="background:#2563eb"></i>执行 / 调度</div>
+        <div class="legend-item"><i style="background:#d97706"></i>同步 / 互斥</div>
+        <div class="legend-item"><i style="background:#7c3aed"></i>可见性 / 内存序</div>
+        <div class="legend-item"><i style="background:#16a34a"></i>无锁 / CAS</div>
+        <div class="legend-item"><i style="background:#e11d48"></i>风险 / 陷阱</div>
+      </div>
+    </div>
+    <div class="side-block">
+      <div class="side-label"><span>推荐路径</span></div>
+      <div class="path-list" id="path-list"></div>
+    </div>
+  </aside>
+
+  <main class="stage-wrap">
+    <div class="stage" id="stage"></div>
+    <div class="hint-bar" id="hint-bar">
+      <span>拖拽节点重排 · 空白处平移 · 滚轮缩放</span>
+      <span><kbd>Esc</kbd> 清除</span>
+    </div>
+  </main>
+
+  <div class="detail-resizer" id="detail-resizer" title="拖动调整右侧栏宽度" role="separator" aria-orientation="vertical" aria-label="调整右侧栏宽度"></div>
+
+  <aside class="detail" id="detail">
+    <div class="detail-empty">
+      <div class="orb">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="3" stroke="#0d9488" stroke-width="2"/>
+          <circle cx="12" cy="12" r="8" stroke="#0d9488" stroke-width="1.5" opacity=".4"/>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>选择一个知识点</h2>
+      <p>点击图谱中的节点，查看定义、面试要点、代码示意与关联关系。</p>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </aside>
+</div>
+
+<script>
+(() => {
+  const LAYERS = [
+    { id: "hub",   name: "总览",     color: "#0d9488", ring: "rgba(13,148,136,.2)",  count: 0 },
+    { id: "exec",  name: "执行载体", color: "#2563eb", ring: "rgba(37,99,235,.18)",  count: 0 },
+    { id: "sync",  name: "同步原语", color: "#d97706", ring: "rgba(217,119,6,.18)",  count: 0 },
+    { id: "mem",   name: "内存模型", color: "#7c3aed", ring: "rgba(124,58,237,.16)", count: 0 },
+    { id: "lf",    name: "无锁进阶", color: "#16a34a", ring: "rgba(22,163,74,.16)",  count: 0 },
+    { id: "risk",  name: "风险验证", color: "#e11d48", ring: "rgba(225,29,72,.15)",  count: 0 },
+  ];
+
+  const NODES = [
+    {
+      id: "concurrency",
+      layer: "hub",
+      title: "并发与多线程",
+      lines: ["并发与", "多线程"],
+      en: "Concurrency",
+      tag: "CONCURRENCY",
+      x: 600, y: 70,
+      r: 54,
+      hub: true,
+      anchor: "#spine",
+      summary: "整套知识可以串成一条因果链：硬件为了快而缓存与重排 → 共享可变数据出现竞争 → 用互斥或原子解决 → 每种解法又带来死锁、ABA、回收等新代价。",
+      why: "多核硬件与共享内存模型，让「我写的顺序」不等于「别人看到的顺序」。",
+      cost: "每引入一个工具都引入新故障模式，所以并发要连着代价一起学。",
+      points: [
+        "并发关注结构上可交替推进，并行关注物理上真同时执行。",
+        "三层能力：执行载体（thread / task）、同步原语（mutex / condvar）、内存模型（atomic / memory_order）。",
+        "正确性的判据只有一条：冲突访问之间是否存在同步关系。",
+        "优化顺序：先用锁写对 → 测出热点 → 缩小临界区 → 换原子 → 最后才是无锁。",
+      ],
+      trap: "「跑了很久没崩」不构成正确性证据，并发 bug 是概率性的。",
+      code: `<span class="cm">// 三层视角</span>
+<span class="tp">std::thread</span> t{work};              <span class="cm">// 执行载体</span>
+<span class="tp">std::lock_guard</span> lk{mtx};         <span class="cm">// 同步原语</span>
+flag.<span class="fn">store</span>(<span class="kw">true</span>, <span class="tp">std::memory_order_release</span>); <span class="cm">// 内存序</span>`,
+      card: null,
+    },
+    {
+      id: "hardware",
+      layer: "mem",
+      title: "硬件与重排",
+      lines: ["硬件", "与重排"],
+      en: "Cache & Reordering",
+      tag: "HARDWARE",
+      x: 600, y: 210,
+      r: 42,
+      anchor: "#s0",
+      summary: "并发之难有两个独立来源：看不见（每核私有缓存、写缓冲、编译器与 CPU 重排）和抢着改（共享可变数据）。后面所有工具都在解决这两件事之一。",
+      why: "为了性能：每核有自己的 L1/L2，写入先进写缓冲，指令还会被重排。",
+      cost: "写入的顺序和别人观察到的顺序脱钩，正确性必须靠显式同步来买。",
+      points: [
+        "共享的是堆、全局静态、代码、fd；私有的是栈、寄存器、执行位置。",
+        "要加锁的正是「共享且可变」的数据；线程栈上的局部变量不需要。",
+        "MESI 缓存一致性只保证「同一个地址」最终一致。",
+        "它不管两个不同变量的可见顺序 —— 这才是内存序要解决的问题。",
+      ],
+      trap: "有缓存一致性协议 ≠ 不需要内存序：MESI 管不了跨变量的顺序。",
+      code: `<span class="cm">// 硬件视角下这两行可能被对面颠倒看到</span>
+data = <span class="num">42</span>;      <span class="cm">// 可能还在写缓冲里</span>
+ready = <span class="kw">true</span>;    <span class="cm">// 对面先看到它 → 读到 data == 0</span>`,
+      card: null,
+    },
+    {
+      id: "datarace",
+      layer: "risk",
+      title: "数据竞争",
+      en: "Data Race",
+      tag: "UNDEFINED",
+      x: 600, y: 350,
+      r: 40,
+      anchor: "#s5",
+      summary: "两个线程无同步地访问同一非原子对象、且至少一个是写 —— 标准直接判定为未定义行为，这是整条链上真正要消灭的问题。",
+      why: "线程共享堆与全局，而 ++counter 这类操作本身是「读-改-写」三步。",
+      cost: "一旦是 UB，就不是「结果偶尔小一点」，而是整个程序行为不受保证。",
+      points: [
+        "「偶尔读到旧值」只是表象，UB 允许编译器把整段逻辑优化掉。",
+        "三条修复路径：加锁互斥、改用原子、或干脆不共享（值传递 / thread_local）。",
+        "检测手段：ThreadSanitizer 是工程上最有效的一招。",
+        "竞态条件是逻辑时序问题，和数据竞争不是同一个概念。",
+      ],
+      trap: "数据竞争和竞态条件常被混为一谈：前者是 UB，后者可能只是业务时序不对。",
+      code: `<span class="kw">int</span> x = <span class="num">0</span>;                <span class="cm">// 非原子</span>
+<span class="cm">// T1: x++;  T2: x++;   → 数据竞争 = UB</span>
+
+<span class="tp">std::atomic</span>&lt;<span class="kw">int</span>&gt; ax{<span class="num">0</span>};  <span class="cm">// 改原子即有定义</span>`,
+      card: { num: "049", slug: "049-atomic-memory-order" },
+    },
+    {
+      id: "thread",
+      layer: "exec",
+      title: "std::thread",
+      lines: ["std::", "thread"],
+      en: "std::thread",
+      tag: "THREAD",
+      x: 200, y: 190,
+      r: 40,
+      anchor: "#s1",
+      summary: "要并发先得有第二条执行流。构造即启动，析构前必须 join 或 detach —— C++ 强制你显式了结每一条线程。",
+      why: "直接调用函数是当前线程顺序执行，需要另开一条执行流才能真并发。",
+      cost: "它不是完整的 RAII：忘记了结就 terminate，detach 后还可能引用已销毁的栈对象。",
+      points: [
+        "joinable 的含义是「还关联着一条未了结的线程」，不是「线程还在跑」。",
+        "线程函数已经 return 但没 join，依然 joinable —— 析构照样 terminate。",
+        "实参先拷贝进线程存储，需要引用得写 std::ref；成员函数要带对象指针。",
+        "Linux 上通常封装 pthread_create；pthread 没 join 只是资源没回收，不会 terminate。",
+      ],
+      trap: "main 返回后 detach 的线程不会跑完：进程退出，它的线程全部终止。",
+      code: `<span class="tp">std::thread</span> t(work);
+t.<span class="fn">join</span>();       <span class="cm">// 阻塞等待 + 切断关联</span>
+t.<span class="fn">joinable</span>();   <span class="cm">// false；再 join 会抛 system_error</span>
+
+<span class="tp">std::thread</span> t2(inc, <span class="tp">std::ref</span>(n));       <span class="cm">// 传引用</span>
+<span class="tp">std::thread</span> t3(&amp;<span class="tp">Foo</span>::run, &amp;foo, <span class="num">42</span>);   <span class="cm">// 成员函数</span>`,
+      card: { num: "045", slug: "045-std-thread" },
+    },
+    {
+      id: "jthread",
+      layer: "exec",
+      title: "jthread",
+      lines: ["std::", "jthread"],
+      en: "std::jthread",
+      tag: "C++20",
+      x: 80, y: 300,
+      r: 32,
+      anchor: "#s1",
+      summary: "C++20 的自动 join 线程：析构时先 request_stop 再 join，配合 stop_token 做协作式取消。它才是完整的 RAII 线程。",
+      why: "std::thread 把「必须显式了结」的责任留给了程序员，太容易忘。",
+      cost: "取消依然是协作式的：线程不主动检查 stop_token，就停不下来。",
+      points: [
+        "析构自动 join，从根上消除「忘记 join」这类错误。",
+        "可调用对象首参可接 std::stop_token。",
+        "与 condition_variable_any 的 wait 重载配合，可被及时唤醒退出。",
+        "有 C++20 就优先用它，thread 留给需要 detach 的特殊场景。",
+      ],
+      code: `<span class="tp">std::jthread</span> t([](<span class="tp">std::stop_token</span> st) {
+  <span class="kw">while</span> (!st.<span class="fn">stop_requested</span>()) <span class="fn">step</span>();
+});
+<span class="cm">// 析构自动 request_stop() + join()</span>`,
+      card: { num: "045", slug: "045-std-thread" },
+    },
+    {
+      id: "task",
+      layer: "exec",
+      title: "异步任务",
+      en: "async / future",
+      tag: "ASYNC",
+      x: 350, y: 200,
+      r: 38,
+      anchor: "#s7",
+      summary: "从「线程」视角切到「任务」视角：future 是取结果的那一头，get() 会阻塞等待，任务里抛的异常也在 get() 处重抛。",
+      why: "std::thread 与 future 无绑定，返回值丢了，线程里抛异常还会直接 terminate。",
+      cost: "async 的策略与 future 析构语义都藏着坑，容易把并行写成串行。",
+      points: [
+        "三种生产者：promise 手动送、packaged_task 函数 return 送、async 连跑带送。",
+        "future::get() 只能取一次，多消费者要 shared_future。",
+        "launch::async 才保证新线程；默认策略可能 deferred，等 get 时才在当前线程跑。",
+        "async 返回的 future 析构会阻塞到任务结束 —— 必须把 future 存住。",
+      ],
+      trap: "写成临时量的 std::async(f1); std::async(f2); 会退化成串行执行。",
+      code: `<span class="kw">auto</span> f = <span class="tp">std::async</span>(<span class="tp">std::launch::async</span>, calc, <span class="num">42</span>);
+<span class="cm">// ... 干别的活 ...</span>
+<span class="kw">int</span> r = f.<span class="fn">get</span>();   <span class="cm">// 阻塞取值 / 重抛异常</span>`,
+      card: { num: "048", slug: "048-async-future-promise" },
+    },
+    {
+      id: "promise",
+      layer: "exec",
+      title: "结果通道",
+      en: "promise / packaged_task",
+      tag: "PROMISE",
+      x: 250, y: 330,
+      r: 34,
+      anchor: "#s7",
+      summary: "promise 是最底层的管子（不开线程，谁算完谁 set_value）；packaged_task 是函数加内部 promise，调用它 return 值就自动进 future。",
+      why: "需要把「谁执行」和「谁取结果」解耦：结果可能来自回调、C API 或另一阶段。",
+      cost: "packaged_task 只能 move，塞进要求可拷贝的 std::function 时得套一层 shared_ptr。",
+      points: [
+        "set_value / set_exception 一次性写入，唤醒 future 端。",
+        "packaged_task = 函数 + promise，天然适合投递进线程池。",
+        "依赖链：async ≈ 可能开线程 + packaged_task（内含 promise）→ future。",
+        "只要「一次性事件通知」时，promise&lt;void&gt; 比条件变量更简洁。",
+      ],
+      code: `<span class="tp">std::packaged_task</span>&lt;<span class="kw">int</span>(<span class="kw">int</span>,<span class="kw">int</span>)&gt; task(add);
+<span class="kw">auto</span> f = task.<span class="fn">get_future</span>();
+<span class="tp">std::thread</span> t(<span class="tp">std::move</span>(task), <span class="num">3</span>, <span class="num">5</span>);  <span class="cm">// 只能 move</span>`,
+      card: { num: "048", slug: "048-async-future-promise" },
+    },
+    {
+      id: "pool",
+      layer: "exec",
+      title: "线程池",
+      en: "Thread Pool",
+      tag: "POOL",
+      x: 180, y: 460,
+      r: 42,
+      anchor: "#s8",
+      summary: "任务是短的、线程是长的：预创建 N 条 worker 共享一个任务队列反复复用。它把前面所有零件组装在一起 —— mutex 保护队列、cv 睡眠、packaged_task 带回结果。",
+      why: "来一个任务就新建线程太贵，线程太多还会互相抢核。",
+      cost: "优雅关闭变难：工人都睡在 cv 上，直接 join 会卡死，不 join 又会 terminate。",
+      points: [
+        "cv 谓词必须带 stop：否则关池时工人醒来发现队列空又睡回去，join 卡死。",
+        "锁内取任务、锁外执行；否则一个慢任务会一直握着锁。",
+        "关闭三步：加锁置 stop → notify_all → 对每条线程 join。",
+        "线程数：CPU 密集约等于核数，IO 密集可多于核数。",
+      ],
+      trap: "不要在任务里同步等待同一个池里尚未执行的任务 —— 工人被占满会互相等成死锁。",
+      code: `<span class="kw">void</span> <span class="fn">worker_loop</span>() {
+  <span class="kw">for</span> (;;) {
+    <span class="tp">std::function</span>&lt;<span class="kw">void</span>()&gt; job;
+    { <span class="tp">std::unique_lock</span> lk(mtx_);
+      cv_.<span class="fn">wait</span>(lk, [<span class="kw">this</span>] { <span class="kw">return</span> stop_ || !tasks_.<span class="fn">empty</span>(); });
+      <span class="kw">if</span> (stop_ &amp;&amp; tasks_.<span class="fn">empty</span>()) <span class="kw">return</span>;
+      job = <span class="tp">std::move</span>(tasks_.<span class="fn">front</span>()); tasks_.<span class="fn">pop</span>(); }
+    <span class="fn">job</span>();                          <span class="cm">// 锁外执行</span>
+  }
+}`,
+      card: { num: "051", slug: "051-thread-pool" },
+    },
+    {
+      id: "cancel",
+      layer: "exec",
+      title: "协作取消",
+      lines: ["协作", "取消"],
+      en: "Cooperative Cancel",
+      tag: "STOP TOKEN",
+      x: 60, y: 590,
+      r: 32,
+      anchor: "#s8",
+      summary: "C++ 没有安全强杀线程的手段：任务取消只能协作 —— 还在队列里的可以丢掉，已经在跑的只能靠它自己检查标志退出。",
+      why: "长任务和关停流程需要能中断，但强制终止会让锁与析构处于未定状态。",
+      cost: "取消不是即时的：任务多久检查一次标志，就是取消的延迟上限。",
+      points: [
+        "还在队列里：包一层，执行前先查 token，已取消就抛异常。",
+        "已经在跑：任务自己在循环里查 stop_token / atomic&lt;bool&gt;。",
+        "future 没有 cancel()；pthread_cancel 会破坏不变量，不要用。",
+        "jthread + stop_token 是标准提供的协作取消组合。",
+      ],
+      trap: "不要指望「取消」立刻生效，也别用 detach 来逃避停不下来的线程。",
+      code: `<span class="cm">// 已在执行：只能由任务自己配合</span>
+<span class="kw">while</span> (!token.<span class="fn">stop_requested</span>()) {
+  <span class="fn">step</span>();
+}`,
+      card: { num: "051", slug: "051-thread-pool" },
+    },
+    {
+      id: "strand",
+      layer: "exec",
+      title: "Strand 保序",
+      lines: ["Strand", "保序"],
+      en: "Strand / Serial Executor",
+      tag: "STRAND",
+      x: 320, y: 480,
+      r: 36,
+      anchor: "#s9",
+      summary: "线程池让任务并行，却不保证顺序。Strand 用「私有 FIFO 队列 + running 标志」让同一条 strand 上的任务按投递顺序执行且绝不重叠，像一条逻辑单线程。",
+      why: "同一个连接的多个 IO 回调可能落在不同 worker 上，同时改同一份会话状态。",
+      cost: "同一条 strand 上失去并行度；在 strand 回调里同步等待本 strand 的后续任务 = 自死锁。",
+      points: [
+        "mutex 能互斥但不保证顺序：先投递不代表先执行；strand 两者都保证。",
+        "原理：已经 running 时只入队、不再 submit，因此同时只有一个 drain 在跑。",
+        "一个连接一条 strand，会话状态可以像单线程一样写，省掉散落的锁。",
+        "「与 IO 绑定」指这个 fd 的完成通知都进同一条保序队列，不同连接仍并行。",
+      ],
+      trap: "strand 保的是 handler 串行，不是「先发起的 IO 先完成」。",
+      code: `<span class="cm">// Asio 风格：本连接所有 handler 绑到同一 strand</span>
+<span class="kw">auto</span> st = <span class="tp">asio::make_strand</span>(io_ctx);
+<span class="tp">asio::async_read</span>(sock, buf, <span class="tp">asio::bind_executor</span>(st, on_read));`,
+      card: { num: "051", slug: "051-thread-pool" },
+    },
+    {
+      id: "reactor",
+      layer: "exec",
+      title: "事件循环",
+      lines: ["事件", "循环"],
+      en: "Reactor / Event Loop",
+      tag: "REACTOR",
+      x: 170, y: 640,
+      r: 34,
+      anchor: "#s9",
+      summary: "少量线程扛大量连接：epoll 等就绪，就绪了再回调处理，把「等」交给内核而不是占着线程。",
+      why: "一连接一线程在高并发下线程数爆炸，上下文切换与栈内存都撑不住。",
+      cost: "业务被切成回调碎片，状态机手写易错 —— 这正是协程要解决的问题。",
+      points: [
+        "one loop per thread：每个 loop 独占一批 fd，避免跨线程同步。",
+        "回调必须短：耗时活儿投递到线程池，别堵住整个 loop。",
+        "主从 Reactor：主 loop 只 accept，从 loop 处理读写。",
+        "配合 strand 可以让同一连接的回调保序。",
+      ],
+      code: `<span class="cm">// Reactor 骨架</span>
+<span class="kw">while</span> (running) {
+  <span class="kw">int</span> n = <span class="fn">epoll_wait</span>(ep, evs, max, timeout);
+  <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; ++i) <span class="fn">dispatch</span>(evs[i]);
+}`,
+      card: null,
+    },
+    {
+      id: "coro",
+      layer: "exec",
+      title: "协程",
+      en: "Coroutines",
+      tag: "C++20",
+      x: 110, y: 760,
+      r: 32,
+      anchor: "#s9",
+      summary: "无栈协程：co_await 处挂起、把控制权交回调用者，恢复后继续执行。让「等 IO」不占线程，写起来像同步、跑起来是异步。",
+      why: "Reactor 把逻辑打散成回调，可读性和错误处理都很糟。",
+      cost: "生命周期与执行线程都变隐晦：协程可能在另一个线程上恢复。",
+      points: [
+        "C++20 只给语言机制，promise_type / awaiter 要自己或用库实现。",
+        "挂起恢复无内核切换，适合海量 IO 等待。",
+        "小心跨挂起点持锁，也小心 thread_local 在恢复后已换线程。",
+        "常见组合：协程编排逻辑，线程池 / 事件循环提供执行。",
+      ],
+      code: `<span class="tp">task</span>&lt;<span class="kw">int</span>&gt; <span class="fn">fetch</span>() {
+  <span class="kw">auto</span> data = <span class="kw">co_await</span> <span class="fn">read_async</span>();
+  <span class="kw">co_return</span> <span class="fn">parse</span>(data);
+}`,
+      card: { num: "031", slug: "031-coroutines" },
+    },
+    {
+      id: "mutex",
+      layer: "sync",
+      title: "互斥量",
+      en: "std::mutex",
+      tag: "MUTEX",
+      x: 850, y: 230,
+      r: 44,
+      anchor: "#s2",
+      summary: "同一时刻只有一个线程能「持有」它，其余调用 lock 的线程阻塞排队。它既保护临界区，也建立跨线程的 happens-before。",
+      why: "++counter 是读-改-写三步，两条线程交错就会丢更新。",
+      cost: "手写 lock/unlock 会漏解锁；多把锁交叉获取会死锁；临界区太长会成为瓶颈。",
+      points: [
+        "锁要和被保护的数据成对放（通常是类成员），函数内局部锁等于没锁。",
+        "一把锁可以保护多份数据，判断标准是「是否总是一起改」。",
+        "unlock 与后续 lock 之间构成同步关系 —— 这才是可见性的来源。",
+        "recursive_mutex 往往是设计不顺的补丁，能避免就避免。",
+      ],
+      trap: "不是「只有一个线程能调用 lock」，而是「同一时刻只有一个能持有」，其他人排队。",
+      code: `<span class="kw">class</span> <span class="tp">ServiceList</span> {
+  <span class="tp">std::mutex</span> mtx_;              <span class="cm">// 锁</span>
+  <span class="tp">std::map</span>&lt;<span class="tp">K</span>,<span class="tp">V</span>&gt; data_;          <span class="cm">// 被它保护的数据</span>
+<span class="kw">public</span>:
+  <span class="kw">void</span> <span class="fn">update</span>(...) {
+    <span class="tp">std::lock_guard</span>&lt;<span class="tp">std::mutex</span>&gt; lk(mtx_);
+  }
+};`,
+      card: { num: "046", slug: "046-mutex-locks" },
+    },
+    {
+      id: "locks",
+      layer: "sync",
+      title: "锁包装器",
+      en: "lock_guard / unique_lock",
+      tag: "RAII LOCK",
+      x: 1000, y: 130,
+      r: 38,
+      anchor: "#s2",
+      summary: "用 RAII 管住锁的生命周期：构造加锁、析构解锁，异常路径同样安全。三种包装的差别只在灵活度。",
+      why: "手写 unlock 时，中途 return 或抛异常就会漏掉，别人永远死等。",
+      cost: "灵活度换来心智负担：条件变量只能配 unique_lock，多锁场景要换 scoped_lock。",
+      points: [
+        "lock_guard：默认选择，最轻量，不能中途 unlock。",
+        "unique_lock：可延迟加锁、可移动、可手动开关，是条件变量的唯一搭档。",
+        "scoped_lock（C++17）：一次锁多把，内部用死锁避免算法。",
+        "shared_lock 用于 shared_mutex 的读侧。",
+      ],
+      trap: "unique_lock 手动 unlock 后不必自己收尾：析构只看此刻是否持有。",
+      code: `<span class="tp">std::scoped_lock</span> lk(m1, m2);   <span class="cm">// 一次多锁，免死锁</span>
+
+<span class="tp">std::unique_lock</span> ul(m, <span class="tp">std::defer_lock</span>);
+ul.<span class="fn">lock</span>();                     <span class="cm">// 需要时再加</span>`,
+      card: { num: "046", slug: "046-mutex-locks" },
+    },
+    {
+      id: "condvar",
+      layer: "sync",
+      title: "条件变量",
+      en: "condition_variable",
+      tag: "CONDVAR",
+      x: 1020, y: 300,
+      r: 40,
+      anchor: "#s3",
+      summary: "mutex 解决了「别同时改」，解决不了「队列空了怎么办」。条件变量让线程在条件不满足时原子地放锁并睡下，被通知后重新抢锁再检查。",
+      why: "拿着锁 while 空转既浪费 CPU，又让别人没机会改条件。",
+      cost: "存在虚假唤醒与过时唤醒，所以必须带谓词；没人在等时的 notify 会被直接丢弃。",
+      points: [
+        "三件套永远绑定：共享条件数据 + 一把 mutex + 一个 cv，混用 mutex 是 UB。",
+        "wait 内部顺序是「先重新抢锁，再检查谓词」，别记反。",
+        "通知方必须先在锁里改条件，再 notify，否则会丢失唤醒。",
+        "notify_one 用于一个人就能处理完；stop / 容量变化要 notify_all。",
+      ],
+      trap: "不传谓词不等于不需要锁：锁还负责衔接 wait 与 notify，缺了会永久卡死。",
+      code: `<span class="tp">std::unique_lock</span> lk(mtx);
+cv.<span class="fn">wait</span>(lk, [] { <span class="kw">return</span> !q.<span class="fn">empty</span>(); });
+<span class="cm">// 返回时保证：① 你持有锁 ② 谓词为 true</span>
+
+{ <span class="tp">std::lock_guard</span> lk(mtx); q.<span class="fn">push</span>(<span class="num">42</span>); }  <span class="cm">// 先改条件</span>
+cv.<span class="fn">notify_one</span>();                              <span class="cm">// 再通知</span>`,
+      card: { num: "047", slug: "047-condition-variable" },
+    },
+    {
+      id: "locktypes",
+      layer: "sync",
+      title: "锁的家族",
+      lines: ["锁的", "家族"],
+      en: "Mutex / RWLock / Spinlock",
+      tag: "LOCK TYPES",
+      x: 1080, y: 450,
+      r: 40,
+      anchor: "#s2",
+      summary: "按等待方式（睡 vs 忙等）和共享性（独占 vs 读写共享）分类。选型只看两件事：临界区多长、读写比多少。",
+      why: "统一用一种 mutex 会在极短临界区和读多写少场景上白交成本。",
+      cost: "每种变体都带来新问题：自旋烧 CPU，读写锁有写饥饿，递归锁掩盖设计问题。",
+      points: [
+        "mutex 拿不到就睡（Linux 走 futex），是默认选择。",
+        "shared_mutex：一把锁两种拿法，shared_lock 读、unique_lock 写。",
+        "自旋锁忙等不睡，只适合临界区只有几条指令的场景。",
+        "timed_mutex 的 try_lock_for 用于不能无限等的路径。",
+      ],
+      trap: "读锁的意义不是挡住别的读者，而是挡住写者：告诉写者「有人在读，别改」。",
+      code: `<span class="tp">std::shared_mutex</span> sm;
+
+{ <span class="tp">std::shared_lock</span> r(sm); <span class="fn">read</span>();  }  <span class="cm">// 多读并行</span>
+{ <span class="tp">std::unique_lock</span> w(sm); <span class="fn">write</span>(); }  <span class="cm">// 写独占</span>`,
+      card: { num: "052", slug: "052-lock-types" },
+    },
+    {
+      id: "syncprim",
+      layer: "sync",
+      title: "同步工具",
+      en: "semaphore / latch / barrier",
+      tag: "C++20",
+      x: 960, y: 560,
+      r: 36,
+      anchor: "#s2",
+      summary: "C++20 补齐的计数与汇合原语：semaphore 是许可计数，latch 一次性倒数，barrier 可重复汇合。",
+      why: "「限流 N 个名额」「等 N 个初始化完成」用 mutex + cv 手搓既啰嗦又易错。",
+      cost: "多一套语义要学；用错层级（该用锁的地方用信号量）会让所有权变得模糊。",
+      points: [
+        "semaphore 表达许可：acquire 减、release 加，可由别的线程释放。",
+        "这一点和 mutex 根本不同：mutex 是谁锁谁解。",
+        "latch 一次性倒数，适合「等 N 个准备好」再开工。",
+        "barrier 可重复使用，每轮汇合还能带一个完成回调。",
+      ],
+      code: `<span class="tp">std::counting_semaphore</span>&lt;<span class="num">4</span>&gt; slots(<span class="num">4</span>);
+slots.<span class="fn">acquire</span>();  <span class="fn">work</span>();  slots.<span class="fn">release</span>();
+
+<span class="tp">std::latch</span> ready(N);
+ready.<span class="fn">count_down</span>();  ready.<span class="fn">wait</span>();`,
+      card: { num: "052", slug: "052-lock-types" },
+    },
+    {
+      id: "prodcons",
+      layer: "sync",
+      title: "生产者消费者",
+      lines: ["生产者", "消费者"],
+      en: "Producer-Consumer",
+      tag: "PATTERN",
+      x: 860, y: 390,
+      r: 36,
+      anchor: "#s3",
+      summary: "mutex + cv 的经典组合：有界队列 + 两个条件（非空给消费者、非满给生产者），也是手撕高频题。",
+      why: "生产速率和消费速率不一致，需要一个能阻塞两端的缓冲。",
+      cost: "关闭语义要额外设计；无界队列在生产过快时会把内存堆爆。",
+      points: [
+        "两个条件变量：not_empty 给消费者，not_full 给生产者。",
+        "关闭：stop 标志 + notify_all，让所有等待者都能退出。",
+        "生产环境要有界队列 + 背压，而不是无限缓冲。",
+        "单生产单消费可以退化为无锁环形缓冲（SPSC）。",
+      ],
+      code: `<span class="kw">void</span> <span class="fn">push</span>(<span class="tp">T</span> v) {
+  <span class="tp">std::unique_lock</span> lk(m);
+  not_full.<span class="fn">wait</span>(lk, [&amp;] { <span class="kw">return</span> q.<span class="fn">size</span>() &lt; cap || stop; });
+  q.<span class="fn">push</span>(<span class="tp">std::move</span>(v));
+  lk.<span class="fn">unlock</span>();
+  not_empty.<span class="fn">notify_one</span>();
+}`,
+      card: { num: "047", slug: "047-condition-variable" },
+    },
+    {
+      id: "threadsafe",
+      layer: "sync",
+      title: "线程安全契约",
+      lines: ["线程安全", "契约"],
+      en: "Thread Safety",
+      tag: "CONTRACT",
+      x: 1120, y: 610,
+      r: 34,
+      anchor: "#s2",
+      summary: "接口层面的约定：哪些操作能并发调用、加锁责任归谁。STL 的规则是「并发读安全，只要有写就需外部同步」。",
+      why: "锁的正确性依赖调用方遵守约定，而约定必须写在接口上，不能靠默契。",
+      cost: "契约不清就会出现「以为库替我加锁了」的竞争，且极难复现。",
+      points: [
+        "常见等级：不安全 / 条件安全（不同实例可并发） / 完全安全。",
+        "可重入 ≠ 线程安全：不含静态状态的函数才可重入。",
+        "shared_ptr 的控制块计数是原子的，但对象内容与赋值不安全。",
+        "返回内部引用的接口天生难线程安全，改成返回值或回调。",
+      ],
+      code: `<span class="tp">std::vector</span>&lt;<span class="kw">int</span>&gt; v;
+<span class="tp">std::shared_mutex</span> sm;
+
+<span class="cm">// 并发只读 OK；一旦有写就必须外部加锁</span>
+{ <span class="tp">std::shared_lock</span> r(sm); <span class="kw">auto</span> n = v.<span class="fn">size</span>(); }`,
+      card: { num: "046", slug: "046-mutex-locks" },
+    },
+    {
+      id: "atomic",
+      layer: "mem",
+      title: "原子操作",
+      en: "std::atomic",
+      tag: "ATOMIC",
+      x: 470, y: 470,
+      r: 42,
+      anchor: "#s5",
+      summary: "锁太重、或只改一个变量时用 atomic。但要分清三件独立的事：原子性（撕不开）、可见性（何时看见）、有序性（按什么顺序看见）。",
+      why: "为一个计数器加互斥锁，成本远高于它保护的那一次自增。",
+      cost: "原子只覆盖单个对象：多步不变量（先改 map 再改 size）它管不了，仍需锁。",
+      points: [
+        "atomic&lt;T&gt; 要求 T 平凡可拷贝，所以 atomic&lt;string&gt; 不行。",
+        "常用操作：load / store / exchange / fetch_add / compare_exchange。",
+        "三性互相独立：可以「原子但暂时不可见」，也可以「每次读写原子但两次 store 乱序」。",
+        "volatile 只约束编译器优化，不提供原子性与跨线程顺序，别混用。",
+      ],
+      trap: "atomic + 内存序 ≠ mutex：它没有「这段代码请排队」的语义。",
+      code: `<span class="tp">std::atomic</span>&lt;<span class="kw">int</span>&gt; c{<span class="num">0</span>};
+c.<span class="fn">fetch_add</span>(<span class="num">1</span>);                       <span class="cm">// 原子 +1</span>
+c.<span class="fn">load</span>(); c.<span class="fn">store</span>(<span class="num">5</span>); c.<span class="fn">exchange</span>(<span class="num">9</span>);
+c.<span class="fn">compare_exchange_weak</span>(expected, desired);`,
+      card: { num: "049", slug: "049-atomic-memory-order" },
+    },
+    {
+      id: "memorder",
+      layer: "mem",
+      title: "内存序",
+      en: "memory_order",
+      tag: "MEMORY ORDER",
+      x: 600, y: 590,
+      r: 44,
+      anchor: "#s5",
+      summary: "内存序打在单个原子操作上，作用却不限于它自己：acquire/release 是拿这个原子变量当挂钩，去同步旁边一堆普通变量。",
+      why: "原子性只保证「这一次操作撕不开」，不保证周围数据对别人可见。",
+      cost: "更强的序要插内存屏障（冲写缓冲、拦重排），是有成本的；选错则要么慢要么错。",
+      points: [
+        "relaxed：只保本变量原子，不同步周围内存，适合纯计数器。",
+        "release 写：这之前的写入对看到该旗标的人可见；acquire 读与之配对。",
+        "acq_rel 用于读改写；seq_cst 是默认值，全局一个总顺序，最强最贵。",
+        "consume 实践中基本不用，按 acquire 处理即可。",
+      ],
+      trap: "拿 relaxed 当旗标发布数据一定出错 —— 它不同步旁边的普通变量。",
+      code: `<span class="cm">// 经典发布 / 获取配对</span>
+data = <span class="num">42</span>;                                        <span class="cm">// 普通写</span>
+ready.<span class="fn">store</span>(<span class="kw">true</span>, <span class="tp">std::memory_order_release</span>);     <span class="cm">// 发布</span>
+
+<span class="kw">if</span> (ready.<span class="fn">load</span>(<span class="tp">std::memory_order_acquire</span>))        <span class="cm">// 获取</span>
+  <span class="fn">use</span>(data);                                      <span class="cm">// 保证看到 42</span>`,
+      card: { num: "049", slug: "049-atomic-memory-order" },
+    },
+    {
+      id: "happens",
+      layer: "mem",
+      title: "同步关系",
+      en: "happens-before",
+      tag: "ORDERING",
+      x: 740, y: 470,
+      r: 38,
+      anchor: "#s5",
+      summary: "并发正确性的判定标准：两次冲突访问之间只要存在 happens-before，就不构成数据竞争。所有同步原语最终都在提供这个关系。",
+      why: "需要一个与硬件无关的判据，来说明「什么时候可见性是有保证的」。",
+      cost: "它是纸面推理：编译器和 CPU 只承诺这条边，其余顺序一律不保证。",
+      points: [
+        "同线程内是 sequenced-before；跨线程靠 release/acquire 或锁配对建立。",
+        "thread 构造、join、future::get 都自带同步关系。",
+        "seq_cst 额外提供所有线程一致的单一全序。",
+        "判断是否竞态，先找配对的同步点，找不到就是 UB。",
+      ],
+      code: `<span class="cm">// unlock ➜ lock 建立跨线程 happens-before</span>
+{ <span class="tp">std::lock_guard</span> lk(m); shared = <span class="num">1</span>; }    <span class="cm">// A</span>
+{ <span class="tp">std::lock_guard</span> lk(m); <span class="fn">read</span>(shared); }  <span class="cm">// B 必见 A</span>`,
+      card: { num: "049", slug: "049-atomic-memory-order" },
+    },
+    {
+      id: "fence",
+      layer: "mem",
+      title: "内存屏障",
+      lines: ["内存", "屏障"],
+      en: "atomic_thread_fence",
+      tag: "FENCE",
+      x: 740, y: 690,
+      r: 32,
+      anchor: "#s5",
+      summary: "独立屏障：不绑定任何变量、不改数据，只在当前线程插一道顺序栅栏。",
+      why: "有时需要约束一批普通读写的顺序，而不是挂在某一个原子变量上。",
+      cost: "推理难度显著高于 store(release) / load(acquire)，而且它不提供互斥。",
+      points: [
+        "应用代码很少直接用，优先写带内存序的原子操作。",
+        "fence 不提供互斥，替代不了锁。",
+        "常见于自己实现同步原语或对接底层库的场景。",
+        "误用 fence 的代码在 x86 上「看起来对」，换到 ARM 就崩。",
+      ],
+      code: `<span class="tp">std::atomic_thread_fence</span>(<span class="tp">std::memory_order_release</span>);
+<span class="cm">// 只是栅栏：不绑定变量、不改数据、不互斥</span>`,
+      card: { num: "049", slug: "049-atomic-memory-order" },
+    },
+    {
+      id: "falsesharing",
+      layer: "mem",
+      title: "伪共享",
+      en: "False Sharing",
+      tag: "CACHELINE",
+      x: 930, y: 690,
+      r: 36,
+      anchor: "#s6",
+      summary: "缓存按 64 字节的行管理。两个线程写同一行上的不同变量，硬件按行维护一致性，于是互相无谓地失效对方缓存。",
+      why: "缓存一致性的粒度是「行」，而不是「变量」。",
+      cost: "加线程反而更慢，而且从代码上完全看不出来，只能靠 perf 发现。",
+      points: [
+        "高发场景：计数器数组、per-thread 结构紧挨排布、无锁队列的 head/tail。",
+        "解法：按 hardware_destructive_interference_size 对齐或填充。",
+        "反过来，想被一起读的数据应刻意放进同一行（constructive）。",
+        "定位手段：perf 看 cache-misses 与上下文切换。",
+      ],
+      code: `<span class="kw">struct</span> <span class="kw">alignas</span>(<span class="num">64</span>) <span class="tp">Counter</span> {
+  <span class="tp">std::atomic</span>&lt;<span class="kw">long</span>&gt; v{<span class="num">0</span>};
+};
+<span class="tp">Counter</span> counters[N];   <span class="cm">// 各占一行，互不失效</span>`,
+      card: null,
+    },
+    {
+      id: "cas",
+      layer: "lf",
+      title: "CAS",
+      en: "compare_exchange",
+      tag: "CAS",
+      x: 430, y: 620,
+      r: 36,
+      anchor: "#s6",
+      summary: "「还是旧值就换成新值，否则把当前值带回来」。无锁的基本动作：load 当前值 → 本地算好新状态 → CAS 装上去 → 失败就按最新值重算。",
+      why: "需要一个「原子地把状态从一版换到另一版」的原语来替代阻塞。",
+      cost: "高竞争时重试次数上升，缓存行在核间来回弹，可能比一把锁还慢。",
+      points: [
+        "weak 允许假失败（LL/SC 实现所致），必须写在循环里。",
+        "strong 基本只在值真的变了时失败，可以只试一次。",
+        "失败时 expected 已被更新为当前值，循环里不要重置它。",
+        "可分别指定成功/失败的内存序，失败序不能强于成功序。",
+      ],
+      trap: "只试一次、失败要走别的分支时，必须用 strong，否则假失败会让你走错路。",
+      code: `<span class="tp">std::atomic</span>&lt;<span class="tp">Node</span>*&gt; head{<span class="kw">nullptr</span>};
+<span class="kw">void</span> <span class="fn">push</span>(<span class="tp">Node</span>* n) {
+  <span class="tp">Node</span>* old = head.<span class="fn">load</span>();
+  <span class="kw">do</span> { n-&gt;next = old; }
+  <span class="kw">while</span> (!head.<span class="fn">compare_exchange_weak</span>(old, n));
+}`,
+      card: { num: "050", slug: "050-lock-free" },
+    },
+    {
+      id: "lockfree",
+      layer: "lf",
+      title: "无锁编程",
+      en: "Lock-Free",
+      tag: "LOCK-FREE",
+      x: 390, y: 760,
+      r: 40,
+      anchor: "#s6",
+      summary: "锁会让线程睡，持锁者被换下时别人全等着。无锁用「原子地换一版状态，失败就重来」代替阻塞，保证总有线程能推进。",
+      why: "希望某个线程卡住时其他线程仍能前进，同时减少上下文切换。",
+      cost: "难点不在 CAS，而在 ABA 与安全回收；写错的概率远高于加锁版本。",
+      points: [
+        "层级：obstruction-free ⊂ lock-free ⊂ wait-free。",
+        "价值是「进展性保证」，不是无条件更快。",
+        "缓存行 bouncing 和 CAS 重试都可能让它比一把锁更慢。",
+        "正确姿势：先写对有锁版本，测出锁是热点，再把那个很小的共享点改成原子。",
+      ],
+      trap: "把「无锁」当性能银弹是最常见的误判 —— 先量再改。",
+      code: `<span class="cm">// lock-free 的定义：某线程停摆，其他线程仍能完成操作</span>
+<span class="kw">while</span> (!head.<span class="fn">compare_exchange_weak</span>(old, next)) {
+  <span class="cm">// 失败说明别人推进了 —— 整体仍在前进</span>
+}`,
+      card: { num: "050", slug: "050-lock-free" },
+    },
+    {
+      id: "spsc",
+      layer: "lf",
+      title: "SPSC 队列",
+      lines: ["SPSC", "队列"],
+      en: "Single Producer/Consumer",
+      tag: "SPSC",
+      x: 540, y: 870,
+      r: 34,
+      anchor: "#s6",
+      summary: "SPSC 是一种约束（单生产者单消费者），不是标准库的类。环形数组 + 两个原子下标，靠角色分工省掉 CAS。",
+      why: "两个写者争同一个原子变量才需要 CAS；如果各写各的下标，就不需要。",
+      cost: "只在严格单生产单消费下成立；扩展到 MPMC 两端都要 CAS 并处理 ABA。",
+      points: [
+        "生产者只改 tail，消费者只改 head，写的不是同一个变量。",
+        "先写槽位再 store(release) 发布下标；读侧 load(acquire) 后再读槽位。",
+        "空是 head == tail，满是 (tail+1)%Cap == head，浪费一个槽来区分。",
+        "head / tail 之间 alignas(64) 隔开，避免伪共享。",
+      ],
+      code: `<span class="cm">// 固定数组，也没有链表那种回收难题</span>
+buf_[h] = v;
+tail_.<span class="fn">store</span>(next, <span class="tp">std::memory_order_release</span>);  <span class="cm">// 先写数据，再发布下标</span>`,
+      card: { num: "050", slug: "050-lock-free" },
+    },
+    {
+      id: "aba",
+      layer: "risk",
+      title: "ABA 问题",
+      lines: ["ABA", "问题"],
+      en: "ABA Problem",
+      tag: "ABA",
+      x: 250, y: 880,
+      r: 34,
+      anchor: "#s6",
+      summary: "CAS 只比较比特：指针值 A→B→A 变回来了，它以为没人动过，于是把已被复用的节点当成有效节点。",
+      why: "地址会被内存池复用，而 CAS 无法区分「没变过」和「变回来了」。",
+      cost: "要么加版本号让字变宽（可能失去 lock-free），要么引入一整套延迟回收机制。",
+      points: [
+        "典型场景：无锁栈的 pop，节点被复用后地址相同。",
+        "tagged pointer：指针 + 版本号打成一个字一起 CAS，地址复用但 tag 变了 → CAS 失败。",
+        "打包 128 位需要 DWCAS，要确认目标平台是否 lock-free。",
+        "ABA 和「过早释放」是两个不同问题：前者认错代，后者是回收时机。",
+      ],
+      trap: "版本号解决的是「认错代」，不解决「节点已经被 delete」——那要靠安全回收。",
+      code: `<span class="kw">struct</span> <span class="tp">Tagged</span> { <span class="tp">Node</span>* p; <span class="tp">uint64_t</span> tag; };
+<span class="tp">std::atomic</span>&lt;<span class="tp">Tagged</span>&gt; head;   <span class="cm">// tag 每次更新递增</span>`,
+      card: { num: "050", slug: "050-lock-free" },
+    },
+    {
+      id: "reclaim",
+      layer: "lf",
+      title: "安全内存回收",
+      lines: ["安全", "内存回收"],
+      en: "Hazard Pointer / RCU",
+      tag: "RECLAIM",
+      x: 400, y: 940,
+      r: 34,
+      anchor: "#s6",
+      summary: "摘下来的节点不能立刻 delete —— 可能还有人捏着旧指针。谁能证明「没人在读了」，才是无锁结构真正的难点。",
+      why: "无锁读者不持锁，写者摘除节点时无法知道还有谁在访问它。",
+      cost: "回收被推迟，内存占用上升；每种协议都要额外的登记与扫描开销。",
+      points: [
+        "Hazard Pointer：读者把正在用的指针写进自己的槽，回收者扫描所有槽后再 delete。",
+        "RCU / Epoch：读者进出很轻的读临界区，写者等这一波读者全部离开再 delete。",
+        "Hazard 是按指针点名保护，RCU / Epoch 是按时间波次回收。",
+        "逻辑摘除和最终 delete 都由写者做，读者只负责「报到」。",
+      ],
+      code: `<span class="cm">// RCU 风格：读侧几乎零开销</span>
+<span class="fn">rcu_read_lock</span>();
+<span class="kw">auto</span>* p = head.<span class="fn">load</span>(<span class="tp">std::memory_order_acquire</span>);
+<span class="fn">use</span>(p);
+<span class="fn">rcu_read_unlock</span>();   <span class="cm">// 宽限期过后写者才真正 free</span>`,
+      card: { num: "050", slug: "050-lock-free" },
+    },
+    {
+      id: "deadlock",
+      layer: "risk",
+      title: "死锁",
+      en: "Deadlock",
+      tag: "DEADLOCK",
+      x: 900, y: 830,
+      r: 42,
+      anchor: "#s4",
+      summary: "锁解决了竞争，却引入新故障：一组线程各持一部分资源又互相等待，程序还活着但不再前进。",
+      why: "临界区嵌套或多把锁交叉获取时，等待关系成了环。",
+      cost: "四个条件里只有「循环等待」最好破，其余通常破不了也不必破。",
+      points: [
+        "四个必要条件：互斥、占有且等待、不可剥夺、循环等待，同时成立才死锁。",
+        "最常用的破解：统一加锁顺序，或 std::scoped_lock(a, b) 一次拿齐。",
+        "try_lock 失败就释放已有锁重试，能破「不可剥夺」，但要防活锁。",
+        "自死锁：同一线程对非递归 mutex 再 lock 一次，等自己 unlock。",
+      ],
+      trap: "持锁时调用「里面可能加锁」的函数，是最隐蔽的死锁来源。",
+      code: `<span class="cm">// ❌ 交叉加锁：T1 持 a 等 b，T2 持 b 等 a</span>
+{ <span class="tp">std::lock_guard</span> l1(a); <span class="tp">std::lock_guard</span> l2(b); }
+{ <span class="tp">std::lock_guard</span> l1(b); <span class="tp">std::lock_guard</span> l2(a); }
+
+<span class="tp">std::scoped_lock</span> lk(a, b);   <span class="cm">// ✅ 一次性拿齐</span>`,
+      card: { num: "053", slug: "053-deadlock" },
+    },
+    {
+      id: "starvation",
+      layer: "risk",
+      title: "活锁与饥饿",
+      lines: ["活锁", "饥饿"],
+      en: "Livelock / Starvation",
+      tag: "LIVENESS",
+      x: 1060, y: 750,
+      r: 34,
+      anchor: "#s4",
+      summary: "死锁的近亲：线程没被阻塞，却始终得不到有效推进 —— 都在重试却谁也推不动（活锁），或长期抢不到锁（饥饿）。",
+      why: "破死锁的手段（try_lock 退让、读者优先）本身会带来新的活性问题。",
+      cost: "公平锁能保证顺序，但吞吐通常更低，是一次明确的取舍。",
+      points: [
+        "活锁：都在动、都在重试，状态一直变但没进展；加随机退避。",
+        "饥饿：读写锁下「写饥饿」最典型，读者络绎不绝，写者永远等不到。",
+        "优先级反转：低优先级持锁挡住高优先级 → 用优先级继承。",
+        "活锁和死锁的区别是「在动但不前进」vs「彻底不动」。",
+      ],
+      code: `<span class="cm">// 指数退避打破活锁</span>
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; !<span class="fn">try_acquire</span>(); ++i) {
+  <span class="tp">std::this_thread::sleep_for</span>(<span class="fn">backoff</span>(i));
+}`,
+      card: { num: "052", slug: "052-lock-types" },
+    },
+    {
+      id: "verify",
+      layer: "risk",
+      title: "验证与调优",
+      lines: ["验证", "与调优"],
+      en: "Verify & Tune",
+      tag: "TSAN / PERF",
+      x: 700, y: 900,
+      r: 38,
+      anchor: "#s10",
+      summary: "并发 bug 是概率性的，「跑了没崩」不构成正确性证据。要有工具化的判据，也要有量化的优化顺序。",
+      why: "并发缺陷依赖调度时序，靠肉眼审查和压测撞概率都不可靠。",
+      cost: "TSan 会显著拖慢运行、需要专门的构建；性能优化必须先测量再动手。",
+      points: [
+        "ThreadSanitizer（-fsanitize=thread）：运行期检测数据竞争，优先上。",
+        "死锁现场：gdb thread apply all bt / pstack，看谁卡在 lock 上、等谁的锁。",
+        "perf：看上下文切换、cache-misses、锁争用，判断是不是伪共享。",
+        "Amdahl 定律：串行部分决定加速上限，加线程不一定更快。",
+      ],
+      trap: "跳过「先写对再测量」的步骤直接上无锁，通常得到「又慢又错」。",
+      code: `<span class="cm"># 竞争检测</span>
+g++ -fsanitize=thread -g app.cpp
+
+<span class="cm"># 死锁现场 / 锁争用</span>
+gdb -p $PID -ex <span class="str">"thread apply all bt"</span>
+perf stat -e context-switches,cache-misses ./app`,
+      card: null,
+    },
+  ];
+
+  const EDGES = [
+    { from: "concurrency", to: "hardware", kind: "mem",  label: "根因：缓存与重排" },
+    { from: "concurrency", to: "thread",   kind: "exec", label: "先要执行流" },
+    { from: "concurrency", to: "mutex",    kind: "sync", label: "再要正确性" },
+    { from: "concurrency", to: "task",     kind: "exec", label: "然后谈组织" },
+    { from: "concurrency", to: "verify",   kind: "risk", label: "最后要证明" },
+
+    { from: "hardware", to: "datarace",     kind: "risk", label: "共享即竞争" },
+    { from: "hardware", to: "memorder",     kind: "mem",  label: "所以要内存序" },
+    { from: "hardware", to: "falsesharing", kind: "mem",  label: "缓存行 64B" },
+
+    { from: "datarace", to: "mutex",  kind: "sync", label: "解法一：互斥" },
+    { from: "datarace", to: "atomic", kind: "mem",  label: "解法二：原子" },
+    { from: "datarace", to: "verify", kind: "risk", label: "TSan 检测" },
+
+    { from: "thread",  to: "jthread", kind: "exec", label: "RAII 修正" },
+    { from: "thread",  to: "task",    kind: "exec", label: "拿不到返回值" },
+    { from: "thread",  to: "pool",    kind: "exec", label: "一任务一线程太贵" },
+    { from: "thread",  to: "happens", kind: "mem",  label: "join 建立同步" },
+    { from: "jthread", to: "cancel",  kind: "exec", label: "stop_token" },
+
+    { from: "task",    to: "promise", kind: "exec", label: "三种生产者" },
+    { from: "task",    to: "coro",    kind: "exec", label: "异步编排" },
+    { from: "promise", to: "pool",    kind: "exec", label: "打包可投递" },
+    { from: "pool",    to: "cancel",  kind: "exec", label: "协作式取消" },
+    { from: "pool",    to: "strand",  kind: "exec", label: "并行但不保序" },
+    { from: "pool",    to: "prodcons",kind: "exec", label: "队列模型" },
+    { from: "pool",    to: "condvar", kind: "sync", label: "空闲则睡" },
+    { from: "pool",    to: "verify",  kind: "risk", label: "先量再改" },
+    { from: "strand",  to: "reactor", kind: "exec", label: "IO 回调保序" },
+    { from: "reactor", to: "coro",    kind: "exec", label: "等 IO 不占线程" },
+
+    { from: "mutex",     to: "locks",      kind: "sync", label: "漏解锁→RAII" },
+    { from: "mutex",     to: "condvar",    kind: "sync", label: "不能空转等条件" },
+    { from: "mutex",     to: "locktypes",  kind: "sync", label: "锁的家族" },
+    { from: "mutex",     to: "deadlock",   kind: "risk", label: "嵌套加锁" },
+    { from: "mutex",     to: "happens",    kind: "mem",  label: "unlock➜lock" },
+    { from: "mutex",     to: "threadsafe", kind: "sync", label: "对外的契约" },
+    { from: "locks",     to: "condvar",    kind: "sync", label: "必须 unique_lock" },
+    { from: "condvar",   to: "prodcons",   kind: "sync", label: "经典应用" },
+    { from: "locktypes", to: "syncprim",   kind: "sync", label: "许可计数" },
+    { from: "locktypes", to: "deadlock",   kind: "risk", label: "加锁顺序" },
+    { from: "locktypes", to: "starvation", kind: "risk", label: "写者饥饿" },
+    { from: "syncprim",  to: "prodcons",   kind: "sync", label: "限流额度" },
+
+    { from: "atomic",     to: "memorder",     kind: "mem", label: "原子≠可见" },
+    { from: "atomic",     to: "cas",          kind: "lf",  label: "原子读改写" },
+    { from: "atomic",     to: "falsesharing", kind: "mem", label: "缓存行争用" },
+    { from: "memorder",   to: "happens",      kind: "mem", label: "建立同步关系" },
+    { from: "memorder",   to: "fence",        kind: "mem", label: "独立屏障" },
+    { from: "happens",    to: "datarace",     kind: "risk", label: "无同步即 UB" },
+    { from: "threadsafe", to: "datarace",     kind: "risk", label: "契约缺失" },
+
+    { from: "cas",      to: "lockfree",     kind: "lf",  label: "循环重试" },
+    { from: "lockfree", to: "memorder",     kind: "mem", label: "顺序推理" },
+    { from: "lockfree", to: "spsc",         kind: "lf",  label: "单写单读免 CAS" },
+    { from: "lockfree", to: "aba",          kind: "risk", label: "值 A→B→A" },
+    { from: "lockfree", to: "reclaim",      kind: "lf",  label: "谁来 delete" },
+    { from: "aba",      to: "reclaim",      kind: "lf",  label: "延迟回收" },
+    { from: "spsc",     to: "falsesharing", kind: "mem", label: "alignas(64)" },
+
+    { from: "deadlock",     to: "starvation", kind: "risk", label: "退让→活锁" },
+    { from: "deadlock",     to: "verify",     kind: "risk", label: "线程栈定位" },
+    { from: "falsesharing", to: "verify",     kind: "risk", label: "perf 定位" },
+  ];
+
+  const PATHS = [
+    {
+      id: "spine",
+      title: "总主干（来龙去脉）",
+      desc: "硬件重排 → 数据竞争 → 互斥/原子 → 死锁/ABA → 任务与线程池 → 验证",
+      nodes: ["hardware", "datarace", "mutex", "condvar", "deadlock", "atomic", "memorder",
+              "cas", "lockfree", "aba", "reclaim", "task", "pool", "strand", "verify"],
+    },
+    {
+      id: "basic",
+      title: "基础主线",
+      desc: "线程 → 互斥 → RAII 锁 → 条件变量 → 生产者消费者 → 线程池",
+      nodes: ["concurrency", "thread", "mutex", "locks", "condvar", "prodcons", "pool"],
+    },
+    {
+      id: "async",
+      title: "任务与异步",
+      desc: "future 家族 → 线程池 → 取消 → Strand → 事件循环 → 协程",
+      nodes: ["task", "promise", "pool", "cancel", "strand", "reactor", "coro"],
+    },
+    {
+      id: "memory",
+      title: "内存模型",
+      desc: "硬件 → 原子 → memory_order → happens-before → fence / 伪共享",
+      nodes: ["hardware", "atomic", "memorder", "happens", "fence", "falsesharing"],
+    },
+    {
+      id: "lockfreepath",
+      title: "无锁进阶",
+      desc: "原子 → CAS → 无锁结构 → SPSC → ABA → 安全回收",
+      nodes: ["atomic", "cas", "lockfree", "spsc", "aba", "reclaim"],
+    },
+    {
+      id: "pitfall",
+      title: "风险与验证",
+      desc: "数据竞争 → 死锁 → 活锁饥饿 → 线程安全契约 → TSan / perf",
+      nodes: ["datarace", "deadlock", "starvation", "threadsafe", "verify"],
+    },
+  ];
+
+  const EDGE_COLOR = {
+    exec: "#2563eb",
+    sync: "#d97706",
+    mem: "#7c3aed",
+    lf: "#16a34a",
+    risk: "#e11d48",
+  };
+
+  // count layers + remember home positions
+  for (const n of NODES) {
+    const L = LAYERS.find(l => l.id === n.layer);
+    if (L) L.count++;
+    n.homeX = n.x;
+    n.homeY = n.y;
+  }
+
+  const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
+  let activeLayer = "all";
+  let selectedId = null;
+  let pathHighlight = null;
+  let searchQuery = "";
+
+  // camera / drag
+  const cam = { x: 0, y: 0, k: 1 };
+  let panning = false;
+  let nodeDrag = null; // { id, el, n, moved, originX, originY }
+  let last = { x: 0, y: 0 };
+
+  const stage = document.getElementById("stage");
+  const detail = document.getElementById("detail");
+  const detailBody = document.getElementById("detail-body");
+  const layerList = document.getElementById("layer-list");
+  const pathList = document.getElementById("path-list");
+  const layerCount = document.getElementById("layer-count");
+  const hintBar = document.getElementById("hint-bar");
+
+  // SVG setup
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("xmlns", svgNS);
+  const defs = document.createElementNS(svgNS, "defs");
+  defs.innerHTML = `
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <radialGradient id="hubGrad" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="55%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#115e59"/>
+    </radialGradient>
+  `;
+  svg.appendChild(defs);
+
+  const gWorld = document.createElementNS(svgNS, "g");
+  gWorld.setAttribute("id", "world");
+  const gEdges = document.createElementNS(svgNS, "g");
+  const gEdgeLabels = document.createElementNS(svgNS, "g");
+  const gNodes = document.createElementNS(svgNS, "g");
+  gWorld.append(gEdges, gEdgeLabels, gNodes);
+  svg.appendChild(gWorld);
+  stage.appendChild(svg);
+
+  function layerColor(id) {
+    return LAYERS.find(l => l.id === id)?.color || "#64748b";
+  }
+
+  function shortenEdge(x1, y1, x2, y2, r1, r2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len;
+    return {
+      x1: x1 + ux * (r1 + 2),
+      y1: y1 + uy * (r1 + 2),
+      x2: x2 - ux * (r2 + 6),
+      y2: y2 - uy * (r2 + 6),
+    };
+  }
+
+  function layoutEdge(e) {
+    const a = byId[e.from], b = byId[e.to];
+    const s = shortenEdge(a.x, a.y, b.x, b.y, a.r, b.r);
+    const midX = (s.x1 + s.x2) / 2;
+    const midY = (s.y1 + s.y2) / 2 - 18;
+    e.el.setAttribute("d", `M ${s.x1} ${s.y1} Q ${midX} ${midY} ${s.x2} ${s.y2}`);
+    if (e.labelText) {
+      e.labelText.setAttribute("x", midX);
+      e.labelText.setAttribute("y", midY - 2);
+    }
+  }
+
+  function layoutEdgesForNode(id) {
+    for (const e of edgeEls) {
+      if (e.from === id || e.to === id) layoutEdge(e);
+    }
+  }
+
+  function setNodePos(n, el, x, y) {
+    n.x = x;
+    n.y = y;
+    el.setAttribute("transform", `translate(${x},${y})`);
+    layoutEdgesForNode(n.id);
+  }
+
+  function clientToWorld(clientX, clientY) {
+    const rect = stage.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left - cam.x) / cam.k,
+      y: (clientY - rect.top - cam.y) / cam.k,
+    };
+  }
+
+  // build edges
+  const edgeEls = EDGES.map(e => {
+    const path = document.createElementNS(svgNS, "path");
+    path.setAttribute("class", "edge");
+    path.dataset.from = e.from;
+    path.dataset.to = e.to;
+    const c = EDGE_COLOR[e.kind] || "#94a3b8";
+    path.style.stroke = c;
+    path.style.setProperty("--edge-c", c);
+    gEdges.appendChild(path);
+
+    const labelG = document.createElementNS(svgNS, "g");
+    labelG.setAttribute("class", "edge-label-g");
+    labelG.dataset.from = e.from;
+    labelG.dataset.to = e.to;
+
+    const labelText = document.createElementNS(svgNS, "text");
+    labelText.setAttribute("text-anchor", "middle");
+    labelText.setAttribute("dominant-baseline", "middle");
+    labelText.textContent = e.label;
+    labelG.appendChild(labelText);
+    gEdgeLabels.appendChild(labelG);
+
+    const item = { ...e, el: path, labelEl: labelG, labelText, color: c };
+    layoutEdge(item);
+    return item;
+  });
+
+  function estimateTextWidth(str, fontSize) {
+    let w = 0;
+    for (const ch of str) {
+      w += /[\u3400-\u9fff]/.test(ch) ? fontSize : fontSize * 0.62;
+    }
+    return w;
+  }
+
+  function wrapTitle(title) {
+    if (title.length <= 4) return [title];
+    const mid = Math.ceil(title.length / 2);
+    return [title.slice(0, mid), title.slice(mid)];
+  }
+
+  function buildNodeLabel(n) {
+    const margin = 8;
+    const maxW = (n.r - margin) * 1.7;
+    let lines = n.lines ? [...n.lines] : [n.title];
+    let fontSize = n.hub ? 14 : 12;
+
+    for (let guard = 0; guard < 10; guard++) {
+      const widest = Math.max(...lines.map(l => estimateTextWidth(l, fontSize)));
+      if (widest <= maxW) break;
+      if (lines.length === 1 && n.title.length >= 4) {
+        lines = wrapTitle(n.title);
+        continue;
+      }
+      fontSize = Math.max(9, fontSize - 0.5);
+    }
+
+    const tag = (n.tag || n.en || "").toUpperCase();
+    let tagSize = n.hub ? 9 : 8;
+    while (estimateTextWidth(tag, tagSize) > maxW && tagSize > 6.5) tagSize -= 0.5;
+
+    const lineH = fontSize + 1.5;
+    const hasTag = !!tag;
+    const titleBlockH = (lines.length - 1) * lineH;
+    const blockH = titleBlockH + (hasTag ? tagSize + 5 : 0);
+    const titleTop = -blockH / 2 + fontSize * 0.35;
+
+    const titleEl = document.createElementNS(svgNS, "text");
+    titleEl.setAttribute("class", "node-title");
+    titleEl.setAttribute("text-anchor", "middle");
+    titleEl.setAttribute("font-size", String(fontSize));
+    if (n.hub) titleEl.style.fill = "#fff";
+
+    lines.forEach((line, i) => {
+      const ts = document.createElementNS(svgNS, "tspan");
+      ts.setAttribute("x", "0");
+      ts.setAttribute("y", String(titleTop + i * lineH));
+      ts.textContent = line;
+      titleEl.appendChild(ts);
+    });
+
+    const enEl = document.createElementNS(svgNS, "text");
+    enEl.setAttribute("class", "node-en");
+    enEl.setAttribute("text-anchor", "middle");
+    enEl.setAttribute("font-size", String(tagSize));
+    enEl.setAttribute("y", String(titleTop + titleBlockH + tagSize + 4));
+    enEl.textContent = tag;
+    if (n.hub) enEl.style.fill = "rgba(255,255,255,0.78)";
+
+    return { titleEl, enEl };
+  }
+
+  function tightenLabels(list) {
+    for (const { n, el } of list) {
+      const r = n.r;
+      const margin = 7;
+      const texts = [...el.querySelectorAll("text")];
+      for (let k = 0; k < 8; k++) {
+        let overflow = false;
+        for (const t of texts) {
+          const b = t.getBBox();
+          const corners = [
+            [b.x, b.y], [b.x + b.width, b.y],
+            [b.x, b.y + b.height], [b.x + b.width, b.y + b.height],
+          ];
+          if (corners.some(([x, y]) => Math.hypot(x, y) > r - margin)) {
+            overflow = true;
+            const fs = parseFloat(t.getAttribute("font-size") || "12") - 0.5;
+            if (fs < 7) continue;
+            t.setAttribute("font-size", String(fs));
+          }
+        }
+        if (!overflow) break;
+      }
+    }
+  }
+
+  // build nodes
+  const nodeEls = NODES.map(n => {
+    const g = document.createElementNS(svgNS, "g");
+    g.setAttribute("class", "node" + (n.hub ? " hub" : ""));
+    g.dataset.id = n.id;
+    g.style.setProperty("--node-c", layerColor(n.layer));
+    g.setAttribute("transform", `translate(${n.x},${n.y})`);
+
+    const glow = document.createElementNS(svgNS, "circle");
+    glow.setAttribute("class", "glow");
+    glow.setAttribute("r", n.r + 14);
+
+    const ring = document.createElementNS(svgNS, "circle");
+    ring.setAttribute("class", "ring");
+    ring.setAttribute("r", n.r + 7);
+
+    const body = document.createElementNS(svgNS, "circle");
+    body.setAttribute("class", "body");
+    body.setAttribute("r", n.r);
+    body.setAttribute("filter", "url(#soft)");
+    if (n.hub) {
+      body.setAttribute("fill", "url(#hubGrad)");
+      body.setAttribute("stroke", "#99f6e4");
+      body.setAttribute("stroke-width", "2");
+    } else {
+      body.setAttribute("fill", "#ffffff");
+      body.setAttribute("stroke", layerColor(n.layer));
+      body.setAttribute("stroke-width", "2.5");
+    }
+
+    const { titleEl, enEl } = buildNodeLabel(n);
+    g.append(glow, ring, body, titleEl, enEl);
+    gNodes.appendChild(g);
+
+    g.addEventListener("mouseenter", () => {
+      if (!nodeDrag) hoverNode(n.id, true);
+    });
+    g.addEventListener("mouseleave", () => {
+      if (!nodeDrag) hoverNode(n.id, false);
+    });
+    g.addEventListener("pointerdown", (ev) => {
+      if (ev.button != null && ev.button !== 0) return;
+      ev.stopPropagation();
+      ev.preventDefault();
+      // 先置顶再 capture，避免拖拽中重排丢掉指针捕获
+      gNodes.appendChild(g);
+      const world = clientToWorld(ev.clientX, ev.clientY);
+      nodeDrag = {
+        id: n.id,
+        el: g,
+        n,
+        moved: false,
+        grabDX: n.x - world.x,
+        grabDY: n.y - world.y,
+        startX: ev.clientX,
+        startY: ev.clientY,
+        pointerId: ev.pointerId,
+      };
+      panning = false;
+      g.classList.add("dragging");
+      g.classList.remove("quiet");
+      // 在 stage 上捕获，节点未选中时拖出 hit 区也不会断
+      stage.setPointerCapture(ev.pointerId);
+    });
+
+    return { n, el: g };
+  });
+
+  // 字体就绪后再实测收缩，避免首次测量不准
+  const runTighten = () => tightenLabels(nodeEls);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(runTighten);
+  } else {
+    requestAnimationFrame(runTighten);
+  }
+
+  function neighborsOf(id) {
+    const set = new Set([id]);
+    for (const e of EDGES) {
+      if (e.from === id) set.add(e.to);
+      if (e.to === id) set.add(e.from);
+    }
+    return set;
+  }
+
+  function visibleIds() {
+    let ids = new Set(NODES.map(n => n.id));
+    if (activeLayer !== "all") {
+      ids = new Set(NODES.filter(n => n.layer === activeLayer || n.layer === "hub").map(n => n.id));
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      ids = new Set([...ids].filter(id => {
+        const n = byId[id];
+        return n.title.toLowerCase().includes(q)
+          || n.en.toLowerCase().includes(q)
+          || n.summary.toLowerCase().includes(q);
+      }));
+    }
+    return ids;
+  }
+
+  function applyVisualState(hoverId = null) {
+    const vis = visibleIds();
+    const focus = selectedId || hoverId;
+    const hot = focus ? neighborsOf(focus) : null;
+    const pathSet = pathHighlight ? new Set(pathHighlight) : null;
+    const focusing = !!(focus || pathSet);
+
+    stage.classList.toggle("focus-on", focusing);
+    stage.classList.toggle("path-on", !!pathSet);
+
+    for (const { n, el } of nodeEls) {
+      const inVis = vis.has(n.id);
+      const inPath = !pathSet || pathSet.has(n.id);
+      const inHot = !hot || hot.has(n.id);
+      const isQuiet = !inVis || !inPath || (hot && !inHot);
+      const isRelated = !!(hot && hot.has(n.id) && n.id !== focus);
+      const isSelected = n.id === selectedId || (!selectedId && n.id === hoverId);
+
+      el.classList.toggle("quiet", isQuiet);
+      el.classList.toggle("related", isRelated && !isQuiet);
+      el.classList.toggle("selected", isSelected && inVis);
+      el.classList.toggle("on-path", !!(pathSet && pathSet.has(n.id)));
+      el.style.display = inVis ? "" : "none";
+    }
+
+    for (const e of edgeEls) {
+      const bothVis = vis.has(e.from) && vis.has(e.to);
+      const bothPath = !pathSet || (pathSet.has(e.from) && pathSet.has(e.to));
+      const isHot = !!(hot && bothVis && bothPath
+        && hot.has(e.from) && hot.has(e.to)
+        && (e.from === focus || e.to === focus));
+      const isQuiet = !bothVis || !bothPath || (hot && !isHot);
+      const onPath = !!(pathSet && pathSet.has(e.from) && pathSet.has(e.to));
+
+      e.el.classList.toggle("quiet", isQuiet);
+      e.el.classList.toggle("hot", isHot);
+      e.el.classList.toggle("flow", isHot);
+      e.el.classList.toggle("on-path", onPath && bothVis);
+      e.el.style.display = bothVis ? "" : "none";
+      // hot edges keep their semantic color; quiet edges already styled via CSS
+      if (isHot) e.el.style.stroke = e.color;
+      e.labelEl.classList.toggle("show", isHot);
+      e.labelEl.style.display = bothVis ? "" : "none";
+    }
+  }
+
+  function hoverNode(id, on) {
+    if (selectedId) return;
+    applyVisualState(on ? id : null);
+  }
+
+  function selectNode(id, { keepPath = false } = {}) {
+    selectedId = id;
+    if (!keepPath) pathHighlight = null;
+    renderDetail(byId[id]);
+    detail.classList.add("has-selection");
+    applyVisualState();
+    hintBar.style.opacity = "0";
+  }
+
+  function clearSelection() {
+    selectedId = null;
+    pathHighlight = null;
+    detail.classList.remove("has-selection");
+    applyVisualState();
+    hintBar.style.opacity = "1";
+    document.querySelectorAll(".path-chip").forEach(c => {
+      c.style.borderColor = "";
+    });
+  }
+
+  function cardLinks(card) {
+    const num = card.num;
+    let slug = card.slug;
+    if (!slug && card.href) {
+      slug = card.href.split("/")[0];
+    }
+    if (!slug) return null;
+    return {
+      card: `${slug}/${num}-cpp-interview-card.html`,
+      followup: `${slug}/${num}-cpp-interview-followup.html`,
+    };
+  }
+
+  function renderDetail(n) {
+    const color = layerColor(n.layer);
+    const layerName = LAYERS.find(l => l.id === n.layer)?.name || "";
+    const rels = EDGES.filter(e => e.from === n.id || e.to === n.id).map(e => {
+      const other = e.from === n.id ? e.to : e.from;
+      const outbound = e.from === n.id;
+      return { other: byId[other], label: e.label, outbound };
+    });
+
+    detailBody.innerHTML = `
+      <div class="detail-head">
+        <div class="detail-badge" style="background:${color}">${n.title.slice(0, 1)}</div>
+        <div>
+          <h2>${n.title}</h2>
+          <div class="en">${n.en}</div>
+        </div>
+      </div>
+      <div class="pill-row">
+        <span class="pill layer">${layerName}</span>
+        ${n.card ? `<span class="pill card">卡片 #${n.card.num}</span>` : ""}
+        <span class="pill">${rels.length} 条关联</span>
+      </div>
+      <p class="desc">${n.summary}</p>
+      ${(n.why || n.cost) ? `
+      <div class="section-title">因果链</div>
+      <div class="causal">
+        ${n.why ? `<div class="cell why"><span class="k">起因</span><p>${n.why}</p></div>` : ""}
+        ${n.cost ? `<div class="cell cost"><span class="k">新代价</span><p>${n.cost}</p></div>` : ""}
+      </div>` : ""}
+      <div class="section-title">面试要点</div>
+      <ul class="points">
+        ${n.points.map((p, i) => `<li data-n="${String(i + 1).padStart(2, "0")}">${p}</li>`).join("")}
+      </ul>
+      ${n.trap ? `<div class="trap"><span class="k">易错</span>${n.trap}</div>` : ""}
+      ${n.table ? `<div class="section-title">对照表</div>${n.table}` : ""}
+      <div class="section-title">代码示意</div>
+      <div class="code-window">
+        <div class="code-chrome">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+          <span class="code-file">${n.id.replace(/_/g, "-")}.cpp</span>
+        </div>
+        <div class="code">${n.code}</div>
+      </div>
+      <div class="section-title">关联节点</div>
+      <div class="rel-list">
+        ${rels.map(r => `
+          <button class="rel-chip" data-goto="${r.other.id}" type="button">
+            <span class="dir">${r.outbound ? "通向" : "来自"} · ${r.label}</span>
+            ${r.other.title}
+          </button>`).join("")}
+      </div>
+      ${(() => {
+        const links = n.card && cardLinks(n.card);
+        if (!links && !n.anchor) return "";
+        return `
+        <div class="section-title">${links ? `延伸阅读 · 卡片 #${n.card.num}` : "延伸阅读"}</div>
+        <div class="card-links">
+          ${links ? `
+          <a class="link-card card-ans" href="${links.card}" target="_blank" rel="noopener">
+            <span class="link-kicker">Answer</span>
+            参考回答
+            <small>card · 面试话术</small>
+          </a>
+          <a class="link-card card-fu" href="${links.followup}" target="_blank" rel="noopener">
+            <span class="link-kicker">Follow-up</span>
+            追问清单
+            <small>followup · 深挖题</small>
+          </a>` : ""}
+          ${n.anchor ? `
+          <a class="link-card card-sheet" href="concurrency.html${n.anchor}" target="_blank" rel="noopener">
+            <span class="link-kicker">Cheatsheet</span>
+            来龙去脉 · 对应章节
+            <small>起因 → 问题 → 解法 → 新代价</small>
+          </a>` : ""}
+        </div>`;
+      })()}
+    `;
+
+    detailBody.querySelectorAll("[data-goto]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.goto;
+        const keepPath = !!(pathHighlight && pathHighlight.includes(id));
+        selectNode(id, { keepPath });
+      });
+    });
+  }
+
+  // layers UI
+  function renderLayers() {
+    layerList.innerHTML = "";
+    const allBtn = document.createElement("button");
+    allBtn.className = "layer-btn" + (activeLayer === "all" ? " active" : "");
+    allBtn.type = "button";
+    allBtn.innerHTML = `<span class="swatch" style="background:#0f172a;--swatch-ring:rgba(15,23,42,.12)"></span>全部显示<span class="meta">${NODES.length}</span>`;
+    allBtn.addEventListener("click", () => setLayer("all"));
+    layerList.appendChild(allBtn);
+
+    for (const L of LAYERS) {
+      const btn = document.createElement("button");
+      btn.className = "layer-btn" + (activeLayer === L.id ? " active" : "");
+      btn.type = "button";
+      btn.innerHTML = `<span class="swatch" style="background:${L.color};--swatch-ring:${L.ring}"></span>${L.name}<span class="meta">${L.count}</span>`;
+      btn.addEventListener("click", () => setLayer(L.id));
+      layerList.appendChild(btn);
+    }
+  }
+
+  function setLayer(id) {
+    activeLayer = id;
+    pathHighlight = null;
+    layerCount.textContent = id === "all" ? "全部" : LAYERS.find(l => l.id === id).name;
+    renderLayers();
+    applyVisualState();
+  }
+
+  // paths UI
+  PATHS.forEach((p, i) => {
+    const btn = document.createElement("button");
+    btn.className = "path-chip";
+    btn.type = "button";
+    btn.innerHTML = `<span class="num">${i + 1}</span><div><strong>${p.title}</strong><span>${p.desc}</span></div>`;
+    btn.addEventListener("click", () => {
+      pathHighlight = p.nodes;
+      document.querySelectorAll(".path-chip").forEach(c => { c.style.borderColor = ""; });
+      btn.style.borderColor = "#0d9488";
+      selectNode(p.nodes[0], { keepPath: true });
+    });
+    pathList.appendChild(btn);
+  });
+
+  // camera
+  function applyCam() {
+    gWorld.setAttribute("transform", `translate(${cam.x},${cam.y}) scale(${cam.k})`);
+  }
+
+  function fitView() {
+    const pad = 80;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const n of NODES) {
+      minX = Math.min(minX, n.x - n.r);
+      minY = Math.min(minY, n.y - n.r);
+      maxX = Math.max(maxX, n.x + n.r);
+      maxY = Math.max(maxY, n.y + n.r);
+    }
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    const bw = maxX - minX + pad * 2;
+    const bh = maxY - minY + pad * 2;
+    const k = Math.min(w / bw, h / bh, 1.35);
+    cam.k = k;
+    cam.x = (w - bw * k) / 2 - (minX - pad) * k;
+    cam.y = (h - bh * k) / 2 - (minY - pad) * k;
+    applyCam();
+  }
+
+  function resetLayout() {
+    for (const { n, el } of nodeEls) {
+      setNodePos(n, el, n.homeX, n.homeY);
+    }
+    fitView();
+  }
+
+  function endNodeDrag() {
+    if (!nodeDrag) return;
+    const { el, n, pointerId } = nodeDrag;
+    el.classList.remove("dragging");
+    try { stage.releasePointerCapture(pointerId); } catch (_) {}
+    nodeDrag = null;
+    const keepPath = !!(pathHighlight && pathHighlight.includes(n.id));
+    selectNode(n.id, { keepPath });
+  }
+
+  stage.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".node") || nodeDrag) return;
+    panning = true;
+    stage.classList.add("dragging");
+    last = { x: e.clientX, y: e.clientY };
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (nodeDrag) {
+      e.preventDefault();
+      const dx = e.clientX - nodeDrag.startX;
+      const dy = e.clientY - nodeDrag.startY;
+      if (!nodeDrag.moved && Math.hypot(dx, dy) > 4) nodeDrag.moved = true;
+      if (!nodeDrag.moved) return;
+      const world = clientToWorld(e.clientX, e.clientY);
+      setNodePos(
+        nodeDrag.n,
+        nodeDrag.el,
+        world.x + nodeDrag.grabDX,
+        world.y + nodeDrag.grabDY
+      );
+      return;
+    }
+    if (!panning) return;
+    cam.x += e.clientX - last.x;
+    cam.y += e.clientY - last.y;
+    last = { x: e.clientX, y: e.clientY };
+    applyCam();
+  });
+  stage.addEventListener("pointerup", (e) => {
+    if (nodeDrag) {
+      endNodeDrag();
+      return;
+    }
+    panning = false;
+    stage.classList.remove("dragging");
+    try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+  });
+  stage.addEventListener("pointercancel", (e) => {
+    if (nodeDrag) {
+      endNodeDrag();
+      return;
+    }
+    panning = false;
+    stage.classList.remove("dragging");
+    try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+  });
+  stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const rect = stage.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const prev = cam.k;
+    const next = Math.min(2.2, Math.max(0.45, cam.k * (e.deltaY < 0 ? 1.08 : 0.92)));
+    const wx = (mx - cam.x) / prev;
+    const wy = (my - cam.y) / prev;
+    cam.k = next;
+    cam.x = mx - wx * next;
+    cam.y = my - wy * next;
+    applyCam();
+  }, { passive: false });
+
+  document.getElementById("btn-fit").addEventListener("click", fitView);
+  document.getElementById("btn-reset").addEventListener("click", resetLayout);
+  document.getElementById("btn-clear").addEventListener("click", clearSelection);
+  document.getElementById("btn-tour").addEventListener("click", () => {
+    pathList.querySelector(".path-chip")?.click();
+  });
+  document.getElementById("search").addEventListener("input", (e) => {
+    searchQuery = e.target.value.trim();
+    applyVisualState();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") clearSelection();
+  });
+
+  // 右侧栏拖拽改宽
+  (function setupDetailResize() {
+    const appEl = document.querySelector(".app");
+    const handle = document.getElementById("detail-resizer");
+    if (!appEl || !handle) return;
+
+    const MIN_W = 280;
+    const MAX_W = 720;
+    const KEY = "kg-detail-w";
+
+    const saved = Number(localStorage.getItem(KEY));
+    if (Number.isFinite(saved) && saved >= MIN_W && saved <= MAX_W) {
+      appEl.style.setProperty("--detail-w", `${saved}px`);
+    }
+
+    let resizing = false;
+
+    const applyWidth = (clientX) => {
+      const rect = appEl.getBoundingClientRect();
+      let w = rect.right - clientX;
+      w = Math.min(MAX_W, Math.max(MIN_W, w));
+      appEl.style.setProperty("--detail-w", `${w}px`);
+      return w;
+    };
+
+    handle.addEventListener("pointerdown", (e) => {
+      if (window.matchMedia("(max-width: 1100px)").matches) return;
+      e.preventDefault();
+      resizing = true;
+      handle.classList.add("is-dragging");
+      document.body.classList.add("is-resizing-detail");
+      handle.setPointerCapture(e.pointerId);
+      applyWidth(e.clientX);
+    });
+
+    handle.addEventListener("pointermove", (e) => {
+      if (!resizing) return;
+      applyWidth(e.clientX);
+    });
+
+    const endResize = (e) => {
+      if (!resizing) return;
+      resizing = false;
+      handle.classList.remove("is-dragging");
+      document.body.classList.remove("is-resizing-detail");
+      const w = applyWidth(e.clientX);
+      localStorage.setItem(KEY, String(Math.round(w)));
+      fitView();
+    };
+
+    handle.addEventListener("pointerup", endResize);
+    handle.addEventListener("pointercancel", endResize);
+
+    handle.addEventListener("dblclick", () => {
+      appEl.style.setProperty("--detail-w", "360px");
+      localStorage.setItem(KEY, "360");
+      fitView();
+    });
+  })();
+
+  window.addEventListener("resize", () => fitView());
+
+  renderLayers();
+  applyVisualState();
+  requestAnimationFrame(() => {
+    fitView();
+    // gentle entrance: select hub after brief delay
+    setTimeout(() => selectNode("concurrency"), 400);
+  });
+})();
+</script>
+</body>
+</html>

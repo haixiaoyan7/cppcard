@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>口述稿 · 13 创建与生命周期</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --theme: #059669; --theme-2: #047857; --theme-soft: #ecfdf5;
+    --theme-deep: #064e3b; --theme-rgb: 5,150,105; --theme2-rgb: 4,120,87;
+    --ink: #243041; --muted: #667385;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f3f5f9; color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 96px 16px 48px;
+  }
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 12px 16px; background: rgba(255,255,255,.96);
+    border-bottom: 1px solid #e4e8ef;
+  }
+  .btn {
+    border: none; cursor: pointer; background: var(--theme); color: #fff;
+    font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 8px;
+  }
+  .toolbar span, .toolbar a { color: var(--muted); font-size: 12px; text-decoration: none; }
+  .pages { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame { width: 720px; height: 1280px; background: #f0f3f8; padding: 18px; }
+  .panel {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: #fff; border: 1px solid #e2e8f4; border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(74,127,232,.07);
+    display: flex; flex-direction: column;
+  }
+  .panel::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px;
+    background: linear-gradient(180deg, var(--theme), var(--theme-2));
+  }
+  .cover { padding: 52px 52px 40px 60px; color: var(--ink); }
+  .cover .wm {
+    position: absolute; right: -20px; bottom: 40px;
+    font-size: 280px; line-height: .8; font-weight: 900; letter-spacing: -.06em;
+    color: transparent; -webkit-text-stroke: 2px rgba(var(--theme-rgb), .08);
+  }
+  .top, .hero, .kicker, h1, .rule, .hook, .foot, .beats, .bridge { position: relative; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; letter-spacing: 1px; }
+  .no { color: var(--theme); font-size: 28px; font-weight: 900; }
+  .kicker {
+    align-self: flex-start; margin-top: 54px;
+    color: var(--theme-deep); background: var(--theme-soft);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; font-weight: 800; letter-spacing: 2px;
+  }
+  .hero { display: flex; align-items: flex-end; gap: 16px; margin-top: 28px; }
+  .big {
+    font-size: 118px; line-height: .82; font-weight: 900; letter-spacing: -.04em;
+    background: linear-gradient(135deg, var(--theme), var(--theme-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .act { padding-bottom: 12px; border-left: 3px solid var(--theme-2); padding-left: 14px; font-size: 20px; font-weight: 800; }
+  .cover h1 { margin-top: 34px; max-width: 560px; font-size: 58px; line-height: 1.18; }
+  .rule { width: 116px; height: 4px; margin: 24px 0; border-radius: 2px; background: linear-gradient(90deg, var(--theme), var(--theme-2)); }
+  .hook { max-width: 540px; color: #4f5d6f; font-size: 22px; line-height: 1.75; }
+  .order {
+    position: relative; margin-top: 26px; max-width: 580px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  }
+  .order span {
+    padding: 5px 10px; border-radius: 7px; background: var(--theme-soft);
+    color: var(--theme-deep); font-size: 15px; font-weight: 800;
+  }
+  .order i { color: var(--muted); font-style: normal; font-size: 14px; }
+  .foot {
+    margin-top: auto; padding-top: 22px; border-top: 1px solid #e8ecf2;
+    display: flex; justify-content: space-between; color: var(--muted); font-size: 13px;
+  }
+  .script { padding: 34px 36px 28px 46px; }
+  .script .no { font-size: 22px; }
+  .script .no small { color: var(--muted); font-size: 14px; font-weight: 700; }
+  .script h1 { margin: 22px 0 18px; font-size: 32px; line-height: 1.25; }
+  .bridge { margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: var(--theme-soft); }
+  .bridge.out { margin-top: 16px; margin-bottom: 0; background: #fff8ee; }
+  .bridge .tag { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .bridge b { color: var(--theme-deep); font-size: 13px; letter-spacing: 1px; }
+  .bridge.out b { color: #9a6230; }
+  .bridge .tag span { color: var(--muted); font-size: 11px; letter-spacing: 1px; }
+  .bridge p { color: #3e4b5e; font-size: 17px; line-height: 1.7; }
+  .beats { display: flex; flex-direction: column; gap: 16px; }
+  .beat {
+    display: grid; grid-template-columns: 58px 1fr; gap: 14px;
+    padding: 16px 16px 16px 12px; border: 1px solid #e7edf5; border-radius: 12px;
+    background: #f9fbfe;
+  }
+  .side { display: flex; flex-direction: column; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 28px; border-radius: 7px; background: var(--theme); color: #fff;
+    font-size: 13px; font-weight: 800;
+  }
+  .chip.ghost { background: #e7edf5; color: #9aa6b5; }
+  .beat p { color: #2d3948; font-size: 18px; line-height: 1.75; }
+  code {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: .92em; color: var(--theme-deep); background: var(--theme-soft);
+    padding: 0 5px; border-radius: 4px;
+  }
+  .script .foot b { color: var(--theme); font-size: 16px; }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportAll" class="btn">导出本幕口述稿 (PNG)</button>
+    <span>第 13 幕 · 720 × 1280</span>
+    <a href="index-oral.html">← 返回口述稿目录</a>
+  </div>
+  <div class="pages" id="pages"><div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-13-00"><div class="panel cover"><div class="wm">13</div><div class="top"><div><div class="brand">C++ ORAL SCRIPT</div><div class="sub">口述稿 · 可以直接照着讲</div></div><div class="no">ARCHITECTURE</div></div><div class="kicker">13</div><div class="hero"><div class="big">13</div><div class="act">ACT 13</div></div><h1>创建与生命周期</h1><div class="rule"></div><p class="hook">现在要真正做一个日志组件。设计的第一个问题，和幕 1 一样：谁来创建它？要创建几个？</p><div class="order"><span>064</span><i>→</i><span>063</span></div><div class="foot"><span>2 段口述 · 2 张原卡 · 共 3 页</span><span>终章 · 架构的落地</span></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-13-01"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">终章 · 架构的落地</div></div><div class="no">1 <small>/ 2</small></div></div><h1>创建与生命周期</h1><section class="bridge in"><div class="tag"><b>承上</b><span>FROM LAST ACT</span></div><p>现在要真正做一个日志组件。设计的第一个问题，和幕 1 一样：谁来创建它？要创建几个？</p></section><div class="beats"><article class="beat"><div class="side"><span class="chip">064</span></div><p>谁来创建：工厂模式。调用方不应该关心具体创建的是文件日志、网络日志还是控制台日志，只需要说&quot;给我一个 logger&quot;。工厂返回 <code>unique_ptr&lt;Logger&gt;</code>，所有权交给调用方，这是幕 1 的所有权语义加幕 2 的多态。简单工厂用一个函数加 switch；工厂方法把创建延迟到子类；抽象工厂负责创建一整族相关的对象。工程上常用一张注册表，把名字映射到创建函数，也就是 <code>std::function</code>，新增类型时不用修改工厂代码。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>2 / 3</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-13-02"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">终章 · 架构的落地</div></div><div class="no">2 <small>/ 2</small></div></div><h1>创建与生命周期</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">063</span></div><p>要几个：日志系统全局通常只要一个，这就是单例。最推荐的写法是 Meyers 单例：函数里一个 <code>static</code> 局部变量。幕 2 讲过，C++11 起局部静态变量的初始化是线程安全的，所以一行代码就同时解决了延迟初始化和线程安全。老式的双重检查锁定，如果不用幕 7 的原子操作和正确的内存序，是有 bug 的。还要注意析构顺序：程序退出时，别的全局对象可能在日志单例析构之后还想写日志。</p></article></div><section class="bridge out"><div class="tag"><b>启下</b><span>INTO NEXT ACT</span></div><p>logger 造好了。它要通知外界，比如出错时告警；它自己的实现也会经常改。怎么做到解耦？</p></section><div class="foot"><span>卡号不用念出来</span><b>3 / 3</b></div></div></div></div></div></div>
+<script>
+var W = 720, H = 1280;
+var viewports = Array.prototype.slice.call(document.querySelectorAll('.viewport'));
+function fit() {
+  var scale = Math.min(1, (window.innerWidth - 32) / W, (window.innerHeight - 144) / H);
+  viewports.forEach(function (v) {
+    v.querySelector('.stage').style.transform = 'scale(' + scale + ')';
+    v.style.width = (W * scale) + 'px';
+    v.style.height = (H * scale) + 'px';
+  });
+}
+window.addEventListener('resize', fit); fit();
+function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); }); }
+document.getElementById('exportAll').addEventListener('click', async function () {
+  if (typeof html2canvas !== 'function') { alert('html2canvas 尚未加载。'); return; }
+  var btn = this, label = btn.textContent; btn.disabled = true;
+  viewports.forEach(function (v) { v.querySelector('.stage').style.transform = 'none'; v.style.width = W + 'px'; v.style.height = H + 'px'; });
+  await nextFrame();
+  try {
+    for (var i = 0; i < viewports.length; i++) {
+      btn.textContent = '导出中 ' + (i + 1) + '/' + viewports.length + '…';
+      var frame = viewports[i].querySelector('.frame');
+      var canvas = await html2canvas(frame, { scale: 2, backgroundColor: '#f0f3f8', useCORS: true, logging: false, width: W, height: H, windowWidth: W, windowHeight: H });
+      var a = document.createElement('a'); a.download = frame.dataset.name + '.png'; a.href = canvas.toDataURL('image/png'); a.click();
+      await new Promise(function (r) { setTimeout(r, 300); });
+    }
+  } catch (e) { alert('导出失败：' + e.message); }
+  finally { btn.disabled = false; btn.textContent = label; fit(); }
+});
+</script>
+</body>
+</html>

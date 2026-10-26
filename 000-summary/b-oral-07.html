@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>口述稿 · 07 被并发访问：共享数据与异步</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --theme: #3b5bdb; --theme-2: #2746b0; --theme-soft: #eef1fb;
+    --theme-deep: #1e3266; --theme-rgb: 59,91,219; --theme2-rgb: 39,70,176;
+    --ink: #243041; --muted: #667385;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f3f5f9; color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 96px 16px 48px;
+  }
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 12px 16px; background: rgba(255,255,255,.96);
+    border-bottom: 1px solid #e4e8ef;
+  }
+  .btn {
+    border: none; cursor: pointer; background: var(--theme); color: #fff;
+    font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 8px;
+  }
+  .toolbar span, .toolbar a { color: var(--muted); font-size: 12px; text-decoration: none; }
+  .pages { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame { width: 720px; height: 1280px; background: #f0f3f8; padding: 18px; }
+  .panel {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: #fff; border: 1px solid #e2e8f4; border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(74,127,232,.07);
+    display: flex; flex-direction: column;
+  }
+  .panel::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px;
+    background: linear-gradient(180deg, var(--theme), var(--theme-2));
+  }
+  .cover { padding: 52px 52px 40px 60px; color: var(--ink); }
+  .cover .wm {
+    position: absolute; right: -20px; bottom: 40px;
+    font-size: 280px; line-height: .8; font-weight: 900; letter-spacing: -.06em;
+    color: transparent; -webkit-text-stroke: 2px rgba(var(--theme-rgb), .08);
+  }
+  .top, .hero, .kicker, h1, .rule, .hook, .foot, .beats, .bridge { position: relative; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; letter-spacing: 1px; }
+  .no { color: var(--theme); font-size: 28px; font-weight: 900; }
+  .kicker {
+    align-self: flex-start; margin-top: 54px;
+    color: var(--theme-deep); background: var(--theme-soft);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; font-weight: 800; letter-spacing: 2px;
+  }
+  .hero { display: flex; align-items: flex-end; gap: 16px; margin-top: 28px; }
+  .big {
+    font-size: 118px; line-height: .82; font-weight: 900; letter-spacing: -.04em;
+    background: linear-gradient(135deg, var(--theme), var(--theme-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .act { padding-bottom: 12px; border-left: 3px solid var(--theme-2); padding-left: 14px; font-size: 20px; font-weight: 800; }
+  .cover h1 { margin-top: 34px; max-width: 560px; font-size: 58px; line-height: 1.18; }
+  .rule { width: 116px; height: 4px; margin: 24px 0; border-radius: 2px; background: linear-gradient(90deg, var(--theme), var(--theme-2)); }
+  .hook { max-width: 540px; color: #4f5d6f; font-size: 22px; line-height: 1.75; }
+  .order {
+    position: relative; margin-top: 26px; max-width: 580px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  }
+  .order span {
+    padding: 5px 10px; border-radius: 7px; background: var(--theme-soft);
+    color: var(--theme-deep); font-size: 15px; font-weight: 800;
+  }
+  .order i { color: var(--muted); font-style: normal; font-size: 14px; }
+  .foot {
+    margin-top: auto; padding-top: 22px; border-top: 1px solid #e8ecf2;
+    display: flex; justify-content: space-between; color: var(--muted); font-size: 13px;
+  }
+  .script { padding: 34px 36px 28px 46px; }
+  .script .no { font-size: 22px; }
+  .script .no small { color: var(--muted); font-size: 14px; font-weight: 700; }
+  .script h1 { margin: 22px 0 18px; font-size: 32px; line-height: 1.25; }
+  .bridge { margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: var(--theme-soft); }
+  .bridge.out { margin-top: 16px; margin-bottom: 0; background: #fff8ee; }
+  .bridge .tag { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .bridge b { color: var(--theme-deep); font-size: 13px; letter-spacing: 1px; }
+  .bridge.out b { color: #9a6230; }
+  .bridge .tag span { color: var(--muted); font-size: 11px; letter-spacing: 1px; }
+  .bridge p { color: #3e4b5e; font-size: 17px; line-height: 1.7; }
+  .beats { display: flex; flex-direction: column; gap: 16px; }
+  .beat {
+    display: grid; grid-template-columns: 58px 1fr; gap: 14px;
+    padding: 16px 16px 16px 12px; border: 1px solid #e7edf5; border-radius: 12px;
+    background: #f9fbfe;
+  }
+  .side { display: flex; flex-direction: column; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 28px; border-radius: 7px; background: var(--theme); color: #fff;
+    font-size: 13px; font-weight: 800;
+  }
+  .chip.ghost { background: #e7edf5; color: #9aa6b5; }
+  .beat p { color: #2d3948; font-size: 18px; line-height: 1.75; }
+  code {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: .92em; color: var(--theme-deep); background: var(--theme-soft);
+    padding: 0 5px; border-radius: 4px;
+  }
+  .script .foot b { color: var(--theme); font-size: 16px; }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportAll" class="btn">导出本幕口述稿 (PNG)</button>
+    <span>第 07 幕 · 720 × 1280</span>
+    <a href="index-oral.html">← 返回口述稿目录</a>
+  </div>
+  <div class="pages" id="pages"><div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-07-00"><div class="panel cover"><div class="wm">07</div><div class="top"><div><div class="brand">C++ ORAL SCRIPT</div><div class="sub">口述稿 · 可以直接照着讲</div></div><div class="no">OBJECT LIFE</div></div><div class="kicker">07</div><div class="hero"><div class="big">07</div><div class="act">ACT 07</div></div><h1>被并发访问：共享数据与异步</h1><div class="rule"></div><p class="hook">前面的一切都默认只有一个线程。现在业务线程生产 <code>LogMessage</code>，后台线程消费，它们共享一个队列。</p><div class="order"><span>045</span><i>→</i><span>046</span><i>→</i><span>047</span><i>→</i><span>052</span><i>→</i><span>053</span><i>→</i><span>049</span><i>→</i><span>050</span><i>→</i><span>051</span><i>→</i><span>048</span><i>→</i><span>031</span></div><div class="foot"><span>10 段口述 · 10 张原卡 · 共 6 页</span><span>篇一 · 一个对象的一生</span></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-07-01"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">1 <small>/ 5</small></div></div><h1>被并发访问：共享数据与异步</h1><section class="bridge in"><div class="tag"><b>承上</b><span>FROM LAST ACT</span></div><p>前面的一切都默认只有一个线程。现在业务线程生产 <code>LogMessage</code>，后台线程消费，它们共享一个队列。</p></section><div class="beats"><article class="beat"><div class="side"><span class="chip">045</span></div><p>先起线程。<code>std::thread</code> 析构之前必须 <code>join</code> 或 <code>detach</code>，否则程序直接 <code>terminate</code>。<code>detach</code> 之后，线程如果还引用着局部变量就会悬垂。C++20 的 <code>jthread</code> 析构时会自动 <code>join</code>，本质上就是 RAII，又回到了幕 1。</p></article><article class="beat"><div class="side"><span class="chip">046</span></div><p>两个线程同时改队列，会产生数据竞争，这是未定义行为，所以要加锁。<code>mutex</code> 本身不能保证异常时解锁，所以用 RAII 包装：<code>lock_guard</code> 最简单；<code>unique_lock</code> 更灵活，可以延迟加锁、提前解锁、可以移动；同时锁多个 mutex 用 <code>scoped_lock</code>。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>2 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-07-02"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">2 <small>/ 5</small></div></div><h1>被并发访问：共享数据与异步</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">047</span></div><p>队列空的时候，消费者不能一直空转，要睡下等通知，这就是条件变量。<code>wait</code> 必须配合 <code>unique_lock</code>，因为它要在睡眠时释放锁、醒来时重新加锁。它可能在没人通知时醒来，这叫虚假唤醒，所以一定要在循环里检查条件，或者用带谓词的 <code>wait</code>。</p></article><article class="beat"><div class="side"><span class="chip">052</span></div><p>锁有不同的种类，要选型：读多写少用读写锁 <code>shared_mutex</code>；临界区极短、不希望线程睡眠切换，用自旋锁；控制&quot;最多 N 个同时访问&quot;用信号量，C++20 有 <code>counting_semaphore</code>。</p></article><article class="beat"><div class="side"><span class="chip">053</span></div><p>锁多了就会死锁。四个必要条件：互斥、持有并等待、不可抢占、循环等待，破坏任意一个就行。工程上最常用的是固定加锁顺序，或者用 <code>scoped_lock</code> 一次锁住多个，再就是用 <code>try_lock</code> 加超时。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>3 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-07-03"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">3 <small>/ 5</small></div></div><h1>被并发访问：共享数据与异步</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">049</span></div><p>锁终归有代价。简单的计数器可以用原子操作。原子操作保证不会被撕裂，内存序决定周围的普通读写能不能被重排：<code>relaxed</code> 只保证原子性；<code>release</code> 和 <code>acquire</code> 配对，建立&quot;写之前的一切，对读之后可见&quot;的关系；<code>seq_cst</code> 最严格，也是默认值。</p></article><article class="beat"><div class="side"><span class="chip">050</span></div><p>再往前一步是无锁编程，核心是 CAS：比较一下，没被别人改过就写入，否则重试。难点在于 ABA 问题，以及节点被别的线程还在读时怎么安全释放，这需要 hazard pointer 或者基于 epoch 的回收。所以无锁不一定更快，也不一定更简单。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>4 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-07-04"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">4 <small>/ 5</small></div></div><h1>被并发访问：共享数据与异步</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">051</span></div><p>把这些组合成工程组件，就是线程池：一个任务队列，加一个锁、一个条件变量，加一组工作线程。线程数量上，CPU 密集型大约等于核数，IO 密集型可以更多。关闭时要让线程把剩余任务处理完、全部 <code>join</code>，否则又会遇到本幕开头说的 <code>terminate</code>。</p></article><article class="beat"><div class="side"><span class="chip">048</span></div><p>提交了任务，结果怎么拿回来？用 <code>future</code>。<code>promise</code> 和 <code>future</code> 是一条单次通道；<code>packaged_task</code> 把一个函数包装成能产出 <code>future</code> 的任务，线程池就靠它返回结果；<code>std::async</code> 是最简便的方式，但注意它返回的 <code>future</code> 在析构时会阻塞等待。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>5 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-07-05"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">5 <small>/ 5</small></div></div><h1>被并发访问：共享数据与异步</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">031</span></div><p>最后，还有一种不占用线程的等待：协程。C++20 的协程是无栈的，<code>co_await</code> 时把状态存进堆上的协程帧，然后让出执行权，线程可以去做别的事，等 IO 完成再恢复。它适合大量 IO 等待的场景，和线程不是一回事：线程是 OS 调度的，协程是用户态自己调度的。</p></article></div><section class="bridge out"><div class="tag"><b>启下</b><span>INTO NEXT ACT</span></div><p>对象经历了诞生、多态、移动、进容器、被泛化、被并发访问。最后一步是死亡，但前面几乎每一幕，我们都在讲它怎么死。那还剩下什么？剩下的是&quot;死得不正常&quot;。</p></section><div class="foot"><span>卡号不用念出来</span><b>6 / 6</b></div></div></div></div></div></div>
+<script>
+var W = 720, H = 1280;
+var viewports = Array.prototype.slice.call(document.querySelectorAll('.viewport'));
+function fit() {
+  var scale = Math.min(1, (window.innerWidth - 32) / W, (window.innerHeight - 144) / H);
+  viewports.forEach(function (v) {
+    v.querySelector('.stage').style.transform = 'scale(' + scale + ')';
+    v.style.width = (W * scale) + 'px';
+    v.style.height = (H * scale) + 'px';
+  });
+}
+window.addEventListener('resize', fit); fit();
+function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); }); }
+document.getElementById('exportAll').addEventListener('click', async function () {
+  if (typeof html2canvas !== 'function') { alert('html2canvas 尚未加载。'); return; }
+  var btn = this, label = btn.textContent; btn.disabled = true;
+  viewports.forEach(function (v) { v.querySelector('.stage').style.transform = 'none'; v.style.width = W + 'px'; v.style.height = H + 'px'; });
+  await nextFrame();
+  try {
+    for (var i = 0; i < viewports.length; i++) {
+      btn.textContent = '导出中 ' + (i + 1) + '/' + viewports.length + '…';
+      var frame = viewports[i].querySelector('.frame');
+      var canvas = await html2canvas(frame, { scale: 2, backgroundColor: '#f0f3f8', useCORS: true, logging: false, width: W, height: H, windowWidth: W, windowHeight: H });
+      var a = document.createElement('a'); a.download = frame.dataset.name + '.png'; a.href = canvas.toDataURL('image/png'); a.click();
+      await new Promise(function (r) { setTimeout(r, 300); });
+    }
+  } catch (e) { alert('导出失败：' + e.message); }
+  finally { btn.disabled = false; btn.textContent = label; fit(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ 面试口袋卡片 #049 · 9:16</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --blue: #3d5afe;
+    --blue-deep: #3949ab;
+    --ink: #1f232c;
+    --ink-soft: #4a4f5a;
+    --gray: #9aa0ac;
+    --gray-light: #c4c9d4;
+    --panel-bg: #ffffff;
+    --item-bg: #f6f7f9;
+    --summary-bg: #eef1fa;
+    --line: #e8eaef;
+    --page-bg: #e9ebf0;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB",
+      "Helvetica Neue", Arial, sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 88px 16px 32px;
+  }
+
+  /* ---------- Toolbar (excluded from export) ---------- */
+  .toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: rgba(24, 28, 44, 0.92);
+    backdrop-filter: blur(6px);
+    color: #fff;
+  }
+  .btn {
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(135deg, #4c6ef5, #3b5bdb);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0 6px 16px rgba(61, 90, 254, 0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(61, 90, 254, 0.5); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+  .hint { font-size: 12px; color: #b9c0d6; letter-spacing: 0.5px; }
+
+  /* ---------- 9:16 canvas ---------- */
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame {
+    width: 720px;
+    height: 1280px;
+    background: var(--page-bg);
+    padding: 20px;
+  }
+  .panel {
+    width: 100%;
+    height: 100%;
+    background: var(--panel-bg);
+    border: 1px solid #e2e5ec;
+    border-radius: 22px;
+    padding: 34px 40px 26px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 18px 44px rgba(40, 55, 100, 0.10);
+  }
+
+  /* ---------- Header ---------- */
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+  }
+  .logo svg { width: 100%; height: 100%; display: block; }
+  .brand-title { flex: 1; }
+  .brand-title .en {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--ink);
+  }
+  .brand-title .cn {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--gray);
+    letter-spacing: 3px;
+  }
+  .brand-no { text-align: right; }
+  .brand-no .num {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--blue-deep);
+    letter-spacing: 1px;
+  }
+  .brand-no .tag {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--gray);
+    letter-spacing: 2px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--line);
+    margin: 18px 0;
+  }
+
+  /* ---------- Section title ---------- */
+  .section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section .bar {
+    width: 5px;
+    height: 30px;
+    border-radius: 3px;
+    background: var(--blue);
+  }
+  .section .en {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--ink);
+  }
+  .section .cn {
+    margin-top: 3px;
+    font-size: 13px;
+    color: var(--gray);
+    letter-spacing: 3px;
+  }
+
+  /* ---------- Items (stacked, portrait) ---------- */
+  .list {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .item {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    background: var(--item-bg);
+    border-radius: 14px;
+    padding: 13px 22px;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .item-left {
+    width: 150px;
+    flex-shrink: 0;
+    border-right: 1px solid #e4e7ee;
+    padding-right: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .item-left .num {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--blue);
+    line-height: 1;
+  }
+  .item-left .cn {
+    margin-top: 10px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--blue-deep);
+    letter-spacing: 1px;
+  }
+  .item-left .en {
+    margin-top: 5px;
+    font-size: 11px;
+    color: var(--gray-light);
+    letter-spacing: 1.4px;
+  }
+  .item-right {
+    flex: 1;
+    padding-left: 22px;
+    display: flex;
+    align-items: center;
+  }
+  .item-right p {
+    font-size: 14.5px;
+    line-height: 1.72;
+    color: var(--ink-soft);
+  }
+  .item-right code {
+    font-family: "SFMono-Regular", "Consolas", "Menlo", monospace;
+    font-size: 14px;
+    color: var(--ink);
+    background: rgba(61, 90, 254, 0.08);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  /* ---------- Summary ---------- */
+  .item.summary {
+    flex: 0 0 auto;
+    background: var(--summary-bg);
+    align-items: center;
+  }
+  .item.summary .item-left {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    width: 200px;
+    border-right-color: #d9def0;
+  }
+  .sum-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4c6ef5, #3b5bdb);
+    color: #fff;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .item.summary .item-left .cn { margin-top: 0; }
+  .item.summary .item-left .en { margin-top: 4px; }
+  .item.summary .item-right p {
+    font-size: 16px;
+    color: var(--ink);
+    line-height: 1.7;
+    font-weight: 500;
+  }
+
+  /* ---------- Footer ---------- */
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--line);
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+  .footer .slogan {
+    font-size: 12px;
+    color: var(--gray);
+    letter-spacing: 3px;
+  }
+  .footer .stars {
+    color: var(--blue);
+    font-size: 15px;
+    letter-spacing: 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportBtn" class="btn">⬇ 导出 9:16 图片 (PNG)</button>
+    <span class="hint">画布 720 × 1280 · 导出为 2× 高清 (1440 × 2560)</span>
+  </div>
+
+  <div class="viewport" id="viewport">
+    <div class="stage" id="stage">
+      <div class="frame" id="frame">
+        <div class="panel">
+
+        <!-- Header -->
+        <div class="brand">
+          <div class="logo" aria-label="C++">
+            <svg class="cpp-logo" width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img">
+              <defs>
+                <linearGradient id="cppBadge" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#4c6ef5" />
+                  <stop offset="1" stop-color="#3b5bdb" />
+                </linearGradient>
+              </defs>
+              <path d="M26 6 H74 A20 20 0 0 1 94 26 V74 A20 20 0 0 1 74 94 H26 L6 74 V26 A20 20 0 0 1 26 6 Z" fill="url(#cppBadge)" />
+              <path d="M6 74 L26 94 H16 A10 10 0 0 1 6 84 Z" fill="#6f8dfb" />
+              <path d="M48.6 36.2 A18 18 0 1 0 48.6 63.8" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" />
+              <g fill="#ffffff">
+                <rect x="58" y="48" width="12" height="4" rx="1.6" />
+                <rect x="62" y="44" width="4" height="12" rx="1.6" />
+                <rect x="72" y="48" width="12" height="4" rx="1.6" />
+                <rect x="76" y="44" width="4" height="12" rx="1.6" />
+              </g>
+            </svg>
+          </div>
+          <div class="brand-title">
+            <div class="en">C++ INTERVIEW CARD</div>
+            <div class="cn">面试口袋卡片</div>
+          </div>
+          <div class="brand-no">
+            <div class="num">#049</div>
+            <div class="tag">并发多线程 CONCURRENCY</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Section title -->
+        <div class="section">
+          <div class="bar"></div>
+          <div>
+            <div class="en">INTERVIEW ANSWER</div>
+            <div class="cn">参考回答</div>
+          </div>
+        </div>
+
+        <!-- Items -->
+        <div class="list">
+          <div class="item">
+            <div class="item-left">
+              <div class="num">01</div>
+              <div class="cn">数据竞争</div>
+              <div class="en">DATA RACE</div>
+            </div>
+            <div class="item-right">
+              <p>多线程同时访问共享数据时，<br />如果没有适当的同步机制，<br />就可能产生数据竞争。</p>
+            </div>
+          </div>
+
+          <div class="item">
+            <div class="item-left">
+              <div class="num">02</div>
+              <div class="cn">原子操作</div>
+              <div class="en">ATOMIC</div>
+            </div>
+            <div class="item-right">
+              <p>C++ 用 <code>std::atomic&lt;T&gt;</code> 把类型包装成原子对象，<br />提供 load、store、exchange、CAS、fetch_add 等操作；<br />它们不可分割，别人看不到执行到一半的中间态。</p>
+            </div>
+          </div>
+
+          <div class="item">
+            <div class="item-left">
+              <div class="num">03</div>
+              <div class="cn">边界与内存序</div>
+              <div class="en">LIMIT & ORDER</div>
+            </div>
+            <div class="item-right">
+              <p>原子性只保证单次操作，普通变量不会因此变安全；<br />多次操作间仍有顺序和可见性问题，<br />所以可给原子操作指定内存序来控制这些。</p>
+            </div>
+          </div>
+
+          <div class="item">
+            <div class="item-left">
+              <div class="num">04</div>
+              <div class="cn">弱序</div>
+              <div class="en">RELAXED / ACQ / REL</div>
+            </div>
+            <div class="item-right">
+              <p>relaxed 只保证原子性、不做线程间同步；<br />acquire 获取语义，后续访问不能重排到它前；<br />release 发布语义，之前访问不能重排到它后。</p>
+            </div>
+          </div>
+
+          <div class="item">
+            <div class="item-left">
+              <div class="num">05</div>
+              <div class="cn">强序</div>
+              <div class="en">ACQ_REL / SEQ_CST</div>
+            </div>
+            <div class="item-right">
+              <p>acq_rel 兼具 acquire 和 release，用于读改写；<br />seq_cst 是默认，最强顺序并建立统一总序；<br />consume 理论上更弱的依赖同步，工程基本不用。</p>
+            </div>
+          </div>
+
+          <div class="item summary">
+            <div class="item-left">
+              <div class="sum-icon">★</div>
+              <div>
+                <div class="cn">一句话总结</div>
+                <div class="en">SUMMARY</div>
+              </div>
+            </div>
+            <div class="item-right">
+              <p>atomic 保证单次操作的原子性，<br />内存序控制跨线程的顺序与可见性。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+          <div class="slogan">MAKE EACH ANSWER COUNT.</div>
+          <div class="stars">★ ★ ★</div>
+        </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var frame = document.getElementById('frame');
+      var stage = document.getElementById('stage');
+      var viewport = document.getElementById('viewport');
+      var btn = document.getElementById('exportBtn');
+      var W = 720, H = 1280;
+
+      // Scale the 16:9 canvas to fit the current screen (preview only).
+      function fit() {
+        var availW = window.innerWidth - 32;
+        var availH = window.innerHeight - 88 - 32;
+        var scale = Math.min(1, availW / W, availH / H);
+        stage.style.transform = 'scale(' + scale + ')';
+        viewport.style.width = (W * scale) + 'px';
+        viewport.style.height = (H * scale) + 'px';
+      }
+      window.addEventListener('resize', fit);
+      fit();
+
+      function nextFrame() {
+        return new Promise(function (resolve) {
+          requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+        });
+      }
+
+      btn.addEventListener('click', async function () {
+        if (typeof html2canvas !== 'function') {
+          alert('html2canvas 尚未加载（可能网络受限）。请联网后重试，或直接对下方卡片使用系统截图。');
+          return;
+        }
+        var label = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '正在导出…';
+
+        // Render at native 1:1 so the capture is pixel-perfect.
+        stage.style.transform = 'none';
+        viewport.style.width = W + 'px';
+        viewport.style.height = H + 'px';
+        await nextFrame();
+
+        try {
+          var canvas = await html2canvas(frame, {
+            scale: 2,               // 2x -> 1440 x 2560 output
+            backgroundColor: '#e9ebf0',
+            useCORS: true,
+            logging: false,
+            width: W,
+            height: H,
+            windowWidth: W,
+            windowHeight: H
+          });
+          var link = document.createElement('a');
+          link.download = '049-cpp-interview-card.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        } catch (err) {
+          alert('导出失败：' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = label;
+          fit();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

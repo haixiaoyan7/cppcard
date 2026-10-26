@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CPU 与内存底层 · Cheatsheet · 9:16</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --ink: #0f172a;
+    --text: #1e293b;
+    --muted: #64748b;
+    --line: #dbe4ef;
+    --page: #e8eef6;
+    --paper: #fbfdff;
+    --card: #ffffff;
+    --blue: #2563eb;
+    --blue-deep: #1e40af;
+    --blue-soft: #dbeafe;
+    --teal: #0d9488;
+    --teal-deep: #0f766e;
+    --teal-soft: #ccfbf1;
+    --amber: #b45309;
+    --amber-soft: #fef3c7;
+    --rose: #be123c;
+    --rose-soft: #ffe4e6;
+    --violet: #6d28d9;
+    --violet-soft: #ede9fe;
+    --cyan: #0e7490;
+    --cyan-soft: #cffafe;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB",
+      "Helvetica Neue", Arial, sans-serif;
+    background: var(--page);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 88px 16px 32px;
+  }
+
+  .toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.94);
+    color: #fff;
+  }
+  .btn {
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(135deg, #2563eb, #0f766e);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.34);
+  }
+  .btn:disabled { opacity: 0.62; cursor: default; }
+  .hint { font-size: 12px; color: #cbd5e1; letter-spacing: 0.5px; }
+
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame {
+    width: 720px;
+    height: 1280px;
+    padding: 14px;
+    background:
+      radial-gradient(ellipse 80% 46% at 0% 0%, rgba(37, 99, 235, 0.20), transparent 54%),
+      radial-gradient(ellipse 70% 46% at 100% 6%, rgba(13, 148, 136, 0.18), transparent 52%),
+      radial-gradient(ellipse 60% 42% at 92% 100%, rgba(180, 83, 9, 0.13), transparent 54%),
+      linear-gradient(165deg, #dde8f4 0%, #f2f7fb 46%, #dce8ef 100%);
+  }
+  .sheet {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(circle at 18px 18px, rgba(37, 99, 235, 0.08) 1.2px, transparent 1.4px),
+      linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    background-size: 18px 18px, 100% 100%;
+    border: 1px solid rgba(37, 99, 235, 0.16);
+    border-radius: 22px;
+    padding: 16px 16px 13px;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    gap: 8px;
+    overflow: hidden;
+    box-shadow: 0 24px 52px rgba(15, 23, 42, 0.12);
+  }
+  .watermark {
+    position: absolute;
+    right: 12px;
+    bottom: 50px;
+    font-size: 126px;
+    font-weight: 900;
+    letter-spacing: -0.08em;
+    color: rgba(37, 99, 235, 0.055);
+    line-height: 1;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .sheet > *:not(.watermark) { position: relative; z-index: 1; }
+
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 2px 4px 10px;
+    border-bottom: 1px solid rgba(37, 99, 235, 0.16);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #2563eb, #0f766e);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24);
+  }
+  .logo svg { width: 30px; height: 30px; display: block; }
+  .kicker {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    color: var(--blue-deep);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .title {
+    margin-top: 1px;
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    line-height: 1.14;
+    white-space: nowrap;
+  }
+  .title span { color: var(--teal); }
+  .subtitle {
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .badge {
+    flex-shrink: 0;
+    text-align: right;
+    padding: 8px 12px;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #2563eb 0%, #1e40af 54%, #0f766e 140%);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+    overflow: hidden;
+  }
+  .badge .big {
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .badge .small {
+    margin-top: 4px;
+    font-size: 9px;
+    opacity: 0.86;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+
+  .chips {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+  .chip {
+    text-align: center;
+    padding: 7px 2px 8px;
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.045);
+  }
+  .chip .dot {
+    width: 18px;
+    height: 18px;
+    margin: 0 auto 4px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 900;
+    line-height: 18px;
+    white-space: nowrap;
+  }
+  .chip .en {
+    display: block;
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .chip .cn {
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .chip.c1 .dot { background: var(--blue); }
+  .chip.c2 .dot { background: var(--teal); }
+  .chip.c3 .dot { background: var(--violet); }
+  .chip.c4 .dot { background: var(--amber); }
+  .chip.c5 .dot { background: var(--rose); }
+  .chip.c6 .dot { background: var(--cyan); }
+
+  .body {
+    display: grid;
+    grid-template-rows: 1.28fr 1.08fr 1.08fr 1.08fr 0.92fr 0.92fr;
+    gap: 7px;
+    min-height: 0;
+  }
+
+  .sec {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 8px 10px 8px 10px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.045);
+  }
+  .sec::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+  }
+  .sec.s1::before { background: linear-gradient(#60a5fa, #1d4ed8); }
+  .sec.s2::before { background: linear-gradient(#2dd4bf, #0f766e); }
+  .sec.s3::before { background: linear-gradient(#a78bfa, #6d28d9); }
+  .sec.s4::before { background: linear-gradient(#fbbf24, #b45309); }
+  .sec.s5::before { background: linear-gradient(#fb7185, #be123c); }
+  .sec.s6::before { background: linear-gradient(#22d3ee, #0e7490); }
+  .glow {
+    position: absolute;
+    right: -28px;
+    top: -30px;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .s1 .glow { background: rgba(37, 99, 235, 0.10); }
+  .s2 .glow { background: rgba(13, 148, 136, 0.10); }
+  .s3 .glow { background: rgba(109, 40, 217, 0.10); }
+  .s4 .glow { background: rgba(180, 83, 9, 0.10); }
+  .s5 .glow { background: rgba(190, 18, 60, 0.10); }
+  .s6 .glow { background: rgba(14, 116, 144, 0.10); }
+
+  .sec-h {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 6px 4px;
+  }
+  .sec-h .left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .num {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 26px;
+    text-align: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .s1 .num { background: var(--blue); }
+  .s2 .num { background: var(--teal); }
+  .s3 .num { background: var(--violet); }
+  .s4 .num { background: var(--amber); }
+  .s5 .num { background: var(--rose); }
+  .s6 .num { background: var(--cyan); }
+  .sec-h .cn {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .sec-h .en {
+    font-size: 8.5px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .cols-3, .cols-2, .row3 {
+    display: grid;
+    gap: 7px;
+    min-height: 0;
+    padding-left: 4px;
+  }
+  .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .cols-2 { grid-template-columns: 1fr 1fr; }
+  .row3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .cell {
+    background: #f4f8ff;
+    border: 1px solid #dbe7fb;
+    border-radius: 10px;
+    padding: 7px 8px 8px;
+  }
+  .s2 .cell { background: #f3fcfa; border-color: #d5f0ea; }
+  .s3 .cell { background: #f7f4ff; border-color: #e6ddfb; }
+  .s4 .cell { background: #fff8eb; border-color: #f3e4c4; }
+  .s5 .cell { background: #fff4f6; border-color: #f8dce3; }
+  .s6 .cell { background: #f0fbfd; border-color: #d5eef3; }
+
+  .sub-h {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--blue-deep);
+    margin-bottom: 5px;
+    white-space: nowrap;
+  }
+  .s2 .sub-h { color: var(--teal-deep); }
+  .s3 .sub-h { color: var(--violet); }
+  .s4 .sub-h { color: var(--amber); }
+  .s5 .sub-h { color: var(--rose); }
+  .s6 .sub-h { color: var(--cyan); }
+
+  .line {
+    font-size: 11px;
+    line-height: 1.42;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .line + .line { margin-top: 1px; }
+  .mono {
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 9.8px;
+    font-weight: 700;
+    color: var(--blue-deep);
+  }
+  .s2 .mono { color: var(--teal-deep); }
+  .s3 .mono { color: var(--violet); }
+  .s4 .mono { color: var(--amber); }
+  .s5 .mono { color: var(--rose); }
+  .s6 .mono { color: var(--cyan); }
+  .dim { color: var(--muted); }
+
+  .tag {
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+  .tag.ok { background: var(--teal-soft); color: var(--teal-deep); }
+  .tag.warn { background: var(--amber-soft); color: var(--amber); }
+  .tag.bad { background: var(--rose-soft); color: var(--rose); }
+  .tag.info { background: var(--blue-soft); color: var(--blue-deep); }
+  .tag.soft { background: var(--violet-soft); color: var(--violet); }
+  .tag.cyan { background: var(--cyan-soft); color: var(--cyan); }
+  .tag.plain { background: #eef4f8; color: var(--ink); }
+
+  .flow {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  .pill {
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #c7d8f4;
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--blue-deep);
+    white-space: nowrap;
+  }
+  .arrow { font-size: 10px; color: #93a7c9; }
+
+  .pick {
+    margin: 7px 0 0 4px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #eff6ff, #f0fdfa);
+    border: 1px solid #d7e7f3;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .pick .k {
+    font-size: 10px;
+    font-weight: 900;
+    color: var(--blue-deep);
+    white-space: nowrap;
+  }
+
+  .kv {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    column-gap: 7px;
+    align-items: center;
+  }
+  .kv + .kv { margin-top: 3px; }
+  .kv .k {
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 9.6px;
+    font-weight: 800;
+    color: var(--violet);
+    background: #fff;
+    border: 1px solid #ddd6fe;
+    border-radius: 6px;
+    padding: 1px 5px;
+    white-space: nowrap;
+  }
+  .kv .v {
+    font-size: 10.8px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .mantra {
+    position: relative;
+    padding: 10px 14px 10px 42px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #1e40af 0%, #0f766e 70%, #115e59 140%);
+    color: #fff;
+    overflow: hidden;
+  }
+  .mantra .q {
+    position: absolute;
+    left: 12px;
+    top: 6px;
+    font-size: 34px;
+    font-weight: 900;
+    line-height: 1;
+    color: rgba(255,255,255,0.22);
+    white-space: nowrap;
+  }
+  .mantra .label {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    color: #bfdbfe;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .mantra p {
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #fff;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportBtn" class="btn">导出 9:16 图片 (PNG)</button>
+    <span class="hint">画布 720 × 1280 · 导出为 2× 高清 (1440 × 2560)</span>
+  </div>
+
+  <div class="viewport" id="viewport">
+    <div class="stage" id="stage">
+      <div class="frame" id="frame">
+        <div class="sheet">
+          <div class="watermark">CPU</div>
+
+          <div class="head">
+            <div class="brand">
+              <div class="logo" aria-hidden="true">
+                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="8" y="8" width="16" height="16" rx="3" fill="none" stroke="#fff" stroke-width="2.4"/>
+                  <rect x="12" y="12" width="8" height="8" rx="1.6" fill="#fff"/>
+                  <path d="M4 11h4M4 16h4M4 21h4M24 11h4M24 16h4M24 21h4M11 4v4M16 4v4M21 4v4M11 24v4M16 24v4M21 24v4" stroke="#bfdbfe" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="kicker">Computer Architecture</div>
+                <div class="title">CPU 与内存 <span>底层速查</span></div>
+                <div class="subtitle">缓存层级 · Cache Line · 虚拟内存 · 内存碎片 · 用户态/内核态 · TLB</div>
+              </div>
+            </div>
+            <div class="badge">
+              <div class="big">CORE</div>
+              <div class="small">CHEATSHEET</div>
+            </div>
+          </div>
+
+          <div class="chips">
+            <div class="chip c1"><div class="dot">1</div><div class="en">Hierarchy</div><div class="cn">层级</div></div>
+            <div class="chip c2"><div class="dot">2</div><div class="en">Cache</div><div class="cn">缓存</div></div>
+            <div class="chip c3"><div class="dot">3</div><div class="en">Virtual</div><div class="cn">虚存</div></div>
+            <div class="chip c4"><div class="dot">4</div><div class="en">Mode</div><div class="cn">态切换</div></div>
+            <div class="chip c5"><div class="dot">5</div><div class="en">Memory</div><div class="cn">内存序</div></div>
+            <div class="chip c6"><div class="dot">6</div><div class="en">Tuning</div><div class="cn">优化</div></div>
+          </div>
+
+          <div class="body">
+            <section class="sec s1">
+              <div class="glow"></div>
+              <div class="sec-h">
+                <div class="left"><div class="num">01</div><div class="cn">存储层级</div></div>
+                <div class="en">Hierarchy · 离 CPU 越近越快</div>
+              </div>
+              <div class="cols-3">
+                <div class="cell">
+                  <div class="sub-h">速度顺序</div>
+                  <div class="flow">
+                    <span class="pill">Reg</span><span class="arrow">→</span>
+                    <span class="pill">L1</span><span class="arrow">→</span>
+                    <span class="pill">L2</span><span class="arrow">→</span>
+                    <span class="pill">L3</span><span class="arrow">→</span>
+                    <span class="pill">RAM</span>
+                  </div>
+                  <div class="line">越近越快 · 越小越贵</div>
+                  <div class="line">性能瓶颈常是等内存</div>
+                  <div class="line">核心目标：提高命中率</div>
+                </div>
+                <div class="cell">
+                  <div class="sub-h">典型认知</div>
+                  <div class="line"><span class="mono">L1</span> 每核心独享 · 极快</div>
+                  <div class="line"><span class="mono">L2</span> 每核心常见独享</div>
+                  <div class="line"><span class="mono">L3</span> 多核心共享更大</div>
+                  <div class="line"><span class="mono">RAM</span> 容量大但延迟高</div>
+                </div>
+                <div class="cell">
+                  <div class="sub-h">两个局部性</div>
+                  <div class="line">时间：刚用过还会再用</div>
+                  <div class="line">空间：附近地址马上会用</div>
+                  <div class="line">数组遍历天然更友好</div>
+                  <div class="line">链式跳转容易 miss</div>
+                </div>
+              </div>
+              <div class="pick">
+                <span class="k">口诀</span>
+                <span class="tag info">CPU 快</span>
+                <span class="tag bad">内存慢</span>
+                <span class="tag ok">Cache 救场</span>
+                <span class="tag plain">布局决定命中</span>
+              </div>
+            </section>
+
+            <section class="sec s2">
+              <div class="glow"></div>
+              <div class="sec-h">
+                <div class="left"><div class="num">02</div><div class="cn">Cache Line</div></div>
+                <div class="en">Cache · 最小搬运单位</div>
+              </div>
+              <div class="cols-2">
+                <div class="cell">
+                  <div class="sub-h">Cache Line</div>
+                  <div class="line">常见大小：<span class="mono">64 bytes</span></div>
+                  <div class="line">读 1 个变量，会搬整条线</div>
+                  <div class="line">连续访问能吃到预取收益</div>
+                  <div class="line">随机访问会放大延迟</div>
+                </div>
+                <div class="cell">
+                  <div class="sub-h">False Sharing</div>
+                  <div class="line">不同线程写不同变量</div>
+                  <div class="line">但变量落在同一条线</div>
+                  <div class="line">缓存行在核心间反复失效</div>
+                  <div class="line"><span class="tag ok">alignas(64)</span> 可隔离热点字段</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="sec s3">
+              <div class="glow"></div>
+              <div class="sec-h">
+                <div class="left"><div class="num">03</div><div class="cn">虚存与碎片</div></div>
+                <div class="en">Virtual Memory · Page & Fragmentation</div>
+              </div>
+              <div class="cols-3">
+                <div class="cell">
+                  <div class="sub-h">地址路径</div>
+                  <div class="flow">
+                    <span class="pill">VA</span><span class="arrow">→</span>
+                    <span class="pill">TLB</span><span class="arrow">→</span>
+                    <span class="pill">PageTable</span><span class="arrow">→</span>
+                    <span class="pill">PA</span>
+                  </div>
+                  <div class="line">程序看到虚拟地址</div>
+                  <div class="line">页表映射到物理地址</div>
+                  <div class="line">进程间地址空间隔离</div>
+                </div>
+                <div class="cell">
+                  <div class="sub-h">Page / TLB</div>
+                  <div class="kv"><span class="k">Page</span><span class="v">常见 4KB 管理粒度</span></div>
+                  <div class="kv"><span class="k">TLB Hit</span><span class="v">快速拿到物理地址</span></div>
+                  <div class="kv"><span class="k">TLB Miss</span><span class="v">查页表，延迟上升</span></div>
+                  <div class="kv"><span class="k">HugePage</span><span class="v">减少大内存 TLB 压力</span></div>
+                </div>
+                <div class="cell">
+                  <div class="sub-h">内存碎片</div>
+                  <div class="line"><span class="tag warn">内部碎片</span> 分到但没用完</div>
+                  <div class="line"><span class="tag bad">外部碎片</span> 空闲但不连续</div>
+                  <div class="line">分页解决外部碎片</div>
+                  <div class="line">页内仍可能有浪费</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="sec s4">
+              <div class="glow"></div>
+              <div class="sec-h">
+                <div class="left"><div class="num">04</div><div class="cn">流水线与态切换</div></div>
+                <div class="en">Pipeline & Mode · 指令执行边界</div>
+              </div>
+              <div class="row3">
+                <div class="cell">
+                  <div class="sub-h">流水线</div>
+                  <div class="line">取指 → 解码 → 执行</div>
+                  <div class="line">访存 → 写回</div>
+                  <div class="line">数据依赖会阻塞</div>
+                </div>
+                <div class="cell">
+                  <div class="sub-h">分支预测</div>
+                  <div class="line">猜对：流水线继续</div>
+                  <div class="line">猜错：清空重来</div>
+                  <div class="line">随机 if 代价高</div>
+                </div>
+                <div class="cell">
+                  <div class="sub-h">用户态 / 内核态</div>
+                  <div class="line">用户态不能直接操作硬件</div>
+                  <div class="line">系统调用 trap 进内核态</div>
+                  <div class="line">开销来自切换与缓存扰动</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="sec s5">
+              <div class="glow"></div>
+              <div class="sec-h">
+                <div class="left"><div class="num">05</div><div class="cn">原子与内存序</div></div>
+                <div class="en">Memory Order · 可见性与重排</div>
+              </div>
+              <div class="row3">
+                <div class="cell">
+                  <div class="sub-h">atomic</div>
+                  <div class="line">保证单次读写不可撕裂</div>
+                  <div class="line">不等于所有顺序都安全</div>
+                </div>
+                <div class="cell">
+                  <div class="sub-h">常见序</div>
+                  <div class="line"><span class="mono">relaxed</span> 只保原子性</div>
+                  <div class="line"><span class="mono">acq/rel</span> 建同步关系</div>
+                </div>
+                <div class="cell">
+                  <div class="sub-h">屏障</div>
+                  <div class="line">限制编译器/CPU 重排</div>
+                  <div class="line"><span class="mono">seq_cst</span> 最强也最保守</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="sec s6">
+              <div class="glow"></div>
+              <div class="sec-h">
+                <div class="left"><div class="num">06</div><div class="cn">性能排查</div></div>
+                <div class="en">Tuning · 先测量再优化</div>
+              </div>
+              <div class="cols-2">
+                <div class="cell">
+                  <div class="sub-h">看什么</div>
+                  <div class="line"><span class="tag info">cache-misses</span> 缓存未命中</div>
+                  <div class="line"><span class="tag warn">branch-misses</span> 分支失败</div>
+                  <div class="line"><span class="tag soft">cycles / IPC</span> 指令效率</div>
+                </div>
+                <div class="cell">
+                  <div class="sub-h">怎么改</div>
+                  <div class="line">热数据紧凑 · 顺序访问</div>
+                  <div class="line">减少小对象堆分配</div>
+                  <div class="line">NUMA 下线程靠近数据</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="mantra">
+            <div class="q">“</div>
+            <div class="label">One-liner</div>
+            <p>高性能代码的本质，是减少 CPU 等待：少 miss、少碎片、少系统调用、少跨核心争抢。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  var W = 720, H = 1280;
+  var frame = document.getElementById("frame");
+  var stage = document.getElementById("stage");
+  var viewport = document.getElementById("viewport");
+  var btn = document.getElementById("exportBtn");
+
+  function fit() {
+    var maxW = Math.min(window.innerWidth - 32, 560);
+    var maxH = window.innerHeight - 120;
+    var scale = Math.min(1, maxW / W, maxH / H);
+    viewport.style.width = W * scale + "px";
+    viewport.style.height = H * scale + "px";
+    stage.style.transform = "scale(" + scale + ")";
+  }
+  fit();
+  window.addEventListener("resize", fit);
+
+  function nextFrame() {
+    return new Promise(function (resolve) {
+      requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+    });
+  }
+
+  btn.addEventListener("click", async function () {
+    if (typeof html2canvas !== "function") {
+      alert("html2canvas 尚未加载。请联网后重试。");
+      return;
+    }
+    var label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "导出中...";
+    stage.style.transform = "none";
+    viewport.style.width = W + "px";
+    viewport.style.height = H + "px";
+    await nextFrame();
+    try {
+      var canvas = await html2canvas(frame, {
+        scale: 2,
+        width: W,
+        height: H,
+        windowWidth: W,
+        windowHeight: H,
+        backgroundColor: "#e8eef6",
+        useCORS: true,
+        logging: false
+      });
+      var a = document.createElement("a");
+      a.download = "cpu-memory-cheatsheet.png";
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    } catch (err) {
+      alert("导出失败：" + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+      fit();
+    }
+  });
+})();
+</script>
+</body>
+</html>

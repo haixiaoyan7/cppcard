@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>红黑树 × AVL · 知识海报 9:16</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0f1c1a;
+    --text: #1a2e2a;
+    --muted: #5a726b;
+    --line: #c9d8d2;
+    --paper: #e7efe9;
+    --sheet: #f7faf8;
+    --teal: #0d9488;
+    --teal-deep: #0f766e;
+    --teal-soft: #ccfbf1;
+    --sky: #0284c7;
+    --sky-soft: #e0f2fe;
+    --rb: #dc2626;
+    --rb-soft: #fee2e2;
+    --amber: #d97706;
+    --amber-soft: #fef3c7;
+    --black: #1e293b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+
+  body {
+    font-family: "Noto Sans SC", "Outfit", sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(ellipse 70% 40% at 10% 0%, rgba(13,148,136,.12), transparent 55%),
+      linear-gradient(168deg, #dfeae4 0%, #eef3f0 50%, #e4ebe8 100%);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 88px 16px 32px;
+  }
+
+  /* toolbar */
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; flex-wrap: wrap;
+    padding: 12px 14px;
+    background: rgba(15, 28, 26, 0.92);
+    backdrop-filter: blur(8px);
+  }
+  .btn {
+    border: none; cursor: pointer;
+    height: 38px; padding: 0 14px; border-radius: 11px;
+    font: 700 12px/1 "Noto Sans SC", sans-serif;
+    color: #fff;
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+  }
+  .btn.ghost {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.25);
+    color: #d5e0dc;
+  }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+  .tab {
+    border: 1px solid rgba(255,255,255,.18);
+    background: transparent; color: #a8bdb6;
+    font: 600 11px/1 "Noto Sans SC", sans-serif;
+    padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  }
+  .tab.active { background: #fff; color: var(--ink); border-color: #fff; }
+  .hint { font: 500 11px/1 "Outfit", sans-serif; color: #8aa39a; letter-spacing: .04em; }
+
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame {
+    width: 720px; height: 1280px;
+    background: transparent; padding: 0;
+  }
+
+  /* poster sheet */
+  .poster {
+    display: none;
+    width: 720px; height: 1280px;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 80% 50% at 100% 0%, rgba(2,132,199,.10), transparent 50%),
+      radial-gradient(ellipse 60% 40% at 0% 100%, rgba(13,148,136,.12), transparent 50%),
+      linear-gradient(165deg, #eef5f1 0%, #f7faf8 45%, #e8f0ec 100%);
+  }
+  .poster.active { display: block; }
+
+  .poster::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(15,28,26,.035) 1px, transparent 1px);
+    background-size: 18px 18px;
+    pointer-events: none;
+    opacity: .7;
+  }
+
+  .pad {
+    position: relative; z-index: 1;
+    height: 100%;
+    padding: 48px 44px 40px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .kicker {
+    font: 700 12px/1 "Outfit", sans-serif;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+  .title {
+    margin-top: 14px;
+    font: 800 42px/1.12 "Outfit", "Noto Sans SC", sans-serif;
+    letter-spacing: -.03em;
+    color: var(--ink);
+  }
+  /* 不用 background-clip:text —— html2canvas 会导出成色块、文字消失 */
+  .title em {
+    font-style: normal;
+    color: var(--teal-deep);
+  }
+  .lead {
+    margin-top: 14px;
+    font: 500 16px/1.65 "Noto Sans SC", sans-serif;
+    color: var(--muted);
+    max-width: 28em;
+  }
+
+  .foot {
+    margin-top: auto;
+    padding-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(201,216,210,.7);
+    font: 600 11px/1 "Outfit", sans-serif;
+    letter-spacing: .12em;
+    color: var(--muted);
+  }
+
+  /* ── cover ── */
+  .cover-visual {
+    margin-top: 36px;
+    flex: 1;
+    position: relative;
+    border-radius: 28px;
+    overflow: hidden;
+    background:
+      linear-gradient(160deg, rgba(255,255,255,.55), rgba(255,255,255,.15)),
+      repeating-linear-gradient(-18deg, transparent, transparent 16px, rgba(13,148,136,.04) 16px, rgba(13,148,136,.04) 17px);
+    border: 1px solid rgba(201,216,210,.65);
+  }
+  .cover-visual svg { width: 100%; height: 100%; }
+  .cover-chips {
+    margin-top: 22px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .chip {
+    font: 700 13px/1 "Noto Sans SC", sans-serif;
+    padding: 11px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.8);
+    color: var(--text);
+  }
+  .chip.teal { border-color: transparent; background: var(--teal-soft); color: var(--teal-deep); }
+  .chip.sky { border-color: transparent; background: var(--sky-soft); color: #075985; }
+
+  /* ── compare ── */
+  .stack {
+    margin-top: 28px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+  }
+  .band {
+    flex: 1;
+    border-radius: 22px;
+    padding: 22px 22px 18px;
+    border: 1px solid rgba(201,216,210,.6);
+    background: rgba(255,255,255,.78);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .band-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .band-head .mark {
+    width: 36px; height: 36px; border-radius: 12px;
+    display: grid; place-items: center;
+    color: #fff; font: 800 14px/1 "Outfit", sans-serif;
+    flex: none;
+  }
+  .band-head .mark.rb { background: linear-gradient(145deg, #f87171, #dc2626 50%, #1e293b); }
+  .band-head .mark.avl { background: linear-gradient(145deg, #38bdf8, #0284c7); }
+  .band-head h3 {
+    font: 800 22px/1.1 "Outfit", "Noto Sans SC", sans-serif;
+    letter-spacing: -.02em;
+  }
+  .band-head span {
+    display: block;
+    margin-top: 3px;
+    font: 600 11px/1 "Outfit", sans-serif;
+    letter-spacing: .12em;
+    color: var(--muted);
+  }
+  .band-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 12px;
+    align-items: center;
+    min-height: 0;
+  }
+  .band-body svg { width: 100%; height: 140px; }
+  .metrics { display: flex; flex-direction: column; gap: 8px; }
+  .metric {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .metric .k {
+    font: 700 11px/1.2 "Outfit", sans-serif;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--teal-deep);
+  }
+  .metric .v {
+    font: 500 14px/1.4 "Noto Sans SC", sans-serif;
+    color: var(--text);
+  }
+  .verdict {
+    margin-top: 16px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(204,251,241,.7), rgba(224,242,254,.55));
+    border: 1px solid rgba(13,148,136,.2);
+    font: 600 15px/1.55 "Noto Sans SC", sans-serif;
+    color: var(--ink);
+  }
+
+  /* ── howto rotate ── */
+  .model {
+    margin-top: 22px;
+    padding: 18px 20px;
+    border-radius: 18px;
+    background: rgba(15,28,26,.92);
+    color: #ecfdf8;
+  }
+  .model .lab {
+    font: 700 11px/1 "Outfit", sans-serif;
+    letter-spacing: .16em;
+    color: #5eead4;
+    margin-bottom: 8px;
+  }
+  .model p {
+    font: 600 16px/1.55 "Noto Sans SC", sans-serif;
+  }
+  .model strong { color: #99f6e4; font-weight: 700; }
+
+  .ops-stack {
+    margin-top: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+  }
+  .op-block {
+    flex: 1;
+    border-radius: 20px;
+    background: rgba(255,255,255,.82);
+    border: 1px solid rgba(201,216,210,.65);
+    padding: 16px 16px 12px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .op-block h3 {
+    font: 800 18px/1.15 "Outfit", "Noto Sans SC", sans-serif;
+    color: var(--ink);
+  }
+  .op-block .sub {
+    margin-top: 4px;
+    font: 500 12px/1.35 "Noto Sans SC", sans-serif;
+    color: var(--muted);
+  }
+  .op-block svg {
+    width: 100%;
+    flex: 1;
+    min-height: 150px;
+    margin-top: 8px;
+  }
+  .op-code {
+    margin-top: 6px;
+    font: 500 12px/1.45 "JetBrains Mono", monospace;
+    color: #92400e;
+    background: var(--amber-soft);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+
+  /* ── four cases ── */
+  .cases {
+    margin-top: 26px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  }
+  .case {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    gap: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(201,216,210,.6);
+    background: rgba(255,255,255,.82);
+    min-height: 0;
+  }
+  .case .side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: linear-gradient(180deg, #0f766e, #0d9488);
+    color: #fff;
+  }
+  .case .side .code {
+    font: 800 26px/1 "Outfit", sans-serif;
+    letter-spacing: .04em;
+  }
+  .case .side .act {
+    font: 600 11px/1 "Noto Sans SC", sans-serif;
+    opacity: .85;
+  }
+  .case:nth-child(2) .side { background: linear-gradient(180deg, #0369a1, #0284c7); }
+  .case:nth-child(3) .side { background: linear-gradient(180deg, #b45309, #d97706); }
+  .case:nth-child(4) .side { background: linear-gradient(180deg, #9f1239, #e11d48); }
+  .case .main {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .case .main h4 {
+    font: 800 17px/1.2 "Outfit", "Noto Sans SC", sans-serif;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .case .main p {
+    font: 500 14px/1.55 "Noto Sans SC", sans-serif;
+    color: var(--muted);
+  }
+  .tip {
+    margin-top: 14px;
+    font: 600 14px/1.5 "Noto Sans SC", sans-serif;
+    color: var(--teal-deep);
+    text-align: center;
+  }
+
+  /* ── invariants ── */
+  .inv-stack {
+    margin-top: 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: 0;
+  }
+  .inv-zone {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .inv-zone h3 {
+    font: 800 18px/1.2 "Outfit", "Noto Sans SC", sans-serif;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .inv-zone h3 i {
+    width: 10px; height: 10px; border-radius: 50%;
+    display: inline-block;
+  }
+  .inv-zone.rb h3 i { background: var(--rb); box-shadow: 0 0 0 4px var(--rb-soft); }
+  .inv-zone.avl h3 i { background: var(--sky); box-shadow: 0 0 0 4px var(--sky-soft); }
+  .rules {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-height: 0;
+  }
+  .rule {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 4px;
+    border-bottom: 1px solid rgba(201,216,210,.55);
+    min-height: 0;
+  }
+  .rule:last-child { border-bottom: none; }
+  .rule .n {
+    flex: none;
+    width: 28px;
+    font: 800 15px/1 "Outfit", sans-serif;
+    color: var(--teal);
+  }
+  .inv-zone.rb .rule .n { color: var(--rb); }
+  .inv-zone.avl .rule .n { color: var(--sky); }
+  .rule p {
+    font: 500 14.5px/1.4 "Noto Sans SC", sans-serif;
+    color: var(--text);
+  }
+
+  /* ── why ── */
+  .why-hero {
+    margin-top: 28px;
+    padding: 28px 24px;
+    border-radius: 24px;
+    background: linear-gradient(145deg, #0f1c1a 0%, #134e4a 100%);
+    color: #ecfdf8;
+  }
+  .why-hero .q {
+    font: 700 12px/1 "Outfit", sans-serif;
+    letter-spacing: .16em;
+    color: #5eead4;
+    margin-bottom: 12px;
+  }
+  .why-hero p {
+    font: 700 24px/1.4 "Outfit", "Noto Sans SC", sans-serif;
+    letter-spacing: -.02em;
+  }
+  .why-points {
+    margin-top: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-height: 0;
+  }
+  .wp {
+    flex: 1;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 18px 4px;
+    border-bottom: 1px solid rgba(201,216,210,.55);
+    min-height: 0;
+  }
+  .wp:last-child { border-bottom: none; }
+  .wp .idx {
+    font: 800 28px/1 "Outfit", sans-serif;
+    color: rgba(13,148,136,.35);
+    letter-spacing: -.04em;
+    width: 44px;
+    flex: none;
+  }
+  .wp h4 {
+    font: 800 17px/1.2 "Outfit", "Noto Sans SC", sans-serif;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .wp p {
+    font: 500 14px/1.55 "Noto Sans SC", sans-serif;
+    color: var(--muted);
+  }
+  .wp code {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: var(--teal-deep);
+    background: var(--teal-soft);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button class="btn ghost" id="prevBtn" type="button">← 上一张</button>
+    <button class="btn ghost" id="nextBtn" type="button">下一张 →</button>
+    <button class="btn" id="exportBtn" type="button">⬇ 导出 PNG</button>
+    <div class="tabs" id="tabs"></div>
+    <span class="hint" id="pageHint">1 / 6</span>
+  </div>
+
+  <div class="viewport" id="viewport">
+    <div class="stage" id="stage">
+      <div class="frame" id="frame">
+
+        <!-- 01 COVER -->
+        <article class="poster active" data-name="01-cover">
+          <div class="pad">
+            <div class="kicker">STL · BALANCED BST</div>
+            <h1 class="title">红黑树 × AVL<br /><em>平衡 · 旋转 · 选型</em></h1>
+            <p class="lead">两种自平衡二叉搜索树如何压住高度？左旋右旋到底在搬什么？为什么 <code style="font-family:JetBrains Mono,monospace;font-size:13px;color:#0f766e">std::map</code> 选了红黑树？</p>
+
+            <div class="cover-visual">
+              <svg viewBox="0 0 632 520" preserveAspectRatio="xMidYMid meet">
+                <g transform="translate(60,40)">
+                  <line x1="256" y1="60" x2="140" y2="170" stroke="#94a3b8" stroke-width="2.5"/>
+                  <line x1="256" y1="60" x2="372" y2="170" stroke="#94a3b8" stroke-width="2.5"/>
+                  <line x1="140" y1="170" x2="70" y2="290" stroke="#94a3b8" stroke-width="2.5"/>
+                  <line x1="140" y1="170" x2="200" y2="290" stroke="#94a3b8" stroke-width="2.5"/>
+                  <line x1="372" y1="170" x2="312" y2="290" stroke="#94a3b8" stroke-width="2.5"/>
+                  <line x1="372" y1="170" x2="432" y2="290" stroke="#94a3b8" stroke-width="2.5"/>
+                  <line x1="70" y1="290" x2="40" y2="400" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="70" y1="290" x2="100" y2="400" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="200" y1="290" x2="170" y2="400" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="200" y1="290" x2="230" y2="400" stroke="#94a3b8" stroke-width="2"/>
+                  <circle cx="256" cy="60" r="34" fill="#1e293b"/>
+                  <text x="256" y="60" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="Outfit" font-weight="800" font-size="18">B</text>
+                  <circle cx="140" cy="170" r="28" fill="#dc2626"/>
+                  <text x="140" y="170" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="Outfit" font-weight="800" font-size="16">R</text>
+                  <circle cx="372" cy="170" r="28" fill="#dc2626"/>
+                  <text x="372" y="170" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="Outfit" font-weight="800" font-size="16">R</text>
+                  <circle cx="70" cy="290" r="24" fill="#1e293b"/>
+                  <circle cx="200" cy="290" r="24" fill="#1e293b"/>
+                  <circle cx="312" cy="290" r="24" fill="#1e293b"/>
+                  <circle cx="432" cy="290" r="24" fill="#1e293b"/>
+                  <circle cx="40" cy="400" r="18" fill="#dc2626"/>
+                  <circle cx="100" cy="400" r="18" fill="#1e293b"/>
+                  <circle cx="170" cy="400" r="18" fill="#1e293b"/>
+                  <circle cx="230" cy="400" r="18" fill="#dc2626"/>
+                </g>
+              </svg>
+            </div>
+
+            <div class="cover-chips">
+              <span class="chip teal">对比特点</span>
+              <span class="chip sky">左旋 / 右旋</span>
+              <span class="chip">四种失衡</span>
+              <span class="chip">map 选型</span>
+            </div>
+
+            <div class="foot">
+              <span>RB × AVL</span>
+              <span>01 / 06</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 02 COMPARE -->
+        <article class="poster" data-name="02-compare">
+          <div class="pad">
+            <div class="kicker">COMPARISON</div>
+            <h1 class="title">同一目标<br /><em>不同松紧</em></h1>
+            <p class="lead">都保证 O(log n)。<br />差别在平衡有多严，以及插入删除要旋几次。</p>
+
+            <div class="stack">
+              <div class="band">
+                <div class="band-head">
+                  <div class="mark rb">RB</div>
+                  <div>
+                    <h3>红黑树</h3>
+                    <span>COLOR BALANCE</span>
+                  </div>
+                </div>
+                <div class="band-body">
+                  <svg viewBox="0 0 260 140">
+                    <line x1="130" y1="28" x2="70" y2="70" stroke="#94a3b8" stroke-width="2"/>
+                    <line x1="130" y1="28" x2="190" y2="70" stroke="#94a3b8" stroke-width="2"/>
+                    <line x1="70" y1="70" x2="40" y2="112" stroke="#94a3b8" stroke-width="2"/>
+                    <line x1="70" y1="70" x2="100" y2="112" stroke="#94a3b8" stroke-width="2"/>
+                    <line x1="190" y1="70" x2="160" y2="112" stroke="#94a3b8" stroke-width="2"/>
+                    <line x1="190" y1="70" x2="220" y2="112" stroke="#94a3b8" stroke-width="2"/>
+                    <circle cx="130" cy="28" r="18" fill="#1e293b"/><text x="130" y="28" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12" font-weight="700" font-family="Outfit">B</text>
+                    <circle cx="70" cy="70" r="15" fill="#dc2626"/><text x="70" y="70" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="11" font-weight="700" font-family="Outfit">R</text>
+                    <circle cx="190" cy="70" r="15" fill="#dc2626"/><text x="190" y="70" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="11" font-weight="700" font-family="Outfit">R</text>
+                    <circle cx="40" cy="112" r="12" fill="#1e293b"/><circle cx="100" cy="112" r="12" fill="#1e293b"/>
+                    <circle cx="160" cy="112" r="12" fill="#1e293b"/><circle cx="220" cy="112" r="12" fill="#1e293b"/>
+                  </svg>
+                  <div class="metrics">
+                    <div class="metric"><span class="k">平衡</span><span class="v">宽松：最长 ≤ 最短×2</span></div>
+                    <div class="metric"><span class="k">高度</span><span class="v">约 2 log n，略高</span></div>
+                    <div class="metric"><span class="k">写入</span><span class="v">插入≤2 旋 · 删除≤3 旋</span></div>
+                    <div class="metric"><span class="k">场景</span><span class="v">写多：map / set / CFS</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="band">
+                <div class="band-head">
+                  <div class="mark avl">AV</div>
+                  <div>
+                    <h3>AVL 树</h3>
+                    <span>HEIGHT BALANCE</span>
+                  </div>
+                </div>
+                <div class="band-body">
+                  <svg viewBox="0 0 260 140">
+                    <line x1="130" y1="28" x2="70" y2="72" stroke="#94a3b8" stroke-width="2"/>
+                    <line x1="130" y1="28" x2="190" y2="72" stroke="#94a3b8" stroke-width="2"/>
+                    <line x1="70" y1="72" x2="40" y2="114" stroke="#94a3b8" stroke-width="2"/>
+                    <line x1="70" y1="72" x2="100" y2="114" stroke="#94a3b8" stroke-width="2"/>
+                    <line x1="190" y1="72" x2="160" y2="114" stroke="#94a3b8" stroke-width="2"/>
+                    <line x1="190" y1="72" x2="220" y2="114" stroke="#94a3b8" stroke-width="2"/>
+                    <circle cx="130" cy="28" r="18" fill="#0284c7"/><text x="130" y="28" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12" font-weight="700" font-family="Outfit">0</text>
+                    <circle cx="70" cy="72" r="15" fill="#0284c7"/><text x="70" y="72" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="11" font-weight="700" font-family="Outfit">0</text>
+                    <circle cx="190" cy="72" r="15" fill="#0284c7"/><text x="190" y="72" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="11" font-weight="700" font-family="Outfit">0</text>
+                    <circle cx="40" cy="114" r="12" fill="#38bdf8"/><circle cx="100" cy="114" r="12" fill="#38bdf8"/>
+                    <circle cx="160" cy="114" r="12" fill="#38bdf8"/><circle cx="220" cy="114" r="12" fill="#38bdf8"/>
+                  </svg>
+                  <div class="metrics">
+                    <div class="metric"><span class="k">平衡</span><span class="v">严格：任意 |BF| ≤ 1</span></div>
+                    <div class="metric"><span class="k">高度</span><span class="v">≈ 1.44 log n，更矮</span></div>
+                    <div class="metric"><span class="k">写入</span><span class="v">插入 1~2 旋 · 删除可多次</span></div>
+                    <div class="metric"><span class="k">场景</span><span class="v">读多写少 / 查找密集</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="verdict">AVL 更严更矮 → 查更快；红黑树旋转更少 → 写更快。</div>
+
+            <div class="foot">
+              <span>COMPARE</span>
+              <span>02 / 06</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 03 ROTATE OPS -->
+        <article class="poster" data-name="03-rotate-ops">
+          <div class="pad">
+            <div class="kicker">HOW TO ROTATE</div>
+            <h1 class="title">左旋 · 右旋<br /><em>怎么操作</em></h1>
+
+            <div class="model">
+              <div class="lab">心智模型</div>
+              <p>旋转名字看<strong>哪边孩子升上来</strong>：<br />左旋 = 右孩子升；右旋 = 左孩子升。<br />中间子树 β 要搬家，才能保住 BST 有序。</p>
+            </div>
+
+            <div class="ops-stack">
+              <div class="op-block">
+                <h3>左旋 Left Rotate(P)</h3>
+                <div class="sub">R 升为新根 · P 降为 R 的左孩子 · β 改挂到 P.right</div>
+                <svg viewBox="0 0 600 170">
+                  <text x="120" y="18" text-anchor="middle" fill="#5a726b" font-size="12" font-family="Noto Sans SC" font-weight="600">旋前</text>
+                  <line x1="120" y1="50" x2="60" y2="95" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="120" y1="50" x2="190" y2="95" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="190" y1="95" x2="155" y2="140" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="190" y1="95" x2="230" y2="140" stroke="#94a3b8" stroke-width="2"/>
+                  <circle cx="120" cy="50" r="18" fill="#0d9488"/><text x="120" y="50" text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700" font-size="13" font-family="Outfit">P</text>
+                  <circle cx="60" cy="95" r="14" fill="#94a3b8"/><text x="60" y="95" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">α</text>
+                  <circle cx="190" cy="95" r="18" fill="#0284c7"/><text x="190" y="95" text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700" font-size="13" font-family="Outfit">R</text>
+                  <circle cx="155" cy="140" r="14" fill="#d97706"/><text x="155" y="140" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">β</text>
+                  <circle cx="230" cy="140" r="14" fill="#94a3b8"/><text x="230" y="140" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">γ</text>
+
+                  <path d="M280 95 h40" stroke="#0d9488" stroke-width="2.5" marker-end="url(#a1)"/>
+                  <defs><marker id="a1" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#0d9488"/></marker></defs>
+
+                  <text x="450" y="18" text-anchor="middle" fill="#5a726b" font-size="12" font-family="Noto Sans SC" font-weight="600">旋后</text>
+                  <line x1="450" y1="50" x2="380" y2="95" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="450" y1="50" x2="510" y2="95" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="380" y1="95" x2="345" y2="140" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="380" y1="95" x2="415" y2="140" stroke="#94a3b8" stroke-width="2"/>
+                  <circle cx="450" cy="50" r="18" fill="#0284c7"/><text x="450" y="50" text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700" font-size="13" font-family="Outfit">R</text>
+                  <circle cx="380" cy="95" r="18" fill="#0d9488"/><text x="380" y="95" text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700" font-size="13" font-family="Outfit">P</text>
+                  <circle cx="510" cy="95" r="14" fill="#94a3b8"/><text x="510" y="95" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">γ</text>
+                  <circle cx="345" cy="140" r="14" fill="#94a3b8"/><text x="345" y="140" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">α</text>
+                  <circle cx="415" cy="140" r="14" fill="#d97706"/><text x="415" y="140" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">β</text>
+                </svg>
+                <div class="op-code">R=P.right → P.right=β → R.left=P</div>
+              </div>
+
+              <div class="op-block">
+                <h3>右旋 Right Rotate(P)</h3>
+                <div class="sub">L 升为新根 · P 降为 L 的右孩子 · β 改挂到 P.left</div>
+                <svg viewBox="0 0 600 170">
+                  <text x="140" y="18" text-anchor="middle" fill="#5a726b" font-size="12" font-family="Noto Sans SC" font-weight="600">旋前</text>
+                  <line x1="160" y1="50" x2="90" y2="95" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="160" y1="50" x2="220" y2="95" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="90" y1="95" x2="55" y2="140" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="90" y1="95" x2="125" y2="140" stroke="#94a3b8" stroke-width="2"/>
+                  <circle cx="160" cy="50" r="18" fill="#0d9488"/><text x="160" y="50" text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700" font-size="13" font-family="Outfit">P</text>
+                  <circle cx="90" cy="95" r="18" fill="#0284c7"/><text x="90" y="95" text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700" font-size="13" font-family="Outfit">L</text>
+                  <circle cx="220" cy="95" r="14" fill="#94a3b8"/><text x="220" y="95" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">γ</text>
+                  <circle cx="55" cy="140" r="14" fill="#94a3b8"/><text x="55" y="140" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">α</text>
+                  <circle cx="125" cy="140" r="14" fill="#d97706"/><text x="125" y="140" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">β</text>
+
+                  <path d="M280 95 h40" stroke="#0d9488" stroke-width="2.5" marker-end="url(#a2)"/>
+                  <defs><marker id="a2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#0d9488"/></marker></defs>
+
+                  <text x="450" y="18" text-anchor="middle" fill="#5a726b" font-size="12" font-family="Noto Sans SC" font-weight="600">旋后</text>
+                  <line x1="430" y1="50" x2="370" y2="95" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="430" y1="50" x2="500" y2="95" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="500" y1="95" x2="465" y2="140" stroke="#94a3b8" stroke-width="2"/>
+                  <line x1="500" y1="95" x2="535" y2="140" stroke="#94a3b8" stroke-width="2"/>
+                  <circle cx="430" cy="50" r="18" fill="#0284c7"/><text x="430" y="50" text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700" font-size="13" font-family="Outfit">L</text>
+                  <circle cx="370" cy="95" r="14" fill="#94a3b8"/><text x="370" y="95" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">α</text>
+                  <circle cx="500" cy="95" r="18" fill="#0d9488"/><text x="500" y="95" text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700" font-size="13" font-family="Outfit">P</text>
+                  <circle cx="465" cy="140" r="14" fill="#d97706"/><text x="465" y="140" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">β</text>
+                  <circle cx="535" cy="140" r="14" fill="#94a3b8"/><text x="535" y="140" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12">γ</text>
+                </svg>
+                <div class="op-code">L=P.left → P.left=β → L.right=P</div>
+              </div>
+            </div>
+
+            <div class="foot">
+              <span>中序不变 · BST 性质保留</span>
+              <span>03 / 06</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 04 FOUR CASES -->
+        <article class="poster" data-name="04-imbalance">
+          <div class="pad">
+            <div class="kicker">FOUR CASES</div>
+            <h1 class="title">四种失衡<br /><em>怎么选旋转</em></h1>
+            <p class="lead">在左旋 / 右旋之上，用插入路径判断。<br />单旋纠直链，双旋先拧直。</p>
+
+            <div class="cases">
+              <div class="case">
+                <div class="side"><div class="code">LL</div><div class="act">右旋</div></div>
+                <div class="main">
+                  <h4>左左偏 → Right(P)</h4>
+                  <p>插入落在左孩子的左子树。<br />对失衡点做一次右旋即可。</p>
+                </div>
+              </div>
+              <div class="case">
+                <div class="side"><div class="code">RR</div><div class="act">左旋</div></div>
+                <div class="main">
+                  <h4>右右偏 → Left(P)</h4>
+                  <p>插入落在右孩子的右子树。<br />对失衡点做一次左旋即可。</p>
+                </div>
+              </div>
+              <div class="case">
+                <div class="side"><div class="code">LR</div><div class="act">左右双旋</div></div>
+                <div class="main">
+                  <h4>折线 → Left(L) 再 Right(P)</h4>
+                  <p>插入落在左孩子的右子树。<br />先拧成 LL，再右旋失衡点。</p>
+                </div>
+              </div>
+              <div class="case">
+                <div class="side"><div class="code">RL</div><div class="act">右左双旋</div></div>
+                <div class="main">
+                  <h4>折线 → Right(R) 再 Left(P)</h4>
+                  <p>插入落在右孩子的左子树。<br />先拧成 RR，再左旋失衡点。</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="tip">口诀：失衡方向 = 插入路径的前两步</div>
+
+            <div class="foot">
+              <span>IMBALANCE</span>
+              <span>04 / 06</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 05 INVARIANTS -->
+        <article class="poster" data-name="05-invariant">
+          <div class="pad">
+            <div class="kicker">INVARIANTS</div>
+            <h1 class="title">各自守住的<br /><em>法律</em></h1>
+            <p class="lead">面试常考：说清破坏了哪条规则、怎么修。</p>
+
+            <div class="inv-stack">
+              <div class="inv-zone rb">
+                <h3><i></i>红黑树 · 五条性质</h3>
+                <div class="rules">
+                  <div class="rule"><span class="n">01</span><p>每个节点非红即黑</p></div>
+                  <div class="rule"><span class="n">02</span><p>根节点是黑色</p></div>
+                  <div class="rule"><span class="n">03</span><p>所有叶子（NIL）是黑色</p></div>
+                  <div class="rule"><span class="n">04</span><p>红节点的两个孩子必须是黑</p></div>
+                  <div class="rule"><span class="n">05</span><p>到叶的每条路径黑高相同</p></div>
+                </div>
+              </div>
+              <div class="inv-zone avl">
+                <h3><i></i>AVL · 平衡因子判定</h3>
+                <div class="rules">
+                  <div class="rule"><span class="n">BF</span><p>左高 − 右高，只能是 −1 / 0 / +1</p></div>
+                  <div class="rule"><span class="n">LL</span><p>BF(P)=+2 且 BF(左)=+1 → 右旋</p></div>
+                  <div class="rule"><span class="n">RR</span><p>BF(P)=−2 且 BF(右)=−1 → 左旋</p></div>
+                  <div class="rule"><span class="n">LR</span><p>BF(P)=+2 且 BF(左)=−1 → 左右双旋</p></div>
+                  <div class="rule"><span class="n">RL</span><p>BF(P)=−2 且 BF(右)=+1 → 右左双旋</p></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="foot">
+              <span>RULES</span>
+              <span>05 / 06</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 06 WHY MAP -->
+        <article class="poster" data-name="06-why-map">
+          <div class="pad">
+            <div class="kicker">WHY STD::MAP</div>
+            <h1 class="title">为什么 map<br /><em>用红黑树</em></h1>
+
+            <div class="why-hero">
+              <div class="q">ONE LINE</div>
+              <p>map / set 写操作频繁<br />红黑树用更松的平衡，换更少的旋转次数。<br />不是 AVL 不行，是工程折中。</p>
+            </div>
+
+            <div class="why-points">
+              <div class="wp">
+                <div class="idx">01</div>
+                <div>
+                  <h4>写多，怕旋转放大</h4>
+                  <p>插入删除是常态。红黑树插入最多约 2 次旋转；AVL 删除可能沿路径多次旋转。</p>
+                </div>
+              </div>
+              <div class="wp">
+                <div class="idx">02</div>
+                <div>
+                  <h4>存储更轻</h4>
+                  <p>红黑树大约 1 bit 颜色；AVL 通常要存平衡因子或高度字段。</p>
+                </div>
+              </div>
+              <div class="wp">
+                <div class="idx">03</div>
+                <div>
+                  <h4>有序能力不丢</h4>
+                  <p>旋转保中序，BST 仍成立。<code>lower_bound</code>、区间遍历照样可用。</p>
+                </div>
+              </div>
+              <div class="wp">
+                <div class="idx">04</div>
+                <div>
+                  <h4>什么时候仍想 AVL</h4>
+                  <p>查找远多于写入、对最坏高度更敏感时，AVL 的「更矮」才是优势。</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="foot">
+              <span>RELATED · #039 MAP</span>
+              <span>06 / 06</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  var posters = Array.prototype.slice.call(document.querySelectorAll('.poster'));
+  var idx = 0;
+  var W = 720, H = 1280;
+  var frame = document.getElementById('frame');
+  var stage = document.getElementById('stage');
+  var viewport = document.getElementById('viewport');
+  var tabs = document.getElementById('tabs');
+  var pageHint = document.getElementById('pageHint');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var exportBtn = document.getElementById('exportBtn');
+  var labels = ['封面', '对比', '左右旋', '失衡', '不变量', '选型'];
+
+  labels.forEach(function (lab, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tab' + (i === 0 ? ' active' : '');
+    b.textContent = lab;
+    b.addEventListener('click', function () { show(i); });
+    tabs.appendChild(b);
+  });
+
+  function show(i) {
+    idx = Math.max(0, Math.min(posters.length - 1, i));
+    posters.forEach(function (p, j) { p.classList.toggle('active', j === idx); });
+    Array.prototype.forEach.call(tabs.children, function (t, j) {
+      t.classList.toggle('active', j === idx);
+    });
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === posters.length - 1;
+    pageHint.textContent = (idx + 1) + ' / ' + posters.length;
+  }
+
+  function fit() {
+    var availW = window.innerWidth - 32;
+    var availH = window.innerHeight - 88 - 32;
+    var scale = Math.min(1, availW / W, availH / H);
+    stage.style.transform = 'scale(' + scale + ')';
+    viewport.style.width = (W * scale) + 'px';
+    viewport.style.height = (H * scale) + 'px';
+  }
+
+  function nextFrame() {
+    return new Promise(function (r) {
+      requestAnimationFrame(function () { requestAnimationFrame(r); });
+    });
+  }
+
+  prevBtn.addEventListener('click', function () { show(idx - 1); });
+  nextBtn.addEventListener('click', function () { show(idx + 1); });
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft') show(idx - 1);
+    if (e.key === 'ArrowRight') show(idx + 1);
+  });
+  window.addEventListener('resize', fit);
+
+  exportBtn.addEventListener('click', async function () {
+    if (typeof html2canvas !== 'function') {
+      alert('html2canvas 未加载，请联网后重试。');
+      return;
+    }
+    var poster = posters[idx];
+    var name = poster.getAttribute('data-name') || ('page-' + (idx + 1));
+    var label = exportBtn.textContent;
+    exportBtn.disabled = true;
+    exportBtn.textContent = '导出中…';
+    stage.style.transform = 'none';
+    viewport.style.width = W + 'px';
+    viewport.style.height = H + 'px';
+    await nextFrame();
+    try {
+      var canvas = await html2canvas(frame, {
+        scale: 2,
+        backgroundColor: null,
+        useCORS: true,
+        logging: false,
+        width: W,
+        height: H,
+        windowWidth: W,
+        windowHeight: H
+      });
+      var a = document.createElement('a');
+      a.download = 'rb-avl-' + name + '.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    } catch (err) {
+      alert('导出失败：' + err.message);
+    } finally {
+      exportBtn.disabled = false;
+      exportBtn.textContent = label;
+      fit();
+    }
+  });
+
+  show(0);
+  fit();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoRA 为什么可能更省</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #333;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+  /* 9:16 比例：540 x 960 */
+  .card {
+    width: 540px;
+    min-height: 960px;
+    background: #fdeff0;
+    border-radius: 28px;
+    padding: 26px 26px 20px;
+    position: relative;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+  }
+  /* 背景装饰：圆点 + 光斑 */
+  .card::before, .card::after {
+    content: ""; position: absolute; border-radius: 50%; z-index: 0; pointer-events: none;
+  }
+  .card::before {
+    width: 180px; height: 180px; background: radial-gradient(circle, #ffd0d8 0%, transparent 70%);
+    top: -40px; right: -60px;
+  }
+  .card::after {
+    width: 220px; height: 220px; background: radial-gradient(circle, #ffe6b8 0%, transparent 70%);
+    bottom: -60px; left: -70px;
+  }
+  .card > * { position: relative; z-index: 1; }
+  .dot { position: absolute; border-radius: 50%; z-index: 0; }
+  .dot-1 { width: 10px; height: 10px; background: #ff8fa3; top: 130px; left: 18px; }
+  .dot-2 { width: 6px; height: 6px; background: #ffd166; top: 300px; right: 26px; }
+  .dot-3 { width: 8px; height: 8px; background: #7ed957; bottom: 210px; left: 30px; }
+  .star { position: absolute; font-size: 16px; color: #ffd166; z-index: 0; }
+  .star-1 { top: 96px; right: 40px; transform: rotate(15deg); }
+  .star-2 { bottom: 130px; right: 14px; transform: rotate(-10deg); font-size: 13px; }
+
+  /* ---------- 顶部标题区 ---------- */
+  .top-tags { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .tag-red {
+    background: #ff3b5c; color: #fff; font-weight: 700;
+    font-size: 15px; padding: 7px 16px; border-radius: 16px 16px 16px 4px;
+    position: relative;
+  }
+  .tag-red::after {
+    content: ""; position: absolute; top: -6px; right: -4px;
+    width: 10px; height: 10px; background: #7ed957;
+    border-radius: 50% 50% 50% 0; transform: rotate(30deg);
+  }
+  .tag-pink {
+    background: #ffd6db; color: #ff3b5c; font-weight: 600;
+    font-size: 14px; padding: 6px 14px; border-radius: 14px;
+  }
+  .handwrite {
+    position: absolute; top: 24px; right: 24px;
+    font-size: 12px; color: #666; text-align: right; line-height: 1.7;
+    transform: rotate(-6deg); font-style: italic;
+  }
+  .handwrite u { text-decoration-color: #ff3b5c; }
+  .handwrite .heart { color: #ff3b5c; }
+
+  .title { margin: 8px 0 16px; }
+  .title .line1 { font-size: 40px; font-weight: 900; color: #1a1a1a; letter-spacing: 1px; }
+  .title .line2 { font-size: 40px; font-weight: 900; margin-top: 4px; display: flex; align-items: baseline; flex-wrap: wrap; }
+  .title .ref {
+    color: #ff2e4d; font-style: italic; margin-right: 8px;
+    text-decoration: underline; text-decoration-color: #ffb3bd; text-decoration-thickness: 4px;
+  }
+  .title .why { color: #1a1a1a; }
+  .title .faster { background: #ffe14d; color: #1a1a1a; padding: 0 10px; border-radius: 8px; margin-left: 6px; }
+  .title .q { color: #ff2e4d; }
+  .tape {
+    position: absolute; width: 70px; height: 24px; background: rgba(255,209,102,.55);
+    border: 1px dashed rgba(180,120,0,.4); top: -6px; left: 40px; transform: rotate(-8deg);
+    z-index: 2;
+  }
+
+  /* ---------- 条目 ---------- */
+  .items { display: flex; flex-direction: column; gap: 14px; }
+  .item {
+    background: #fff; border-radius: 20px; padding: 15px 16px 15px 16px;
+    display: flex; gap: 14px; position: relative;
+    box-shadow: 0 6px 16px rgba(255, 59, 92, .08);
+    border: 1.5px solid #ffe0e5;
+  }
+  .num {
+    flex: 0 0 44px; height: 44px; border-radius: 14px;
+    background: linear-gradient(135deg, #ff5c78, #ff2e4d); color: #fff;
+    font-weight: 800; font-size: 19px; font-style: italic;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 10px rgba(255, 46, 77, .35);
+  }
+  .num::before {
+    content: ""; position: absolute; left: 15px; top: 15px;
+    width: 44px; height: 44px; border-radius: 14px;
+    border: 2px solid #ffc2cc; z-index: -1; transform: rotate(-8deg);
+  }
+  .item-body { flex: 1; font-size: 15px; line-height: 1.6; color: #333; min-width: 0; }
+  .item-body b { color: #1a1a1a; }
+  code {
+    font-family: "SF Mono", Consolas, monospace;
+    background: #ffe3e7; color: #d6285a; padding: 1px 6px; border-radius: 5px; font-size: 13px;
+  }
+  .hl-red { color: #ff2e4d; font-weight: 700; }
+
+  /* 贴纸小徽章 */
+  .badge {
+    position: absolute; top: -10px; right: 16px; background: #ffd166; color: #7a4a00;
+    font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 10px;
+    transform: rotate(6deg); box-shadow: 0 3px 6px rgba(0,0,0,.12);
+  }
+
+  /* ---------- 速览对比条 ---------- */
+  .compare {
+    margin: 18px 0; display: flex; align-items: center; gap: 10px;
+  }
+  .compare .col {
+    flex: 1; background: #fff; border-radius: 16px; padding: 12px 14px;
+    text-align: center; box-shadow: 0 6px 16px rgba(255,59,92,.08);
+    border: 1.5px solid #ffe0e5;
+  }
+  .compare .col .label { font-size: 12px; color: #999; margin-bottom: 6px; }
+  .compare .col .num-big { font-size: 24px; font-weight: 900; color: #1a1a1a; }
+  .compare .col.hl .num-big { color: #ff2e4d; }
+  .compare .vs {
+    flex: 0 0 auto; font-size: 13px; font-weight: 800; color: #fff;
+    background: #ff3b5c; width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---------- 本质区 ---------- */
+  .essence {
+    background: #ffd9de; border-radius: 20px; padding: 16px 18px; margin: 12px 0 12px;
+    display: flex; gap: 16px; align-items: center;
+  }
+  .essence-left { flex: 1; }
+  .essence-left h3 { font-size: 26px; font-weight: 900; color: #ff2e4d; margin-bottom: 8px; }
+  .essence-left h3 u { text-decoration-color: #ff2e4d; }
+  .essence-left p { font-size: 14px; line-height: 1.6; color: #333; }
+  .essence-left p b { color: #ff2e4d; }
+  .flow { display: flex; align-items: center; gap: 5px; }
+  .flow .step {
+    background: #ffeef0; border-radius: 12px; padding: 10px 6px; text-align: center;
+    font-size: 11px; color: #444; line-height: 1.35; width: 68px; min-height: 72px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .flow .step .ico { font-size: 18px; color: #ff2e4d; display: block; margin-bottom: 5px; }
+  .flow .fa { color: #ff3b5c; font-weight: 900; font-size: 14px; }
+
+  /* ---------- 底栏 ---------- */
+  .footer { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #555; margin-top: auto; }
+  .footer .chk { color: #2fb344; }
+  .footer .sep { color: #ccc; }
+  .footer .next {
+    margin-left: auto; background: #ff3b5c; color: #fff; font-weight: 700;
+    padding: 9px 16px; border-radius: 16px; font-size: 13px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="dot dot-1"></span>
+    <span class="dot dot-2"></span>
+    <span class="dot dot-3"></span>
+    <span class="star star-1">✦</span>
+    <span class="star star-2">✧</span>
+
+    <!-- 顶部 -->
+    <div class="top-tags">
+      <span class="tag-red">1分钟看懂</span>
+      <span class="tag-pink">大模型微调小知识</span>
+    </div>
+    <div class="handwrite">
+      少一些参数<br>
+      多一些可落地的微调<br>
+      <u>让显卡不再爆内存</u> <span class="heart">♥</span>
+    </div>
+
+    <div class="title">
+      <span class="tape"></span>
+      <div class="line1">先说结论：</div>
+      <div class="line2">
+        <span class="ref">LoRA</span>
+        <span class="why">为什么</span>
+        <span class="faster">可能更省</span>
+        <span class="q">?</span>
+      </div>
+    </div>
+
+    <div class="items">
+      <!-- 01 -->
+      <div class="item">
+        <div class="num">01</div>
+        <div class="item-body">
+          LoRA 不动原权重 <code>W</code>，只训练两个低秩矩阵：
+          <code>A</code> / <code>B</code> / <code>rank r</code>。
+          冻结 W，只训练低秩的 A、B，天然可插拔。
+        </div>
+      </div>
+
+      <!-- 02 -->
+      <div class="item">
+        <div class="num">02</div>
+        <div class="item-body">
+          把权重更新拆成 <code>ΔW = B·A</code> 的低秩形式：
+          <code>h = (W + B·A)·x</code>，只训练 A、B（r ≪ d），
+          可训练参数量骤降到原来的百分之几。
+        </div>
+      </div>
+
+      <!-- 03 -->
+      <div class="item">
+        <div class="num">03</div>
+        <div class="item-body">
+          可训练参数少，优化器状态和显存占用也随之大降，
+          单卡就能微调 <span class="hl-red">更大模型</span>。
+        </div>
+      </div>
+
+      <!-- 04 -->
+      <div class="item">
+        <span class="badge">实测有效 ✓</span>
+        <div class="num">04</div>
+        <div class="item-body">
+          原论文在 GPT-3 上把可训练参数减少约
+          <span class="hl-red">10000×</span>，效果基本持平。
+        </div>
+      </div>
+    </div>
+
+    <!-- 速览对比 -->
+    <div class="compare">
+      <div class="col">
+        <div class="label">全量微调</div>
+        <div class="num-big">100%</div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="col hl">
+        <div class="label">LoRA 微调</div>
+        <div class="num-big">&lt;1%</div>
+      </div>
+    </div>
+
+    <!-- 本质 -->
+    <div class="essence">
+      <div class="essence-left">
+        <h3><u>本质：</u></h3>
+        <p>不是 LoRA 参数少所以更弱，<br>
+        而是<b>大模型的权重更新本就“低秩”</b>，<br>
+        少量参数足以逼近它。</p>
+      </div>
+      <div class="flow">
+        <div class="step"><span class="ico">🧊</span>冻结<br>原权重 W</div>
+        <span class="fa">➜</span>
+        <div class="step"><span class="ico">➕</span>低秩增量<br>B·A</div>
+        <span class="fa">➜</span>
+        <div class="step"><span class="ico">💾</span>更省显存<br>效果持平</div>
+      </div>
+    </div>
+
+    <!-- 底栏 -->
+    <div class="footer">
+      <span><span class="chk">✔</span> 从源码到汇编</span>
+      <span class="sep">|</span>
+      <span><span class="chk">✔</span> 从理论到实测</span>
+      <span class="sep">|</span>
+      <span><span class="chk">✔</span> 面向真实项目</span>
+      <span class="next">左滑看下一页 →</span>
+    </div>
+  </div>
+</body>
+</html>

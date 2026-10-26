@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>口述稿 · 04 进容器：STL 与布局</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --theme: #3b5bdb; --theme-2: #2746b0; --theme-soft: #eef1fb;
+    --theme-deep: #1e3266; --theme-rgb: 59,91,219; --theme2-rgb: 39,70,176;
+    --ink: #243041; --muted: #667385;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f3f5f9; color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 96px 16px 48px;
+  }
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 12px 16px; background: rgba(255,255,255,.96);
+    border-bottom: 1px solid #e4e8ef;
+  }
+  .btn {
+    border: none; cursor: pointer; background: var(--theme); color: #fff;
+    font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 8px;
+  }
+  .toolbar span, .toolbar a { color: var(--muted); font-size: 12px; text-decoration: none; }
+  .pages { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame { width: 720px; height: 1280px; background: #f0f3f8; padding: 18px; }
+  .panel {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: #fff; border: 1px solid #e2e8f4; border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(74,127,232,.07);
+    display: flex; flex-direction: column;
+  }
+  .panel::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px;
+    background: linear-gradient(180deg, var(--theme), var(--theme-2));
+  }
+  .cover { padding: 52px 52px 40px 60px; color: var(--ink); }
+  .cover .wm {
+    position: absolute; right: -20px; bottom: 40px;
+    font-size: 280px; line-height: .8; font-weight: 900; letter-spacing: -.06em;
+    color: transparent; -webkit-text-stroke: 2px rgba(var(--theme-rgb), .08);
+  }
+  .top, .hero, .kicker, h1, .rule, .hook, .foot, .beats, .bridge { position: relative; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; letter-spacing: 1px; }
+  .no { color: var(--theme); font-size: 28px; font-weight: 900; }
+  .kicker {
+    align-self: flex-start; margin-top: 54px;
+    color: var(--theme-deep); background: var(--theme-soft);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; font-weight: 800; letter-spacing: 2px;
+  }
+  .hero { display: flex; align-items: flex-end; gap: 16px; margin-top: 28px; }
+  .big {
+    font-size: 118px; line-height: .82; font-weight: 900; letter-spacing: -.04em;
+    background: linear-gradient(135deg, var(--theme), var(--theme-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .act { padding-bottom: 12px; border-left: 3px solid var(--theme-2); padding-left: 14px; font-size: 20px; font-weight: 800; }
+  .cover h1 { margin-top: 34px; max-width: 560px; font-size: 58px; line-height: 1.18; }
+  .rule { width: 116px; height: 4px; margin: 24px 0; border-radius: 2px; background: linear-gradient(90deg, var(--theme), var(--theme-2)); }
+  .hook { max-width: 540px; color: #4f5d6f; font-size: 22px; line-height: 1.75; }
+  .order {
+    position: relative; margin-top: 26px; max-width: 580px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  }
+  .order span {
+    padding: 5px 10px; border-radius: 7px; background: var(--theme-soft);
+    color: var(--theme-deep); font-size: 15px; font-weight: 800;
+  }
+  .order i { color: var(--muted); font-style: normal; font-size: 14px; }
+  .foot {
+    margin-top: auto; padding-top: 22px; border-top: 1px solid #e8ecf2;
+    display: flex; justify-content: space-between; color: var(--muted); font-size: 13px;
+  }
+  .script { padding: 34px 36px 28px 46px; }
+  .script .no { font-size: 22px; }
+  .script .no small { color: var(--muted); font-size: 14px; font-weight: 700; }
+  .script h1 { margin: 22px 0 18px; font-size: 32px; line-height: 1.25; }
+  .bridge { margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: var(--theme-soft); }
+  .bridge.out { margin-top: 16px; margin-bottom: 0; background: #fff8ee; }
+  .bridge .tag { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .bridge b { color: var(--theme-deep); font-size: 13px; letter-spacing: 1px; }
+  .bridge.out b { color: #9a6230; }
+  .bridge .tag span { color: var(--muted); font-size: 11px; letter-spacing: 1px; }
+  .bridge p { color: #3e4b5e; font-size: 17px; line-height: 1.7; }
+  .beats { display: flex; flex-direction: column; gap: 16px; }
+  .beat {
+    display: grid; grid-template-columns: 58px 1fr; gap: 14px;
+    padding: 16px 16px 16px 12px; border: 1px solid #e7edf5; border-radius: 12px;
+    background: #f9fbfe;
+  }
+  .side { display: flex; flex-direction: column; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 28px; border-radius: 7px; background: var(--theme); color: #fff;
+    font-size: 13px; font-weight: 800;
+  }
+  .chip.ghost { background: #e7edf5; color: #9aa6b5; }
+  .beat p { color: #2d3948; font-size: 18px; line-height: 1.75; }
+  code {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: .92em; color: var(--theme-deep); background: var(--theme-soft);
+    padding: 0 5px; border-radius: 4px;
+  }
+  .script .foot b { color: var(--theme); font-size: 16px; }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportAll" class="btn">导出本幕口述稿 (PNG)</button>
+    <span>第 04 幕 · 720 × 1280</span>
+    <a href="index-oral.html">← 返回口述稿目录</a>
+  </div>
+  <div class="pages" id="pages"><div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-04-00"><div class="panel cover"><div class="wm">04</div><div class="top"><div><div class="brand">C++ ORAL SCRIPT</div><div class="sub">口述稿 · 可以直接照着讲</div></div><div class="no">OBJECT LIFE</div></div><div class="kicker">04</div><div class="hero"><div class="big">04</div><div class="act">ACT 04</div></div><h1>进容器：STL 与布局</h1><div class="rule"></div><p class="hook">幕 3 说对象可以移动。容器正是最频繁移动对象的地方。</p><div class="order"><span>038</span><i>→</i><span>040</span><i>→</i><span>044</span><i>→</i><span>039</span><i>→</i><span>041</span><i>→</i><span>042</span><i>→</i><span>043</span></div><div class="foot"><span>7 段口述 · 7 张原卡 · 共 5 页</span><span>篇一 · 一个对象的一生</span></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-04-01"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">1 <small>/ 4</small></div></div><h1>进容器：STL 与布局</h1><section class="bridge in"><div class="tag"><b>承上</b><span>FROM LAST ACT</span></div><p>幕 3 说对象可以移动。容器正是最频繁移动对象的地方。</p></section><div class="beats"><article class="beat"><div class="side"><span class="chip">038</span></div><p>先说 <code>vector</code>。它是一块连续内存，满了就申请一块更大的，通常是 1.5 倍或 2 倍，把旧元素搬过去，再销毁旧元素、释放旧内存。均摊下来 <code>push_back</code> 是 O(1)。搬的时候是移动还是拷贝？标准库用 <code>move_if_noexcept</code>：只有移动构造标了 <code>noexcept</code> 才用移动，否则退回拷贝，为的是扩容中途抛异常时能回滚。这一点幕 8 讲异常安全时会回收。扩容之后，所有旧的迭代器、指针、引用全部失效，这是最常见的坑。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>2 / 5</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-04-02"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">2 <small>/ 4</small></div></div><h1>进容器：STL 与布局</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">040</span></div><p>如果不想让元素被搬来搬去呢？用 <code>deque</code>。它是一个中控数组，指向若干块固定大小的缓冲区。两端插入都是 O(1)，而且在两端插入不会移动已有元素，所以已有元素的引用仍然有效。代价是不连续，随机访问要多算一步。日志缓冲区只在尾部写、头部读，<code>deque</code> 很合适。</p></article><article class="beat"><div class="side"><span class="chip">044</span></div><p>消息里最常见的成员是字符串，<code>string</code> 有个优化叫 SSO：短字符串直接存在对象内部，不分配堆内存。libstdc++ 能存 15 个字符，libc++ 能存 22 个。副作用是短字符串的移动其实就是一次拷贝，因为没有指针可以偷。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>3 / 5</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-04-03"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">3 <small>/ 4</small></div></div><h1>进容器：STL 与布局</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">039</span></div><p>要按 ID 查消息，就要关联容器。<code>map</code> 是红黑树，有序，O(log n)；<code>unordered_map</code> 是哈希表加拉链，平均 O(1)，但负载因子超了会 rehash，迭代器全部失效，而且最坏情况会退化。需要有序或范围查询就用 <code>map</code>，只做等值查询就用 <code>unordered_map</code>。</p></article><article class="beat"><div class="side"><span class="chip">041</span></div><p>容器这么多，算法怎么通用？靠迭代器。迭代器是容器和算法之间的桥梁，按能力分成输入、输出、前向、双向、随机访问，C++20 还加了连续迭代器。算法根据迭代器的类别选择实现，比如 <code>std::advance</code> 对随机访问迭代器直接加 n，对其他迭代器一步步走。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>4 / 5</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-04-04"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">4 <small>/ 4</small></div></div><h1>进容器：STL 与布局</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">042</span></div><p>排序就是一个好例子。<code>std::sort</code> 要求随机访问迭代器，所以 <code>list</code> 只能用自己的 <code>sort</code>。它的实现是 introsort：以快排为主，递归太深就切到堆排，保证最坏 O(n log n)；区间很小的时候改用插入排序。它不稳定，需要稳定排序要用 <code>stable_sort</code>。</p></article><article class="beat"><div class="side"><span class="chip">043</span></div><p>最后，容器的内存从哪来？allocator。它把&quot;分配内存&quot;和&quot;构造对象&quot;拆开，这正是幕 1 placement new 的思路。自定义 allocator 可以让容器从内存池拿内存；C++17 的 pmr 让这件事不需要改变容器的类型。</p></article></div><section class="bridge out"><div class="tag"><b>启下</b><span>INTO NEXT ACT</span></div><p><code>vector&lt;LogMessage&gt;</code> 能装日志，<code>vector&lt;Metric&gt;</code> 能装指标。同一份容器代码怎么适配任意类型？这就进入模板。</p></section><div class="foot"><span>卡号不用念出来</span><b>5 / 5</b></div></div></div></div></div></div>
+<script>
+var W = 720, H = 1280;
+var viewports = Array.prototype.slice.call(document.querySelectorAll('.viewport'));
+function fit() {
+  var scale = Math.min(1, (window.innerWidth - 32) / W, (window.innerHeight - 144) / H);
+  viewports.forEach(function (v) {
+    v.querySelector('.stage').style.transform = 'scale(' + scale + ')';
+    v.style.width = (W * scale) + 'px';
+    v.style.height = (H * scale) + 'px';
+  });
+}
+window.addEventListener('resize', fit); fit();
+function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); }); }
+document.getElementById('exportAll').addEventListener('click', async function () {
+  if (typeof html2canvas !== 'function') { alert('html2canvas 尚未加载。'); return; }
+  var btn = this, label = btn.textContent; btn.disabled = true;
+  viewports.forEach(function (v) { v.querySelector('.stage').style.transform = 'none'; v.style.width = W + 'px'; v.style.height = H + 'px'; });
+  await nextFrame();
+  try {
+    for (var i = 0; i < viewports.length; i++) {
+      btn.textContent = '导出中 ' + (i + 1) + '/' + viewports.length + '…';
+      var frame = viewports[i].querySelector('.frame');
+      var canvas = await html2canvas(frame, { scale: 2, backgroundColor: '#f0f3f8', useCORS: true, logging: false, width: W, height: H, windowWidth: W, windowHeight: H });
+      var a = document.createElement('a'); a.download = frame.dataset.name + '.png'; a.href = canvas.toDataURL('image/png'); a.click();
+      await new Promise(function (r) { setTimeout(r, 300); });
+    }
+  } catch (e) { alert('导出失败：' + e.message); }
+  finally { btn.disabled = false; btn.textContent = label; fit(); }
+});
+</script>
+</body>
+</html>

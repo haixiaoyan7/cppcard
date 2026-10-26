@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>口述稿 · 02 身份：多态与类型转换</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --theme: #3b5bdb; --theme-2: #2746b0; --theme-soft: #eef1fb;
+    --theme-deep: #1e3266; --theme-rgb: 59,91,219; --theme2-rgb: 39,70,176;
+    --ink: #243041; --muted: #667385;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f3f5f9; color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 96px 16px 48px;
+  }
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 12px 16px; background: rgba(255,255,255,.96);
+    border-bottom: 1px solid #e4e8ef;
+  }
+  .btn {
+    border: none; cursor: pointer; background: var(--theme); color: #fff;
+    font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 8px;
+  }
+  .toolbar span, .toolbar a { color: var(--muted); font-size: 12px; text-decoration: none; }
+  .pages { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame { width: 720px; height: 1280px; background: #f0f3f8; padding: 18px; }
+  .panel {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: #fff; border: 1px solid #e2e8f4; border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(74,127,232,.07);
+    display: flex; flex-direction: column;
+  }
+  .panel::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px;
+    background: linear-gradient(180deg, var(--theme), var(--theme-2));
+  }
+  .cover { padding: 52px 52px 40px 60px; color: var(--ink); }
+  .cover .wm {
+    position: absolute; right: -20px; bottom: 40px;
+    font-size: 280px; line-height: .8; font-weight: 900; letter-spacing: -.06em;
+    color: transparent; -webkit-text-stroke: 2px rgba(var(--theme-rgb), .08);
+  }
+  .top, .hero, .kicker, h1, .rule, .hook, .foot, .beats, .bridge { position: relative; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; letter-spacing: 1px; }
+  .no { color: var(--theme); font-size: 28px; font-weight: 900; }
+  .kicker {
+    align-self: flex-start; margin-top: 54px;
+    color: var(--theme-deep); background: var(--theme-soft);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; font-weight: 800; letter-spacing: 2px;
+  }
+  .hero { display: flex; align-items: flex-end; gap: 16px; margin-top: 28px; }
+  .big {
+    font-size: 118px; line-height: .82; font-weight: 900; letter-spacing: -.04em;
+    background: linear-gradient(135deg, var(--theme), var(--theme-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .act { padding-bottom: 12px; border-left: 3px solid var(--theme-2); padding-left: 14px; font-size: 20px; font-weight: 800; }
+  .cover h1 { margin-top: 34px; max-width: 560px; font-size: 58px; line-height: 1.18; }
+  .rule { width: 116px; height: 4px; margin: 24px 0; border-radius: 2px; background: linear-gradient(90deg, var(--theme), var(--theme-2)); }
+  .hook { max-width: 540px; color: #4f5d6f; font-size: 22px; line-height: 1.75; }
+  .order {
+    position: relative; margin-top: 26px; max-width: 580px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  }
+  .order span {
+    padding: 5px 10px; border-radius: 7px; background: var(--theme-soft);
+    color: var(--theme-deep); font-size: 15px; font-weight: 800;
+  }
+  .order i { color: var(--muted); font-style: normal; font-size: 14px; }
+  .foot {
+    margin-top: auto; padding-top: 22px; border-top: 1px solid #e8ecf2;
+    display: flex; justify-content: space-between; color: var(--muted); font-size: 13px;
+  }
+  .script { padding: 34px 36px 28px 46px; }
+  .script .no { font-size: 22px; }
+  .script .no small { color: var(--muted); font-size: 14px; font-weight: 700; }
+  .script h1 { margin: 22px 0 18px; font-size: 32px; line-height: 1.25; }
+  .bridge { margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: var(--theme-soft); }
+  .bridge.out { margin-top: 16px; margin-bottom: 0; background: #fff8ee; }
+  .bridge .tag { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .bridge b { color: var(--theme-deep); font-size: 13px; letter-spacing: 1px; }
+  .bridge.out b { color: #9a6230; }
+  .bridge .tag span { color: var(--muted); font-size: 11px; letter-spacing: 1px; }
+  .bridge p { color: #3e4b5e; font-size: 17px; line-height: 1.7; }
+  .beats { display: flex; flex-direction: column; gap: 16px; }
+  .beat {
+    display: grid; grid-template-columns: 58px 1fr; gap: 14px;
+    padding: 16px 16px 16px 12px; border: 1px solid #e7edf5; border-radius: 12px;
+    background: #f9fbfe;
+  }
+  .side { display: flex; flex-direction: column; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 28px; border-radius: 7px; background: var(--theme); color: #fff;
+    font-size: 13px; font-weight: 800;
+  }
+  .chip.ghost { background: #e7edf5; color: #9aa6b5; }
+  .beat p { color: #2d3948; font-size: 18px; line-height: 1.75; }
+  code {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: .92em; color: var(--theme-deep); background: var(--theme-soft);
+    padding: 0 5px; border-radius: 4px;
+  }
+  .script .foot b { color: var(--theme); font-size: 16px; }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportAll" class="btn">导出本幕口述稿 (PNG)</button>
+    <span>第 02 幕 · 720 × 1280</span>
+    <a href="index-oral.html">← 返回口述稿目录</a>
+  </div>
+  <div class="pages" id="pages"><div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-02-00"><div class="panel cover"><div class="wm">02</div><div class="top"><div><div class="brand">C++ ORAL SCRIPT</div><div class="sub">口述稿 · 可以直接照着讲</div></div><div class="no">OBJECT LIFE</div></div><div class="kicker">02</div><div class="hero"><div class="big">02</div><div class="act">ACT 02</div></div><h1>身份：多态与类型转换</h1><div class="rule"></div><p class="hook"><code>LogMessage</code> 继承自 <code>MessageBase</code>，我拿一个基类指针调 <code>format()</code>，怎么就调到了派生类的版本？</p><div class="order"><span>009</span><i>→</i><span>058</span><i>→</i><span>012</span><i>→</i><span>010</span><i>→</i><span>011</span><i>→</i><span>016</span><i>→</i><span>017</span><i>→</i><span>018</span><i>→</i><span>014</span><i>→</i><span>015</span><i>→</i><span>019</span></div><div class="foot"><span>11 段口述 · 11 张原卡 · 共 6 页</span><span>篇一 · 一个对象的一生</span></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-02-01"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">1 <small>/ 5</small></div></div><h1>身份：多态与类型转换</h1><section class="bridge in"><div class="tag"><b>承上</b><span>FROM LAST ACT</span></div><p><code>LogMessage</code> 继承自 <code>MessageBase</code>，我拿一个基类指针调 <code>format()</code>，怎么就调到了派生类的版本？</p></section><div class="beats"><article class="beat"><div class="side"><span class="chip">009</span></div><p>靠虚函数。每个有虚函数的类有一张虚表，存着函数地址；每个对象多一个隐藏的虚表指针 vptr。调用时先取 vptr，再查表，再间接跳转。代价是一次间接调用，而且编译器通常没法内联。</p></article><article class="beat"><div class="side"><span class="chip">058</span></div><p>那对象在内存里到底长什么样？通常 vptr 在最前面，然后是基类子对象，再是自己的成员，按声明顺序排、中间有对齐填充，这正好接上幕 1 的对齐。空基类可以被优化到不占空间。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>2 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-02-02"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">2 <small>/ 5</small></div></div><h1>身份：多态与类型转换</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">012</span></div><p>vptr 什么时候设置好？构造函数执行期间。所以构造函数不能是虚函数：调用虚函数需要一个已经存在的对象，而构造时对象还没造完；在构造函数里调虚函数，也只会调到当前这一层。析构函数反过来，必须是虚的：如果用基类指针 <code>delete</code> 一个派生对象，而析构不是虚的，派生部分就不会被析构，这是未定义行为，也是一种泄漏。这是多态对象的&quot;正确死亡&quot;，幕 8 会回收。</p></article><article class="beat"><div class="side"><span class="chip">010</span></div><p>有了虚函数，就可以只定接口不给实现，也就是纯虚函数和抽象类。<code>MessageBase</code> 规定每条消息都必须能 <code>format()</code>，但自己不能被实例化。</p></article><article class="beat"><div class="side"><span class="chip">011</span></div><p>一个类可以继承多个接口，就会遇到菱形继承：两条路径继承到同一个基类，派生类里就有两份基类，访问时产生二义性。虚继承让它们共享一份，代价是多一层偏移查找，而且虚基类由最底层的派生类负责构造。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>3 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-02-03"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">3 <small>/ 5</small></div></div><h1>身份：多态与类型转换</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">016</span></div><p>继承本身也有语义差别：public 继承是&quot;是一个&quot;，private 继承是&quot;用它来实现&quot;，更推荐用组合代替 private 继承。</p></article><article class="beat"><div class="side"><span class="chip">017</span></div><p>同一个名字出现在父子类里，有三种情况：同一作用域、参数不同，是重载，编译期决议；派生类用相同签名改写虚函数，是重写，运行期决议，写上 <code>override</code> 让编译器帮你检查；派生类里同名但不构成重写，会把基类所有同名函数都隐藏掉，要用 <code>using Base::f</code> 捞回来。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>4 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-02-04"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">4 <small>/ 5</small></div></div><h1>身份：多态与类型转换</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">018</span></div><p>名字的归属再往外扩一层：有些东西属于类，而不属于某个对象，这就是 <code>static</code>。静态成员变量所有对象共享一份；静态成员函数没有 <code>this</code>，所以不能是虚函数，这恰好说明了多态是属于对象的。<code>static</code> 还有另外两种含义：修饰全局名字，表示内部链接，只在本文件可见，这一点篇二讲链接时会用到；修饰函数内的局部变量，表示只初始化一次，C++11 起还保证线程安全，这是终章单例的伏笔。</p></article><article class="beat"><div class="side"><span class="chip">014</span></div><p>回到多态：手里只有基类指针，想知道它实际是什么类型怎么办？用 RTTI 和 <code>dynamic_cast</code>。它要沿着类型信息去查，有运行期开销，而且只能用于有虚函数的类型：转指针失败返回空，转引用失败抛异常。频繁用它通常说明接口设计有问题。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>5 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-02-05"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">5 <small>/ 5</small></div></div><h1>身份：多态与类型转换</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">015</span></div><p>这就引出整个类型转换体系：<code>static_cast</code> 做编译期确定的转换；<code>dynamic_cast</code> 做运行期检查的向下转型；<code>const_cast</code> 只改 const 属性；<code>reinterpret_cast</code> 只是按比特重新解释，最危险。</p></article><article class="beat"><div class="side"><span class="chip">019</span></div><p>显式转换之外，还有编译器悄悄替你做的隐式转换：单参数构造函数会被当成隐式转换。比如 <code>LogMessage(int level)</code>，传个整数就能变出一条消息。<code>explicit</code> 就是用来拦住这类意外的；C++11 起，<code>explicit operator bool</code> 也常这么用。</p></article></div><section class="bridge out"><div class="tag"><b>启下</b><span>INTO NEXT ACT</span></div><p>身份确定了。接下来一个很现实的问题：这条消息被复制一份，会发生什么？</p></section><div class="foot"><span>卡号不用念出来</span><b>6 / 6</b></div></div></div></div></div></div>
+<script>
+var W = 720, H = 1280;
+var viewports = Array.prototype.slice.call(document.querySelectorAll('.viewport'));
+function fit() {
+  var scale = Math.min(1, (window.innerWidth - 32) / W, (window.innerHeight - 144) / H);
+  viewports.forEach(function (v) {
+    v.querySelector('.stage').style.transform = 'scale(' + scale + ')';
+    v.style.width = (W * scale) + 'px';
+    v.style.height = (H * scale) + 'px';
+  });
+}
+window.addEventListener('resize', fit); fit();
+function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); }); }
+document.getElementById('exportAll').addEventListener('click', async function () {
+  if (typeof html2canvas !== 'function') { alert('html2canvas 尚未加载。'); return; }
+  var btn = this, label = btn.textContent; btn.disabled = true;
+  viewports.forEach(function (v) { v.querySelector('.stage').style.transform = 'none'; v.style.width = W + 'px'; v.style.height = H + 'px'; });
+  await nextFrame();
+  try {
+    for (var i = 0; i < viewports.length; i++) {
+      btn.textContent = '导出中 ' + (i + 1) + '/' + viewports.length + '…';
+      var frame = viewports[i].querySelector('.frame');
+      var canvas = await html2canvas(frame, { scale: 2, backgroundColor: '#f0f3f8', useCORS: true, logging: false, width: W, height: H, windowWidth: W, windowHeight: H });
+      var a = document.createElement('a'); a.download = frame.dataset.name + '.png'; a.href = canvas.toDataURL('image/png'); a.click();
+      await new Promise(function (r) { setTimeout(r, 300); });
+    }
+  } catch (e) { alert('导出失败：' + e.message); }
+  finally { btn.disabled = false; btn.textContent = label; fit(); }
+});
+</script>
+</body>
+</html>

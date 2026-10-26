@@ -1,0 +1,2708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ STL · 知识图谱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0c1222;
+    --ink-soft: #1a2438;
+    --paper: #f3f6fb;
+    --panel: rgba(255, 255, 255, 0.92);
+    --panel-solid: #ffffff;
+    --line: #d5deec;
+    --muted: #6b7a94;
+    --text: #1e2a3f;
+    --cyan: #0d9488;
+    --cyan-deep: #0f766e;
+    --cyan-soft: #ccfbf1;
+    --amber: #d97706;
+    --amber-soft: #fef3c7;
+    --blue: #2563eb;
+    --blue-soft: #dbeafe;
+    --rose: #e11d48;
+    --rose-soft: #ffe4e6;
+    --violet: #7c3aed;
+    --violet-soft: #ede9fe;
+    --shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    color: var(--text);
+    font-family: "Noto Sans SC", "DM Sans", sans-serif;
+    background: var(--paper);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 80% 50% at 10% -10%, rgba(13, 148, 136, 0.14), transparent 50%),
+      radial-gradient(ellipse 60% 40% at 90% 0%, rgba(37, 99, 235, 0.10), transparent 45%),
+      radial-gradient(ellipse 50% 40% at 70% 100%, rgba(217, 119, 6, 0.08), transparent 50%),
+      linear-gradient(165deg, #eef2f8 0%, #f5f7fb 40%, #e8eef6 100%);
+  }
+
+  .app {
+    --detail-w: 360px;
+    display: grid;
+    grid-template-columns: 280px 1fr 6px var(--detail-w);
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    gap: 0;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 16px 28px;
+    border-bottom: 1px solid rgba(213, 222, 236, 0.8);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px);
+    z-index: 20;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background:
+      linear-gradient(145deg, #0d9488 0%, #0f766e 55%, #115e59 100%);
+    box-shadow: 0 8px 20px rgba(13, 148, 136, 0.35);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .brand-mark svg { width: 22px; height: 22px; }
+
+  .brand-text h1 {
+    font-family: "DM Sans", "Noto Sans SC", sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .brand-text p {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .search {
+    position: relative;
+    width: min(280px, 36vw);
+  }
+
+  .search input {
+    width: 100%;
+    height: 40px;
+    padding: 0 14px 0 40px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    font: 500 13px/1 "Noto Sans SC", sans-serif;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .search input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  }
+
+  .search svg {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .tool-btn {
+    height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    font: 600 12px/1 "Noto Sans SC", sans-serif;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  }
+
+  .tool-btn:hover {
+    background: #f8fafc;
+    border-color: #b8c5d8;
+  }
+
+  .tool-btn:active { transform: scale(0.97); }
+
+  .tool-btn.primary {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.28);
+  }
+
+  .tool-btn.primary:hover { filter: brightness(1.05); }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    padding: 22px 18px 28px;
+    border-right: 1px solid rgba(213, 222, 236, 0.8);
+    background: rgba(255, 255, 255, 0.55);
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  .side-block + .side-block { margin-top: 28px; }
+
+  .side-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .layer-list, .legend-list, .path-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .layer-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--text);
+    font: 500 13px/1.3 "Noto Sans SC", sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .layer-btn:hover { background: rgba(255, 255, 255, 0.8); }
+
+  .layer-btn.active {
+    background: #fff;
+    border-color: var(--line);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  }
+
+  .layer-btn .swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px var(--swatch-ring);
+  }
+
+  .layer-btn .meta {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    font-family: "DM Sans", sans-serif;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .legend-item i {
+    width: 28px;
+    height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .path-chip {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    text-align: left;
+    width: 100%;
+    font: inherit;
+    color: inherit;
+  }
+
+  .path-chip:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 6px 18px rgba(13, 148, 136, 0.1);
+  }
+
+  .path-chip .num {
+    width: 22px;
+    height: 22px;
+    border-radius: 8px;
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+    font: 700 11px/22px "DM Sans", sans-serif;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .path-chip strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+
+  .path-chip span {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  /* ── Graph stage ── */
+  .stage-wrap {
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .stage {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .stage.dragging { cursor: grabbing; }
+
+  .stage svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .edge {
+    fill: none;
+    stroke: #c5d0e0;
+    stroke-width: 1.5;
+    opacity: 0.7;
+    transition: opacity 0.25s ease, stroke 0.25s ease, stroke-width 0.25s ease;
+  }
+
+  /* 焦点模式：无关边变细、变浅灰，不消失 */
+  .stage.focus-on .edge.quiet {
+    stroke: #dde4ef;
+    stroke-width: 1;
+    opacity: 0.45;
+  }
+
+  .edge.hot {
+    opacity: 1;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+  }
+
+  .edge.hot.flow {
+    stroke-dasharray: 6 10;
+    animation: edge-flow 1.1s linear infinite;
+  }
+
+  @keyframes edge-flow {
+    to { stroke-dashoffset: -16; }
+  }
+
+  .edge-label-g {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .edge-label-g.show { opacity: 1; }
+
+  .edge-label-g text {
+    font-size: 10px;
+    fill: #64748b;
+    font-family: "DM Sans", "Noto Sans SC", sans-serif;
+    font-weight: 600;
+  }
+
+  .node {
+    cursor: grab;
+  }
+
+  .node.dragging {
+    cursor: grabbing;
+  }
+
+  .node.dragging .body {
+    filter: drop-shadow(0 8px 18px rgba(13, 148, 136, 0.28));
+  }
+
+  .node .glow {
+    fill: #0d9488;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .node .ring {
+    fill: none;
+    stroke: #0d9488;
+    stroke-width: 1.75;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .node .body {
+    transition: fill 0.22s ease, stroke 0.22s ease, stroke-width 0.22s ease, filter 0.22s ease;
+  }
+
+  .node-title {
+    font-family: "Noto Sans SC", "DM Sans", sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    fill: var(--ink);
+    pointer-events: none;
+    transition: fill 0.22s ease;
+  }
+
+  .node-en {
+    font-family: "DM Sans", sans-serif;
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    fill: var(--muted);
+    pointer-events: none;
+    text-transform: uppercase;
+    transition: fill 0.22s ease;
+  }
+
+  .node.hub .node-title { font-size: 14px; fill: #fff; }
+  .node.hub .node-en { fill: rgba(255, 255, 255, 0.78); font-size: 9px; }
+
+  /* 关联：细虚线青环，描边改青色 */
+  .node.related .ring {
+    opacity: 0.7;
+    stroke-dasharray: 3.5 3.5;
+  }
+  .node.related:not(.hub) .body {
+    stroke: #0d9488 !important;
+    stroke-width: 2.2;
+  }
+
+  /* 选中：统一青色描边 + 轻投影 */
+  .node.selected .glow { opacity: 0.08; }
+  .node.selected .ring {
+    opacity: 1;
+    stroke-width: 1.8;
+    stroke-dasharray: none;
+  }
+  .node.selected:not(.hub) .body {
+    fill: #f0fdfa;
+    stroke: #0d9488 !important;
+    stroke-width: 2.6;
+    filter: drop-shadow(0 4px 12px rgba(13, 148, 136, 0.18));
+  }
+  .node.selected.hub .body {
+    filter: drop-shadow(0 6px 16px rgba(13, 148, 136, 0.32));
+  }
+
+  /* 无关：压低描边与英文，中文仍可读 */
+  .stage.focus-on .node.quiet:not(.hub) .body {
+    fill: #f8fafc;
+    stroke: #dbe2ec;
+    stroke-width: 1.4;
+    filter: none;
+  }
+  .stage.focus-on .node.quiet .node-title { fill: #a0aec0; }
+  .stage.focus-on .node.quiet .node-en { fill: #d0d7e2; }
+  .stage.focus-on .node.quiet.hub .body { opacity: 0.5; }
+  .stage.focus-on .node.quiet .glow,
+  .stage.focus-on .node.quiet .ring { opacity: 0 !important; }
+
+  .stage.path-on .node.on-path:not(.quiet):not(.selected):not(.hub) .body {
+    stroke-width: 2.4;
+  }
+  .edge.on-path:not(.hot) {
+    opacity: 0.8;
+    stroke-width: 1.9;
+  }
+
+  .hint-bar {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: rgba(12, 18, 34, 0.88);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 12px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 12px 32px rgba(12, 18, 34, 0.25);
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .hint-bar kbd {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #fff;
+  }
+
+  /* ── Detail panel ── */
+  .detail-resizer {
+    position: relative;
+    z-index: 15;
+    cursor: col-resize;
+    background: transparent;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .detail-resizer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+    background: rgba(213, 222, 236, 0.95);
+    transition: background 0.15s, width 0.15s, box-shadow 0.15s;
+  }
+
+  .detail-resizer::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 36px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: #c5d0e0;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+  }
+
+  .detail-resizer:hover::before,
+  .detail-resizer.is-dragging::before {
+    width: 2px;
+    background: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .detail-resizer:hover::after,
+  .detail-resizer.is-dragging::after {
+    opacity: 1;
+    background: var(--cyan);
+  }
+
+  body.is-resizing-detail {
+    cursor: col-resize;
+    user-select: none;
+  }
+
+  body.is-resizing-detail * {
+    cursor: col-resize !important;
+  }
+
+  .detail {
+    border-left: none;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(12px);
+    overflow-y: auto;
+    padding: 0;
+    z-index: 10;
+    min-width: 0;
+  }
+
+  .detail-empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 28px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .detail-empty .orb {
+    width: 72px;
+    height: 72px;
+    border-radius: 24px;
+    margin-bottom: 18px;
+    background:
+      linear-gradient(145deg, var(--cyan-soft), var(--blue-soft));
+    display: grid;
+    place-items: center;
+  }
+
+  .detail-empty h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .detail-empty p {
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 240px;
+  }
+
+  .detail-body { display: none; padding: 24px 22px 36px; }
+  .detail.has-selection .detail-empty { display: none; }
+  .detail.has-selection .detail-body { display: block; }
+
+  .detail-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .detail-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font: 700 14px/1 "DM Sans", sans-serif;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .detail-head h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  .detail-head .en {
+    margin-top: 4px;
+    font-family: "DM Sans", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .pill {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: var(--muted);
+  }
+
+  .pill.layer { background: var(--cyan-soft); color: var(--cyan-deep); }
+  .pill.card { background: var(--blue-soft); color: var(--blue); }
+
+  .section-title {
+    margin: 22px 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .detail-body p.desc {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .points {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .points li {
+    position: relative;
+    padding: 12px 14px 12px 36px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .points li::before {
+    content: attr(data-n);
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+    font: 700 10px/18px "DM Sans", sans-serif;
+    text-align: center;
+  }
+
+  .rule-table-wrap {
+    margin-top: 4px;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #e8eef6;
+    background: #fff;
+  }
+
+  .rule-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+
+  .rule-table th,
+  .rule-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #eef2f7;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .rule-table th {
+    background: #f8fafc;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .rule-table tr:last-child td { border-bottom: none; }
+
+  .rule-table .form {
+    font-family: "SF Mono", Menlo, "JetBrains Mono", monospace;
+    font-weight: 700;
+    color: var(--cyan-deep);
+    white-space: nowrap;
+  }
+
+  .rule-table .mono {
+    font-family: "SF Mono", Menlo, "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #334155;
+  }
+
+  .rule-table .err {
+    color: #e11d48;
+    font-weight: 700;
+  }
+
+  .rule-table .note {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .code-window {
+    margin-top: 4px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #1f1f24;
+    border: 1px solid #2c2c34;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+  }
+
+  .code-chrome {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 14px 8px;
+    background: linear-gradient(180deg, #2a2a30 0%, #232328 100%);
+    border-bottom: 1px solid #18181c;
+  }
+
+  .code-chrome .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.25);
+  }
+
+  .code-chrome .dot.red { background: #ff5f57; }
+  .code-chrome .dot.yellow { background: #febc2e; }
+  .code-chrome .dot.green { background: #28c840; }
+
+  .code-chrome .code-file {
+    margin-left: 8px;
+    font-family: "SF Mono", Menlo, Monaco, "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: #9a9aa2;
+    letter-spacing: 0.02em;
+  }
+
+  .code {
+    margin: 0;
+    padding: 14px 16px 16px;
+    background: #1f1f24;
+    color: #dfdfe0;
+    font-family: "SF Mono", Menlo, Monaco, "Cascadia Code", "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  /* Xcode Dark Default 语法色 */
+  .code .kw { color: #ff7ab2; }   /* keyword */
+  .code .tp { color: #6bdfff; }   /* type / system type */
+  .code .fn { color: #a8e6a1; }   /* function / declaration */
+  .code .cm { color: #6c7986; }   /* comment */
+  .code .str { color: #ff8170; }  /* string */
+  .code .num { color: #d0a8ff; }  /* number / constant */
+
+  .rel-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rel-chip {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .rel-chip:hover {
+    border-color: var(--cyan);
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+  }
+
+  .rel-chip .dir {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .card-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .link-card {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform 0.12s, border-color 0.15s, background 0.15s;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--text);
+  }
+
+  .link-card:hover { transform: translateY(-1px); }
+
+  .link-card.card-ans {
+    background: linear-gradient(135deg, #eff6ff, #f8fbff);
+    border-color: #dbeafe;
+    color: var(--blue);
+  }
+
+  .link-card.card-fu {
+    background: linear-gradient(135deg, #f0fdfa, #f7fffc);
+    border-color: #ccfbf1;
+    color: var(--cyan-deep);
+  }
+
+  .link-card .link-kicker {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .link-card small {
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1100px) {
+    .app {
+      --detail-w: auto;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto 1fr auto;
+      height: auto;
+      min-height: 100vh;
+      overflow: auto;
+    }
+    body { overflow: auto; }
+    .sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-height: none;
+    }
+    .side-block:last-child { grid-column: 1 / -1; }
+    .stage-wrap { height: 62vh; min-height: 420px; }
+    .detail-resizer { display: none; }
+    .detail {
+      border-left: none;
+      border-top: 1px solid var(--line);
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .topbar { flex-direction: column; align-items: stretch; }
+    .search { width: 100%; }
+    .top-actions { justify-content: stretch; }
+    .sidebar { grid-template-columns: 1fr; }
+    .brand-text h1 { font-size: 16px; }
+    .hint-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M7 8.5L3.5 12 7 15.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 8.5L20.5 12 17 15.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13.2 6.5L10.8 17.5" stroke="#99f6e4" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>C++ STL · 知识图谱</h1>
+        <p>CONTAINER  ·  ITERATOR  ·  ALGORITHM</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+        <input id="search" type="search" placeholder="搜索知识点…" autocomplete="off" />
+      </div>
+      <button class="tool-btn" id="btn-fit" type="button">适应画布</button>
+      <button class="tool-btn" id="btn-reset" type="button">复位布局</button>
+      <button class="tool-btn" id="btn-clear" type="button">清除高亮</button>
+      <button class="tool-btn primary" id="btn-tour" type="button">学习路径</button>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <div class="side-block">
+      <div class="side-label"><span>知识分层</span><span id="layer-count">全部</span></div>
+      <div class="layer-list" id="layer-list"></div>
+    </div>
+    <div class="side-block">
+      <div class="side-label"><span>关系图例</span></div>
+      <div class="legend-list">
+        <div class="legend-item"><i style="background:#0d9488"></i>组成 / 属于</div>
+        <div class="legend-item"><i style="background:#2563eb"></i>底层实现</div>
+        <div class="legend-item"><i style="background:#d97706"></i>协作 / 依赖</div>
+        <div class="legend-item"><i style="background:#7c3aed"></i>应用 / 演进</div>
+      </div>
+    </div>
+    <div class="side-block">
+      <div class="side-label"><span>推荐路径</span></div>
+      <div class="path-list" id="path-list"></div>
+    </div>
+  </aside>
+
+  <main class="stage-wrap">
+    <div class="stage" id="stage"></div>
+    <div class="hint-bar" id="hint-bar">
+      <span>拖拽节点重排 · 空白处平移 · 滚轮缩放</span>
+      <span><kbd>Esc</kbd> 清除</span>
+    </div>
+  </main>
+
+  <div class="detail-resizer" id="detail-resizer" title="拖动调整右侧栏宽度" role="separator" aria-orientation="vertical" aria-label="调整右侧栏宽度"></div>
+
+  <aside class="detail" id="detail">
+    <div class="detail-empty">
+      <div class="orb">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="3" stroke="#0d9488" stroke-width="2"/>
+          <circle cx="12" cy="12" r="8" stroke="#0d9488" stroke-width="1.5" opacity=".4"/>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>选择一个知识点</h2>
+      <p>点击图谱中的节点，查看底层结构、复杂度、面试要点与代码示意。</p>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </aside>
+</div>
+
+<script>
+(() => {
+  const LAYERS = [
+    { id: "hub",    name: "总览",     color: "#0f766e", ring: "rgba(15,118,110,.20)", count: 0 },
+    { id: "cont",   name: "容器",     color: "#2563eb", ring: "rgba(37,99,235,.18)",  count: 0 },
+    { id: "iter",   name: "迭代器",   color: "#0891b2", ring: "rgba(8,145,178,.18)",  count: 0 },
+    { id: "algo",   name: "算法",     color: "#d97706", ring: "rgba(217,119,6,.18)",  count: 0 },
+    { id: "func",   name: "仿函数",   color: "#7c3aed", ring: "rgba(124,58,237,.16)", count: 0 },
+    { id: "alloc",  name: "配置器",   color: "#e11d48", ring: "rgba(225,29,72,.15)",  count: 0 },
+    { id: "util",   name: "适配器与工具", color: "#059669", ring: "rgba(5,150,105,.16)", count: 0 },
+  ];
+
+  const NODES = [
+    {
+      id: "stl", layer: "hub", title: "STL", en: "Standard Template Library",
+      tag: "STL", x: 950, y: 560, r: 58, hub: true,
+      summary: "以泛型编程为核心的标准模板库：用模板把「数据结构」与「算法」彻底解耦，两者通过迭代器这一抽象接口协作。",
+      points: [
+        "六大组件：容器、迭代器、算法、仿函数、配置器、适配器。",
+        "解耦关键：算法只认迭代器区间 [first, last)，不认容器。",
+        "泛型 = 编译期多态：模板实例化，无虚表开销，可内联。",
+        "组合优于继承：容器/算法/策略三者自由拼装。",
+        "代价：编译期膨胀、错误信息冗长（C++20 concepts 改善）。",
+      ],
+      code: `<span class="cm">// 容器 + 迭代器 + 算法 + 仿函数 四件套协作</span>
+<span class="tp">std</span>::<span class="tp">vector</span>&lt;<span class="kw">int</span>&gt; v{<span class="num">5</span>, <span class="num">3</span>, <span class="num">9</span>, <span class="num">1</span>};
+<span class="tp">std</span>::<span class="fn">sort</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(),      <span class="cm">// 算法 + 迭代器</span>
+          <span class="tp">std</span>::<span class="tp">greater</span>&lt;&gt;{});        <span class="cm">// 仿函数：策略</span>`,
+      card: null,
+    },
+
+    /* ───────── 容器 ───────── */
+    {
+      id: "cont", layer: "cont", title: "容器", en: "Containers", tag: "CONTAINER",
+      x: 600, y: 560, r: 46,
+      summary: "负责数据的存储与组织，本质是各类数据结构的模板化封装。按组织方式分为序列式、关联式、无序关联式三大类。",
+      points: [
+        "值语义：元素以拷贝/移动方式存入容器，容器负责其生命周期。",
+        "统一接口：begin/end、size/empty、swap、emplace 系列。",
+        "选型三问：是否需要随机访问？是否需要有序？插删发生在哪？",
+        "除固定容量的 array 外，标准容器通常可通过 Allocator 模板参数定制内存来源。",
+        "共 13 个经典容器；stack / queue / priority_queue 是接口受限的容器适配器。",
+      ],
+      code: `<span class="cm">// 选型速查</span>
+<span class="tp">vector</span>   <span class="cm">// 默认首选：连续内存、缓存友好</span>
+<span class="tp">deque</span>    <span class="cm">// 需要两端 O(1) 增删</span>
+<span class="tp">list</span>     <span class="cm">// 频繁中间插删且已持有迭代器</span>
+<span class="tp">map/set</span>  <span class="cm">// 需要按 key 有序遍历</span>
+<span class="tp">unordered_map</span> <span class="cm">// 只查不排，平均 O(1)</span>`,
+      card: null,
+    },
+    {
+      id: "seq", layer: "cont", title: "序列式容器", lines: ["序列式", "容器"],
+      en: "Sequence", tag: "SEQUENCE", x: 330, y: 400, r: 42,
+      summary: "元素顺序由「插入位置」决定，与元素值本身无关。包含 vector / deque / list / forward_list / array。",
+      points: [
+        "线性排列，支持在指定位置 insert / erase。",
+        "vector、deque、array 支持随机访问（RandomAccessIterator）。",
+        "list / forward_list 是链式结构，只支持顺序遍历。",
+        "array 容量编译期固定、元素内嵌存储；对象位于栈、堆或静态区取决于其自身存储位置。",
+        "C++11 起统一提供 emplace 系列，原地构造少一次拷贝。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">vector</span>&lt;<span class="tp">Point</span>&gt; v;
+v.<span class="fn">push_back</span>(<span class="tp">Point</span>(<span class="num">1</span>, <span class="num">2</span>));  <span class="cm">// 构造 + 移动</span>
+v.<span class="fn">emplace_back</span>(<span class="num">1</span>, <span class="num">2</span>);      <span class="cm">// 原地构造，更省</span>`,
+      card: null,
+    },
+    {
+      id: "array", layer: "cont", title: "array", en: "Fixed Array", tag: "ARRAY",
+      x: 100, y: 165, r: 36,
+      summary: "std::array<T, N> 是固定容量、连续存储的序列容器，对原生数组做零额外开销的标准容器封装。",
+      points: [
+        "容量 N 是类型的一部分，编译期固定；不支持 insert / erase / resize。",
+        "随机访问 O(1)，迭代器满足连续迭代器要求。",
+        "元素直接内嵌在对象中，不单独进行动态内存分配。",
+        "支持 size / begin / end / swap / at，并可直接用于 STL 算法。",
+        "N 为 0 时 begin() == end()，不可解引用 front() / back()。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">array</span>&lt;<span class="kw">int</span>, <span class="num">4</span>&gt; a{<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">2</span>};
+<span class="tp">std</span>::<span class="fn">sort</span>(a.<span class="fn">begin</span>(), a.<span class="fn">end</span>());
+<span class="kw">int</span> x = a.<span class="fn">at</span>(<span class="num">2</span>);  <span class="cm">// 越界时抛 std::out_of_range</span>`,
+      card: null,
+    },
+    {
+      id: "vector", layer: "cont", title: "vector", en: "Dynamic Array", tag: "VECTOR",
+      x: 110, y: 300, r: 38,
+      summary: "连续内存的动态数组。size 达到 capacity 时按倍数（GCC 2x / MSVC 1.5x）重新分配并搬迁全部元素。",
+      points: [
+        "随机访问 O(1)；尾部 push_back 均摊 O(1)；中间插删 O(N)。",
+        "扩容 = 申请新块 + 移动/拷贝 + 释放旧块 ⇒ 所有迭代器、指针、引用失效。",
+        "reserve 预留可消除重复扩容；resize 会真正构造元素，两者不同。",
+        "shrink_to_fit 是非强制请求；经典写法 vector&lt;T&gt;(v).swap(v)。",
+        "vector&lt;bool&gt; 是位压缩特化，operator[] 返回代理对象，不是真容器。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">vector</span>&lt;<span class="kw">int</span>&gt; v;
+v.<span class="fn">reserve</span>(<span class="num">1000</span>);          <span class="cm">// 一次到位，避免多次搬迁</span>
+<span class="kw">auto</span> it = v.<span class="fn">begin</span>();
+v.<span class="fn">push_back</span>(<span class="num">1</span>);          <span class="cm">// 若触发扩容，it 已失效！</span>
+
+<span class="cm">// 安全的循环删除</span>
+<span class="kw">for</span> (<span class="kw">auto</span> i = v.<span class="fn">begin</span>(); i != v.<span class="fn">end</span>(); ) {
+  <span class="kw">if</span> (*i % <span class="num">2</span>) i = v.<span class="fn">erase</span>(i); <span class="kw">else</span> ++i;
+}`,
+      card: { num: "038", slug: "038-vector-growth" },
+    },
+    {
+      id: "deque", layer: "cont", title: "deque", en: "Double-ended Queue", tag: "DEQUE",
+      x: 80, y: 470, r: 38,
+      summary: "分段连续：一个中控 map 指针数组指向若干等长缓冲区，因此两端都能 O(1) 扩张，且不整体搬迁元素。",
+      points: [
+        "两端 push/pop 均为 O(1)；随机访问 O(1) 但需两次寻址，慢于 vector。",
+        "迭代器较「重」：含 cur / first / last / node 四个指针。",
+        "两端插入：迭代器失效，但已有元素的引用/指针仍然有效。",
+        "中间插入：全部迭代器与引用失效。",
+        "是 stack 与 queue 的默认底层容器。",
+      ],
+      code: `<span class="cm">// 中控 map + 缓冲区（示意）</span>
+<span class="tp">T</span>** map;        <span class="cm">// 指针数组</span>
+<span class="cm">// map[0] -&gt; [ _ _ 3 4 ]   前端预留</span>
+<span class="cm">// map[1] -&gt; [ 5 6 7 8 ]</span>
+<span class="cm">// map[2] -&gt; [ 9 _ _ _ ]   后端预留</span>
+
+<span class="tp">std</span>::<span class="tp">deque</span>&lt;<span class="kw">int</span>&gt; d;
+d.<span class="fn">push_front</span>(<span class="num">1</span>);  <span class="cm">// O(1)，vector 做不到</span>`,
+      card: { num: "040", slug: "040-deque-structure" },
+    },
+    {
+      id: "list", layer: "cont", title: "list", en: "Doubly Linked List", tag: "LIST",
+      x: 95, y: 630, r: 38,
+      summary: "双向循环链表，带一个哨兵节点作为 end()。任意位置插删 O(1)，但不支持随机访问。",
+      points: [
+        "插入/删除 O(1)（已持有迭代器时）；查找 O(N)；无 operator[]。",
+        "迭代器稳定：插删只影响被删元素本身的迭代器。",
+        "独有成员：splice（O(1) 转移节点）、merge、remove、unique、sort。",
+        "不能用 std::sort（需随机访问），必须用成员 list::sort（归并）。",
+        "每个节点两个指针，空间开销与缓存局部性都差于 vector。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">list</span>&lt;<span class="kw">int</span>&gt; a{<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>}, b{<span class="num">7</span>,<span class="num">8</span>};
+a.<span class="fn">splice</span>(a.<span class="fn">begin</span>(), b);  <span class="cm">// O(1) 只改指针</span>
+a.<span class="fn">sort</span>();                <span class="cm">// 成员版归并排序</span>
+<span class="cm">// std::sort(a.begin(), a.end()); // 编译错误</span>`,
+      card: null,
+    },
+    {
+      id: "forward_list", layer: "cont", title: "forward_list", lines: ["forward", "list"],
+      en: "Singly Linked List", tag: "FWD LIST", x: -55, y: 560, r: 38,
+      summary: "单向链表，是标准容器中额外空间开销最小的链式结构；只支持向前遍历和当前位置之后的插删。",
+      points: [
+        "只存 next 指针，不支持反向遍历、size()、push_back 或 back()。",
+        "已知前驱时 insert_after / erase_after 为 O(1)，查找仍为 O(N)。",
+        "提供 before_begin()，用于在首元素之前执行 insert_after。",
+        "插入不使迭代器失效；删除只使被删元素的迭代器失效。",
+        "与 list 一样提供成员版 sort / merge / splice_after / unique。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">forward_list</span>&lt;<span class="kw">int</span>&gt; xs{<span class="num">2</span>, <span class="num">3</span>};
+xs.<span class="fn">insert_after</span>(xs.<span class="fn">before_begin</span>(), <span class="num">1</span>); <span class="cm">// 1, 2, 3</span>
+xs.<span class="fn">erase_after</span>(xs.<span class="fn">before_begin</span>());     <span class="cm">// 2, 3</span>`,
+      card: null,
+    },
+    {
+      id: "assoc", layer: "cont", title: "关联式容器", lines: ["关联式", "容器"],
+      en: "Associative", tag: "ORDERED", x: 300, y: 600, r: 42,
+      summary: "set / multiset / map / multimap，底层统一为红黑树，元素按 key 自动排序，增删查均为 O(log N)。",
+      points: [
+        "有序：中序遍历即为升序；支持 lower_bound / upper_bound 范围查询。",
+        "map 存 pair&lt;const Key, T&gt;，key 不可修改（会破坏树序）。",
+        "map::operator[] 找不到会插入默认值；只查请用 find / at / count。",
+        "比较器需满足严格弱序；等价判定用 !(a&lt;b) && !(b&lt;a)，而非 ==。",
+        "插删不使其他迭代器失效（节点式容器）；C++17 起可用 extract 转移节点。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">map</span>&lt;<span class="tp">std</span>::<span class="tp">string</span>, <span class="kw">int</span>&gt; m;
+<span class="kw">if</span> (m.<span class="fn">count</span>(<span class="str">"k"</span>)) { <span class="cm">/* 不会插入 */</span> }
+m[<span class="str">"k"</span>]++;                 <span class="cm">// 不存在则先插入 0</span>
+
+<span class="cm">// 区间查询：[10, 20)</span>
+<span class="kw">auto</span> lo = s.<span class="fn">lower_bound</span>(<span class="num">10</span>);
+<span class="kw">auto</span> hi = s.<span class="fn">lower_bound</span>(<span class="num">20</span>);`,
+      card: { num: "039", slug: "039-map-unordered-map" },
+    },
+    {
+      id: "set", layer: "cont", title: "set", en: "Unique Keys", tag: "SET",
+      x: 85, y: 735, r: 34,
+      summary: "有序唯一键集合。元素本身就是 key，按比较器排序，不允许重复。",
+      points: [
+        "find / insert / erase 均为 O(log N)。",
+        "元素通过迭代器视为 const，不能原地修改 key。",
+        "insert 返回 pair<iterator, bool>，bool 表示是否真正插入。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">set</span>&lt;<span class="kw">int</span>&gt; s{<span class="num">3</span>, <span class="num">1</span>, <span class="num">3</span>};
+<span class="cm">// s == {1, 3}</span>
+<span class="kw">auto</span> [it, inserted] = s.<span class="fn">insert</span>(<span class="num">2</span>);`,
+      card: null,
+    },
+    {
+      id: "multiset", layer: "cont", title: "multiset", en: "Duplicate Keys", tag: "MULTISET",
+      x: -65, y: 735, r: 34,
+      summary: "允许重复键的有序集合；相等元素相邻存放，适合维护可重复且有序的数据。",
+      points: [
+        "增删查均为 O(log N)，count 可大于 1。",
+        "equal_range(key) 返回全部等价元素的半开区间。",
+        "erase(key) 会删除该 key 的全部元素；只删一个应传迭代器。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">multiset</span>&lt;<span class="kw">int</span>&gt; s{<span class="num">1</span>, <span class="num">1</span>, <span class="num">2</span>};
+<span class="kw">auto</span> [first, last] = s.<span class="fn">equal_range</span>(<span class="num">1</span>);
+s.<span class="fn">erase</span>(first); <span class="cm">// 只删除一个 1</span>`,
+      card: null,
+    },
+    {
+      id: "map", layer: "cont", title: "map", en: "Key-value Map", tag: "MAP",
+      x: 85, y: 835, r: 34,
+      summary: "有序唯一键的键值映射，元素类型为 pair<const Key, T>，按 key 排序。",
+      points: [
+        "查找、插入、删除均为 O(log N)。",
+        "operator[] 在 key 不存在时插入默认值；只查使用 find / contains / at。",
+        "try_emplace 可避免 key 已存在时白白构造 value。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">map</span>&lt;<span class="tp">std</span>::<span class="tp">string</span>, <span class="kw">int</span>&gt; m;
+m.<span class="fn">try_emplace</span>(<span class="str">"cpp"</span>, <span class="num">20</span>);
+<span class="kw">if</span> (m.<span class="fn">contains</span>(<span class="str">"cpp"</span>)) { <span class="cm">/* C++20 */</span> }`,
+      card: { num: "039", slug: "039-map-unordered-map" },
+    },
+    {
+      id: "multimap", layer: "cont", title: "multimap", en: "Duplicate-key Map", tag: "MULTIMAP",
+      x: -65, y: 835, r: 34,
+      summary: "允许重复键的有序键值映射，一个 key 可以对应多个 value。",
+      points: [
+        "没有 operator[] / at，因为一个 key 不唯一对应一个 value。",
+        "equal_range 可遍历某个 key 对应的全部 value。",
+        "插入、查找、删除均为 O(log N)，遍历匹配项另加 O(K)。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">multimap</span>&lt;<span class="kw">int</span>, <span class="tp">std</span>::<span class="tp">string</span>&gt; m;
+m.<span class="fn">emplace</span>(<span class="num">1</span>, <span class="str">"A"</span>);
+m.<span class="fn">emplace</span>(<span class="num">1</span>, <span class="str">"B"</span>);
+<span class="kw">auto</span> [first, last] = m.<span class="fn">equal_range</span>(<span class="num">1</span>);`,
+      card: null,
+    },
+    {
+      id: "rbtree", layer: "cont", title: "红黑树", en: "Red-Black Tree", tag: "RB-TREE",
+      x: 245, y: 800, r: 38,
+      summary: "set / multiset / map / multimap 的统一底层：弱平衡二叉搜索树，用颜色约束保证树高 O(log N)。",
+      points: [
+        "支撑容器：set、multiset、map、multimap（同一套红黑树，节点载荷不同）。",
+        "五条性质：节点非红即黑；根黑；叶(NIL)黑；红节点的子必黑；任一节点到各叶的黑高相同。",
+        "插入：先按 BST 插入并染红，再通过变色 / 单旋 / 双旋修复，最多 2 次旋转。",
+        "删除修复最多 3 次旋转，均摊调整次数为常数。",
+        "对比 AVL：AVL 更严格平衡查询略快，RB 树插删旋转更少，STL 选后者。",
+      ],
+      code: `<span class="cm">// 平衡的直观含义</span>
+<span class="cm">// 黑高相同 =&gt; 任意路径长度差不超过 2 倍</span>
+<span class="cm">// =&gt; 树高 h &lt;= 2*log2(N+1)</span>
+<span class="cm">// =&gt; find / insert / erase 均为 O(logN)</span>
+
+<span class="cm">// 左旋示意</span>
+<span class="cm">//    x            y</span>
+<span class="cm">//   / \\          / \\</span>
+<span class="cm">//  a   y   =&gt;   x   c</span>
+<span class="cm">//     / \\      / \\</span>
+<span class="cm">//    b   c    a   b</span>`,
+      card: null,
+    },
+    {
+      id: "unord", layer: "cont", title: "无序容器", lines: ["无序关联", "容器"],
+      en: "Unordered", tag: "HASH", x: 390, y: 920, r: 42,
+      summary: "C++11 引入的 unordered_map / set 系列，底层为哈希表（链地址法），平均 O(1)，最坏退化到 O(N)。",
+      points: [
+        "元素无序；不支持 lower_bound 之类的范围查询。",
+        "自定义 key 需同时提供 hash 仿函数与 operator== （或 equal_to）。",
+        "load_factor = size / bucket_count，超过 max_load_factor 触发 rehash。",
+        "rehash 使所有迭代器失效，但元素的引用与指针仍然有效（节点式）。",
+        "大量哈希冲突会退化为链表；C++ 未强制要求红黑树化（不同于 Java HashMap）。",
+      ],
+      code: `<span class="kw">struct</span> <span class="tp">KeyHash</span> {
+  <span class="tp">size_t</span> <span class="kw">operator</span>()(<span class="kw">const</span> <span class="tp">Key</span>&amp; k) <span class="kw">const</span> {
+    <span class="kw">return</span> <span class="tp">std</span>::<span class="tp">hash</span>&lt;<span class="kw">int</span>&gt;{}(k.a) ^
+           (<span class="tp">std</span>::<span class="tp">hash</span>&lt;<span class="kw">int</span>&gt;{}(k.b) &lt;&lt; <span class="num">1</span>);
+  }
+};
+<span class="tp">std</span>::<span class="tp">unordered_map</span>&lt;<span class="tp">Key</span>, <span class="kw">int</span>, <span class="tp">KeyHash</span>&gt; m;
+m.<span class="fn">reserve</span>(<span class="num">10000</span>);   <span class="cm">// 预分配桶，避免多次 rehash</span>`,
+      card: { num: "039", slug: "039-map-unordered-map" },
+    },
+    {
+      id: "unordered_set", layer: "cont", title: "unordered_set", lines: ["unordered", "set"],
+      en: "Hash Unique Keys", tag: "USET", x: 135, y: 950, r: 36,
+      summary: "基于哈希表的唯一键集合，不维护顺序；平均 O(1) 增删查，最坏 O(N)。",
+      points: [
+        "key 必须同时满足 Hash 与 KeyEqual 的一致性要求。",
+        "无 lower_bound / upper_bound，遍历顺序也不稳定。",
+        "reserve 可提前准备桶，减少批量插入期间的 rehash。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">unordered_set</span>&lt;<span class="kw">int</span>&gt; s;
+s.<span class="fn">reserve</span>(<span class="num">1000</span>);
+s.<span class="fn">insert</span>(<span class="num">42</span>);
+<span class="kw">bool</span> found = s.<span class="fn">contains</span>(<span class="num">42</span>);`,
+      card: null,
+    },
+    {
+      id: "unordered_multiset", layer: "cont", title: "unordered_multiset", lines: ["unordered", "multiset"],
+      en: "Hash Duplicate Keys", tag: "UMULTISET", x: -65, y: 950, r: 38,
+      summary: "允许重复键的无序集合；等价键在局部迭代顺序中相邻，可用 equal_range 获取。",
+      points: [
+        "平均 O(1) 增删查，最坏 O(N)。",
+        "count 可能大于 1；erase(key) 删除全部同键元素。",
+        "只删除一个匹配元素时，应先 find 再 erase(iterator)。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">unordered_multiset</span>&lt;<span class="kw">int</span>&gt; s{<span class="num">1</span>, <span class="num">1</span>, <span class="num">2</span>};
+<span class="kw">auto</span> it = s.<span class="fn">find</span>(<span class="num">1</span>);
+<span class="kw">if</span> (it != s.<span class="fn">end</span>()) s.<span class="fn">erase</span>(it);`,
+      card: null,
+    },
+    {
+      id: "unordered_map", layer: "cont", title: "unordered_map", lines: ["unordered", "map"],
+      en: "Hash Key-value Map", tag: "UMAP", x: 135, y: 1060, r: 36,
+      summary: "基于哈希表的唯一键值映射，是只需按 key 快速查询、不需要有序遍历时的常用选择。",
+      points: [
+        "平均 O(1) 增删查，最坏 O(N)；不提供范围查询。",
+        "operator[] 会插入缺失 key，查询优先 find / contains / at。",
+        "rehash 使迭代器失效，但已有元素的引用和指针保持有效。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">unordered_map</span>&lt;<span class="tp">std</span>::<span class="tp">string</span>, <span class="kw">int</span>&gt; m;
+m.<span class="fn">reserve</span>(<span class="num">1000</span>);
+m.<span class="fn">try_emplace</span>(<span class="str">"cpp"</span>, <span class="num">20</span>);`,
+      card: { num: "039", slug: "039-map-unordered-map" },
+    },
+    {
+      id: "unordered_multimap", layer: "cont", title: "unordered_multimap", lines: ["unordered", "multimap"],
+      en: "Hash Duplicate Map", tag: "UMULTIMAP", x: -65, y: 1060, r: 38,
+      summary: "允许重复键的无序键值映射，一个 key 可关联多个 value，平均 O(1) 定位匹配区间。",
+      points: [
+        "没有 operator[] / at；通过 find、equal_range、count 查询。",
+        "equal_range 返回同 key 元素的局部连续区间。",
+        "不保证全局遍历顺序；rehash 后迭代器全部失效。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">unordered_multimap</span>&lt;<span class="kw">int</span>, <span class="tp">std</span>::<span class="tp">string</span>&gt; m;
+m.<span class="fn">emplace</span>(<span class="num">1</span>, <span class="str">"A"</span>);
+m.<span class="fn">emplace</span>(<span class="num">1</span>, <span class="str">"B"</span>);
+<span class="kw">auto</span> [first, last] = m.<span class="fn">equal_range</span>(<span class="num">1</span>);`,
+      card: null,
+    },
+    {
+      id: "hashtable", layer: "cont", title: "哈希表", en: "Hash Table", tag: "BUCKET",
+      x: 325, y: 1095, r: 38,
+      summary: "unordered_set / multiset / map / multimap 的统一底层：桶数组 + 开链，定位 = hash(key) % bucket_count。",
+      points: [
+        "支撑容器：unordered_set、unordered_multiset、unordered_map、unordered_multimap。",
+        "开链法 vs 开放定址：STL 选开链，删除简单且不受聚集影响。",
+        "SGI 实现桶数取一组质数（53, 97, 193 …），rehash 时取下一个质数。",
+        "rehash 需要重算所有元素的桶位并重挂链表，代价 O(N)。",
+        "bucket_count / bucket_size / load_factor 可用于诊断性能。",
+      ],
+      code: `<span class="cm">// 开链结构（示意）</span>
+<span class="cm">// buckets[0] -&gt; node -&gt; node -&gt; null</span>
+<span class="cm">// buckets[1] -&gt; null</span>
+<span class="cm">// buckets[2] -&gt; node -&gt; null</span>
+
+<span class="kw">if</span> (m.<span class="fn">load_factor</span>() &gt; m.<span class="fn">max_load_factor</span>())
+  m.<span class="fn">rehash</span>(next_prime);  <span class="cm">// O(N) 重挂全部节点</span>`,
+      card: null,
+    },
+
+    /* ───────── 迭代器 ───────── */
+    {
+      id: "iter", layer: "iter", title: "迭代器", en: "Iterators", tag: "ITERATOR",
+      x: 760, y: 300, r: 46,
+      summary: "容器与算法之间的粘合剂：行为像指针的泛型对象。算法只依赖迭代器的能力，从而与具体容器彻底解耦。",
+      points: [
+        "核心操作：operator*、operator->、operator++、operator==。",
+        "半开区间 [first, last)：last 是尾后位置，不可解引用；空区间即 first == last。",
+        "迭代器的「能力等级」决定算法能否使用它（编译期检查）。",
+        "通过 traits 萃取类型信息，实现零开销的编译期分派。",
+        "C++20 用 concepts 重新定义迭代器要求，错误信息更清晰。",
+      ],
+      code: `<span class="cm">// 算法只认区间，不认容器</span>
+<span class="kw">template</span>&lt;<span class="kw">typename</span> <span class="tp">It</span>, <span class="kw">typename</span> <span class="tp">T</span>&gt;
+<span class="tp">It</span> <span class="fn">my_find</span>(<span class="tp">It</span> first, <span class="tp">It</span> last, <span class="kw">const</span> <span class="tp">T</span>&amp; v) {
+  <span class="kw">while</span> (first != last &amp;&amp; *first != v) ++first;
+  <span class="kw">return</span> first;
+}`,
+      card: { num: "041", slug: "041-stl-iterators" },
+    },
+    {
+      id: "itercat", layer: "iter", title: "五种分类", lines: ["迭代器", "五种分类"],
+      en: "Categories", tag: "CATEGORY", x: 620, y: 120, r: 40,
+      summary: "Input / Output → Forward → Bidirectional → RandomAccess，能力逐层增强，构成继承式的标签体系。",
+      points: [
+        "Input：单遍只读（istream_iterator）；Output：单遍只写（back_insert_iterator）。",
+        "Forward：可多遍前向遍历（forward_list、unordered_*）。",
+        "Bidirectional：支持 --（list、map、set）。",
+        "RandomAccess：支持 +n、-、[]、大小比较（vector、deque、裸指针）。",
+        "C++20 新增 Contiguous：保证内存连续（vector、array、string）。",
+      ],
+      code: `<span class="cm">// 标签分派：编译期选最优实现</span>
+<span class="kw">template</span>&lt;<span class="kw">class</span> <span class="tp">It</span>&gt;
+<span class="kw">void</span> <span class="fn">advance_impl</span>(<span class="tp">It</span>&amp; i, <span class="kw">int</span> n,
+                  <span class="tp">std</span>::<span class="tp">random_access_iterator_tag</span>) {
+  i += n;                       <span class="cm">// O(1)</span>
+}
+<span class="kw">template</span>&lt;<span class="kw">class</span> <span class="tp">It</span>&gt;
+<span class="kw">void</span> <span class="fn">advance_impl</span>(<span class="tp">It</span>&amp; i, <span class="kw">int</span> n,
+                  <span class="tp">std</span>::<span class="tp">input_iterator_tag</span>) {
+  <span class="kw">while</span> (n--) ++i;              <span class="cm">// O(N)</span>
+}`,
+      card: { num: "041", slug: "041-stl-iterators" },
+    },
+    {
+      id: "traits", layer: "iter", title: "iterator_traits", lines: ["iterator", "traits"],
+      en: "Traits", tag: "TRAITS", x: 840, y: 90, r: 40,
+      summary: "类型萃取机：统一取出迭代器的 value_type / difference_type / pointer / reference / iterator_category。",
+      points: [
+        "解决「算法需要知道元素类型，但函数模板无法返回推导类型」的问题。",
+        "对裸指针 T* 提供偏特化：category 为 random_access，value_type 为 T。",
+        "对 const T* 特化时 value_type 去掉 const（否则无法声明临时变量）。",
+        "是编译期决策，零运行时开销，是 STL 泛型的基石。",
+        "C++20 起可用 std::iter_value_t / iter_difference_t 简写。",
+      ],
+      code: `<span class="kw">template</span>&lt;<span class="kw">class</span> <span class="tp">I</span>&gt;
+<span class="kw">struct</span> <span class="tp">iterator_traits</span> {
+  <span class="kw">typedef</span> <span class="kw">typename</span> <span class="tp">I</span>::value_type value_type;
+  <span class="kw">typedef</span> <span class="kw">typename</span> <span class="tp">I</span>::iterator_category iterator_category;
+};
+<span class="cm">// 裸指针偏特化</span>
+<span class="kw">template</span>&lt;<span class="kw">class</span> <span class="tp">T</span>&gt;
+<span class="kw">struct</span> <span class="tp">iterator_traits</span>&lt;<span class="tp">T</span>*&gt; {
+  <span class="kw">typedef</span> <span class="tp">T</span> value_type;
+  <span class="kw">typedef</span> <span class="tp">std</span>::<span class="tp">random_access_iterator_tag</span> iterator_category;
+};`,
+      card: { num: "041", slug: "041-stl-iterators" },
+    },
+    {
+      id: "invalid", layer: "iter", title: "迭代器失效", lines: ["迭代器", "失效"],
+      en: "Invalidation", tag: "PITFALL", x: 500, y: 265, r: 40,
+      summary: "容器结构变化后，原迭代器/指针/引用可能指向已释放或已搬迁的内存。这是 STL 面试最高频的坑。",
+      points: [
+        "vector：扩容后全部失效；erase 后插入点之后的全部失效。",
+        "deque：两端插入使迭代器失效但引用有效；中间插入全失效。",
+        "list / map / set：仅被删除元素的迭代器失效，其余稳定。",
+        "unordered_*：rehash 后迭代器全失效，但引用与指针有效。",
+        "正确写法：it = c.erase(it)；关联容器 C++11 起 erase 也返回下一个迭代器。",
+      ],
+      table: `<div class="rule-table-wrap"><table class="rule-table">
+<thead><tr><th>容器</th><th>插入</th><th>删除</th><th>引用/指针</th></tr></thead>
+<tbody>
+<tr><td class="form">vector</td><td class="err">扩容则全失效</td><td class="mono">删除点之后失效</td><td class="note">随迭代器一同失效</td></tr>
+<tr><td class="form">deque</td><td class="err">中间插入全失效</td><td class="mono">中间删除全失效</td><td class="note">两端操作时引用仍有效</td></tr>
+<tr><td class="form">list</td><td class="mono">不失效</td><td class="mono">仅被删元素</td><td class="note">稳定</td></tr>
+<tr><td class="form">map / set</td><td class="mono">不失效</td><td class="mono">仅被删元素</td><td class="note">稳定</td></tr>
+<tr><td class="form">unordered_*</td><td class="err">rehash 则全失效</td><td class="mono">仅被删元素</td><td class="note">始终有效</td></tr>
+</tbody></table></div>`,
+      code: `<span class="cm">// 反例：erase 后 it 已失效</span>
+<span class="kw">for</span> (<span class="kw">auto</span> it = v.<span class="fn">begin</span>(); it != v.<span class="fn">end</span>(); ++it)
+  <span class="kw">if</span> (bad(*it)) v.<span class="fn">erase</span>(it);   <span class="cm">// UB</span>
+
+<span class="cm">// 正例 1：用返回值</span>
+<span class="kw">for</span> (<span class="kw">auto</span> it = v.<span class="fn">begin</span>(); it != v.<span class="fn">end</span>(); )
+  it = bad(*it) ? v.<span class="fn">erase</span>(it) : it + <span class="num">1</span>;
+
+<span class="cm">// 正例 2：erase-remove（O(N)）</span>
+v.<span class="fn">erase</span>(<span class="tp">std</span>::<span class="fn">remove_if</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), bad),
+        v.<span class="fn">end</span>());`,
+      card: { num: "041", slug: "041-stl-iterators" },
+    },
+    {
+      id: "iteradapt", layer: "iter", title: "迭代器适配器", lines: ["迭代器", "适配器"],
+      en: "Iterator Adapter", tag: "ADAPTER", x: 1040, y: 110, r: 40,
+      summary: "对已有迭代器再包装，改变其行为：反向遍历、插入而非覆盖、移动而非拷贝、直接读写流。",
+      points: [
+        "reverse_iterator：rbegin/rend；其 base() 与自身相差一个位置。",
+        "back_insert_iterator / inserter：把「赋值」变成「插入」，避免目标越界。",
+        "move_iterator：解引用返回右值引用，让算法执行移动而非拷贝。",
+        "istream_iterator / ostream_iterator：把 I/O 流当作区间使用。",
+        "适配器思想 = 组合复用，与容器适配器一脉相承。",
+      ],
+      code: `<span class="cm">// 目标为空也安全：转成插入操作</span>
+<span class="tp">std</span>::<span class="fn">copy</span>(src.<span class="fn">begin</span>(), src.<span class="fn">end</span>(),
+          <span class="tp">std</span>::<span class="fn">back_inserter</span>(dst));
+
+<span class="cm">// 流迭代器：一行读入全部整数</span>
+<span class="tp">std</span>::<span class="tp">vector</span>&lt;<span class="kw">int</span>&gt; v{
+  <span class="tp">std</span>::<span class="tp">istream_iterator</span>&lt;<span class="kw">int</span>&gt;(<span class="tp">std</span>::cin), {}};`,
+      card: { num: "041", slug: "041-stl-iterators" },
+    },
+
+    /* ───────── 算法 ───────── */
+    {
+      id: "algo", layer: "algo", title: "算法", en: "Algorithms", tag: "ALGORITHM",
+      x: 1140, y: 300, r: 46,
+      summary: "以迭代器区间为输入的一族模板函数，与容器完全解耦。约 100+ 个通用算法，C++17 起支持并行执行策略。",
+      points: [
+        "全部作用于半开区间 [first, last)，返回值多为迭代器。",
+        "算法无法改变容器大小，只能改元素值 ⇒ remove 需配合 erase。",
+        "带 _if 后缀取谓词版本，带 _copy 后缀输出到另一区间。",
+        "对已排序区间有专属算法族（binary_search、set_* 系列）。",
+        "C++17 并行：std::sort(std::execution::par, ...)。",
+      ],
+      code: `<span class="cm">// 统一形态：区间 + 可选策略</span>
+<span class="tp">std</span>::<span class="fn">transform</span>(a.<span class="fn">begin</span>(), a.<span class="fn">end</span>(),
+               <span class="fn">back_inserter</span>(b),
+               [](<span class="kw">int</span> x){ <span class="kw">return</span> x * x; });
+
+<span class="tp">std</span>::<span class="fn">sort</span>(<span class="tp">std</span>::execution::par,
+          v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());   <span class="cm">// C++17 并行</span>`,
+      card: null,
+    },
+    {
+      id: "findalgo", layer: "algo", title: "查找与遍历", lines: ["查找", "与遍历"],
+      en: "Non-modifying", tag: "SEARCH", x: 1210, y: 100, r: 38,
+      summary: "非变动算法：只读取不修改元素。find / count / for_each / all_of / equal / search 等。",
+      points: [
+        "无序区间线性查找 find：O(N)。",
+        "已排序区间用 binary_search / lower_bound / upper_bound / equal_range：O(log N)。",
+        "lower_bound 返回第一个 ≥ 值的位置，upper_bound 返回第一个 > 值的位置。",
+        "关联容器优先用成员版 find（O(log N)），而非同名的全局算法（O(N)）。",
+        "注意：对随机访问以外的迭代器，二分算法仍是 O(N) 次移动。",
+      ],
+      code: `<span class="cm">// 成员 find vs 全局 find</span>
+s.<span class="fn">find</span>(x);                      <span class="cm">// O(logN) 走树</span>
+<span class="tp">std</span>::<span class="fn">find</span>(s.<span class="fn">begin</span>(), s.<span class="fn">end</span>(), x); <span class="cm">// O(N) 线性</span>
+
+<span class="cm">// 有序区间求相等区段</span>
+<span class="kw">auto</span> [lo, hi] = <span class="tp">std</span>::<span class="fn">equal_range</span>(
+    v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), key);`,
+      card: null,
+    },
+    {
+      id: "sortalgo", layer: "algo", title: "排序算法", lines: ["排序", "算法"],
+      en: "Sorting", tag: "SORT", x: 1400, y: 130, r: 38,
+      summary: "std::sort 采用内省排序（Introsort）：快排为主，递归过深转堆排，小区间转插入排序，保证最坏 O(N log N)。",
+      points: [
+        "sort：不稳定，O(N log N)，要求随机访问迭代器。",
+        "stable_sort：稳定，归并排序；有额外内存时 O(N log N)，否则 O(N log²N)。",
+        "partial_sort：只需前 K 个有序，用堆，O(N log K)。",
+        "nth_element：只保证第 n 位就位且两侧分区，平均 O(N)。",
+        "比较器必须是严格弱序，否则可能越界崩溃（如写成 &lt;=）。",
+      ],
+      code: `<span class="cm">// Introsort 三段式</span>
+<span class="cm">// 1. 快排分割，depth &lt; 2*log2(N)</span>
+<span class="cm">// 2. 递归过深 -&gt; 堆排（防最坏 O(N^2)）</span>
+<span class="cm">// 3. 区间 &lt; 16 -&gt; 留给最后一次插入排序</span>
+
+<span class="tp">std</span>::<span class="fn">nth_element</span>(v.<span class="fn">begin</span>(), v.<span class="fn">begin</span>()+k, v.<span class="fn">end</span>());
+<span class="cm">// 求 Top-K 时比全排序快得多</span>`,
+      card: null,
+    },
+    {
+      id: "modifyalgo", layer: "algo", title: "变动与惯用法", lines: ["变动算法", "惯用法"],
+      en: "Modifying", tag: "MUTATE", x: 1560, y: 265, r: 38,
+      summary: "copy / transform / replace / remove / unique / rotate 等。核心陷阱：算法不能改变容器大小。",
+      points: [
+        "remove / remove_if 只把保留元素前移，返回新逻辑尾，不缩小容器。",
+        "erase-remove 惯用法：v.erase(remove(...), v.end())。",
+        "unique 仅去除「相邻」重复，需先排序才能全局去重。",
+        "C++20 起可用 std::erase / std::erase_if 一步到位。",
+        "copy 要求目标空间足够，否则用 back_inserter。",
+      ],
+      code: `<span class="cm">// erase-remove 惯用法</span>
+v.<span class="fn">erase</span>(<span class="tp">std</span>::<span class="fn">remove</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), <span class="num">0</span>),
+        v.<span class="fn">end</span>());
+
+<span class="cm">// 全局去重</span>
+<span class="tp">std</span>::<span class="fn">sort</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());
+v.<span class="fn">erase</span>(<span class="tp">std</span>::<span class="fn">unique</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>()), v.<span class="fn">end</span>());
+
+<span class="tp">std</span>::<span class="fn">erase_if</span>(v, [](<span class="kw">int</span> x){ <span class="kw">return</span> x &lt; <span class="num">0</span>; }); <span class="cm">// C++20</span>`,
+      card: null,
+    },
+    {
+      id: "heapalgo", layer: "algo", title: "堆与数值", lines: ["堆算法", "与数值"],
+      en: "Heap & Numeric", tag: "HEAP", x: 1600, y: 435, r: 38,
+      summary: "堆算法把随机访问区间视作隐式完全二叉树；数值算法在 &lt;numeric&gt; 中提供折叠式计算。",
+      points: [
+        "make_heap 建堆 O(N)（自底向上下沉），push_heap / pop_heap 各 O(log N)。",
+        "sort_heap = 反复 pop_heap，整体 O(N log N)；priority_queue 即其封装。",
+        "默认大顶堆（less 比较器），要小顶堆传 greater。",
+        "accumulate 默认求和，可传二元操作实现任意折叠。",
+        "iota 填充递增序列；partial_sum 前缀和；inner_product 内积。",
+      ],
+      code: `<span class="tp">std</span>::<span class="fn">make_heap</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());     <span class="cm">// O(N)</span>
+v.<span class="fn">push_back</span>(x);
+<span class="tp">std</span>::<span class="fn">push_heap</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());     <span class="cm">// 上浮</span>
+
+<span class="kw">int</span> s = <span class="tp">std</span>::<span class="fn">accumulate</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), <span class="num">0</span>);
+<span class="tp">std</span>::<span class="fn">iota</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(), <span class="num">1</span>);       <span class="cm">// 1,2,3...</span>`,
+      card: null,
+    },
+
+    /* ───────── 仿函数 ───────── */
+    {
+      id: "func", layer: "func", title: "仿函数", en: "Function Objects", tag: "FUNCTOR",
+      x: 1300, y: 560, r: 44,
+      summary: "重载 operator() 的对象。相比函数指针，它可携带状态且调用点可被内联，是算法与容器的「策略」注入口。",
+      points: [
+        "作为模板参数传入时类型确定，编译器可内联 ⇒ 比函数指针快。",
+        "可持有成员变量保存状态（如计数器、阈值）。",
+        "关联容器的比较器是类型的一部分：set&lt;int, greater&lt;int&gt;&gt;。",
+        "C++11 起 lambda 成为主流写法，本质是编译器生成的仿函数类。",
+        "C++14 起标准仿函数支持透明比较（less&lt;&gt;），可异构查找。",
+      ],
+      code: `<span class="kw">struct</span> <span class="tp">GreaterThan</span> {
+  <span class="kw">int</span> bound;                     <span class="cm">// 携带状态</span>
+  <span class="kw">bool</span> <span class="kw">operator</span>()(<span class="kw">int</span> x) <span class="kw">const</span> { <span class="kw">return</span> x &gt; bound; }
+};
+<span class="kw">auto</span> n = <span class="tp">std</span>::<span class="fn">count_if</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>(),
+                       <span class="tp">GreaterThan</span>{<span class="num">10</span>});`,
+      card: { num: "025", slug: "025-std-function" },
+    },
+    {
+      id: "stdfunctor", layer: "func", title: "标准仿函数", lines: ["标准", "仿函数"],
+      en: "Standard Functors", tag: "STD", x: 1560, y: 600, r: 36,
+      summary: "&lt;functional&gt; 提供的算术 (plus/minus)、关系 (less/greater)、逻辑 (logical_and) 三族仿函数。",
+      points: [
+        "less&lt;T&gt; 是所有有序关联容器与排序算法的默认比较器。",
+        "严格弱序四条件：非自反、非对称、传递、等价传递。",
+        "C++14 的 less&lt;void&gt;（写作 less&lt;&gt;）支持异构比较，避免临时对象。",
+        "C++17 起 map/set 提供 is_transparent 时可用 string_view 直接查找。",
+        "not_fn（C++17）取代已废弃的 not1 / not2。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">set</span>&lt;<span class="kw">int</span>, <span class="tp">std</span>::<span class="tp">greater</span>&lt;&gt;&gt; s;  <span class="cm">// 降序</span>
+
+<span class="cm">// 透明比较器：避免构造临时 string</span>
+<span class="tp">std</span>::<span class="tp">map</span>&lt;<span class="tp">std</span>::<span class="tp">string</span>, <span class="kw">int</span>, <span class="tp">std</span>::<span class="tp">less</span>&lt;&gt;&gt; m;
+m.<span class="fn">find</span>(<span class="tp">std</span>::<span class="tp">string_view</span>{<span class="str">"key"</span>});`,
+      card: null,
+    },
+    {
+      id: "lambda", layer: "func", title: "Lambda", en: "Lambda Expression", tag: "LAMBDA",
+      x: 1520, y: 765, r: 36,
+      summary: "匿名仿函数的语法糖。编译器为每个 lambda 生成唯一的闭包类型，捕获变量成为其成员。",
+      points: [
+        "捕获：[=] 值捕获、[&] 引用捕获、[this]、[x = expr] 初始化捕获（C++14）。",
+        "引用捕获局部变量后异步执行 ⇒ 悬垂引用，是最常见的 bug。",
+        "无捕获的 lambda 可隐式转换为函数指针。",
+        "默认 operator() 为 const，需修改副本时加 mutable。",
+        "C++14 泛型 lambda（auto 形参）、C++20 模板 lambda 与 constexpr lambda。",
+      ],
+      code: `<span class="kw">int</span> base = <span class="num">10</span>;
+<span class="kw">auto</span> f = [base](<span class="kw">int</span> x) { <span class="kw">return</span> x + base; };
+
+<span class="cm">// 等价的编译器生成类</span>
+<span class="kw">struct</span> <span class="tp">__Closure</span> {
+  <span class="kw">int</span> base;
+  <span class="kw">int</span> <span class="kw">operator</span>()(<span class="kw">int</span> x) <span class="kw">const</span> { <span class="kw">return</span> x + base; }
+};`,
+      card: { num: "024", slug: "024-lambda" },
+    },
+    {
+      id: "bindfn", layer: "func", title: "bind / function", lines: ["bind", "function"],
+      en: "Binder & Wrapper", tag: "BIND", x: 1420, y: 915, r: 36,
+      summary: "std::function 是可调用对象的类型擦除包装；std::bind 做参数绑定与重排。",
+      points: [
+        "function 统一存放 lambda / 函数指针 / 仿函数，代价是间接调用，难以内联。",
+        "小对象优化：小闭包可存在 function 内部，大闭包会堆分配。",
+        "bind 用 _1、_2 占位；默认按值拷贝参数，需引用请用 std::ref。",
+        "现代实践：优先 lambda，可读性与性能均优于 bind。",
+        "function 可为空，调用空对象抛 std::bad_function_call。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">function</span>&lt;<span class="kw">int</span>(<span class="kw">int</span>)&gt; f;
+f = [](<span class="kw">int</span> x){ <span class="kw">return</span> x + <span class="num">1</span>; };   <span class="cm">// 类型擦除</span>
+
+<span class="kw">using namespace</span> <span class="tp">std</span>::placeholders;
+<span class="kw">auto</span> g = <span class="tp">std</span>::<span class="fn">bind</span>(&amp;<span class="tp">Obj</span>::method, &amp;obj, _1);
+<span class="cm">// 等价且更清晰：</span>
+<span class="kw">auto</span> h = [&amp;obj](<span class="kw">int</span> x){ <span class="kw">return</span> obj.<span class="fn">method</span>(x); };`,
+      card: { num: "025", slug: "025-std-function" },
+    },
+
+    /* ───────── 配置器 ───────── */
+    {
+      id: "alloc", layer: "alloc", title: "配置器", en: "Allocators", tag: "ALLOCATOR",
+      x: 1140, y: 820, r: 44,
+      summary: "封装内存的分配 / 释放与对象的构造 / 析构，把「内存管理策略」从容器中分离出去。",
+      points: [
+        "四步分离：allocate（拿内存）→ construct（placement new）→ destroy → deallocate。",
+        "分离的意义：容器可以先要内存后建对象，如 vector::reserve。",
+        "allocator 是容器类型的一部分：vector&lt;T,A1&gt; 与 vector&lt;T,A2&gt; 是不同类型。",
+        "C++11 起统一由 allocator_traits 访问，自定义 allocator 只需少量接口。",
+        "典型场景：内存池、共享内存、对齐分配、统计与调试。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">allocator</span>&lt;<span class="tp">T</span>&gt; a;
+<span class="tp">T</span>* p = a.<span class="fn">allocate</span>(<span class="num">1</span>);          <span class="cm">// 只要内存</span>
+<span class="tp">std</span>::<span class="fn">construct_at</span>(p, args...);   <span class="cm">// placement new</span>
+<span class="tp">std</span>::<span class="fn">destroy_at</span>(p);              <span class="cm">// 显式析构</span>
+a.<span class="fn">deallocate</span>(p, <span class="num">1</span>);              <span class="cm">// 还内存</span>`,
+      card: null,
+    },
+    {
+      id: "alloc2", layer: "alloc", title: "两级配置器", lines: ["两级", "配置器"],
+      en: "SGI Two-level", tag: "POOL", x: 1200, y: 1010, r: 36,
+      summary: "SGI STL 的经典设计：大块走 malloc，小块（≤128B）走内存池 + 16 条自由链表，减少碎片与系统调用。",
+      points: [
+        "一级配置器：直接 malloc/free，并模拟 set_new_handler 处理内存不足。",
+        "二级配置器：请求上调至 8 的倍数，128/8 = 16 条 free_list 各管一种大小。",
+        "分配：free_list 有节点直接摘取 O(1)；否则 refill 一次切出 20 个补充。",
+        "释放：不还给系统，直接挂回对应 free_list 供复用。",
+        "缺点：小块内存永不归还 OS；现代实现（libstdc++）默认已改用 operator new。",
+      ],
+      code: `<span class="cm">// 16 条自由链表：8,16,24,...,128 字节</span>
+<span class="kw">union</span> <span class="tp">obj</span> {
+  <span class="tp">obj</span>* free_list_link;   <span class="cm">// 空闲时当指针</span>
+  <span class="kw">char</span> client_data[<span class="num">1</span>];   <span class="cm">// 使用时当数据</span>
+};                        <span class="cm">// union 省掉额外指针开销</span>
+
+<span class="cm">// 上调对齐：ROUND_UP(bytes) = (bytes+7) &amp; ~7</span>`,
+      card: null,
+    },
+    {
+      id: "pmr", layer: "alloc", title: "多态内存资源", lines: ["多态", "内存资源"],
+      en: "PMR", tag: "C++17", x: 1010, y: 1035, r: 36,
+      summary: "C++17 &lt;memory_resource&gt;：把分配策略从「编译期模板参数」变为「运行期虚函数」，同类型可换策略。",
+      points: [
+        "pmr::vector&lt;int&gt; 无论用哪种资源都是同一个类型，便于传参与存储。",
+        "monotonic_buffer_resource：只分配不回收，析构时一次性释放，极快。",
+        "unsynchronized_pool_resource：单线程池化，减少碎片。",
+        "可挂在栈上的数组做 upstream，实现零堆分配的局部容器。",
+        "代价：每次分配一次虚调用，换取灵活性。",
+      ],
+      code: `<span class="kw">char</span> buf[<span class="num">4096</span>];
+<span class="tp">std</span>::pmr::<span class="tp">monotonic_buffer_resource</span> pool{buf, <span class="kw">sizeof</span> buf};
+<span class="tp">std</span>::pmr::<span class="tp">vector</span>&lt;<span class="kw">int</span>&gt; v{&amp;pool};
+v.<span class="fn">push_back</span>(<span class="num">1</span>);   <span class="cm">// 全程不碰堆</span>`,
+      card: null,
+    },
+
+    /* ───────── 适配器与工具 ───────── */
+    {
+      id: "util", layer: "util", title: "适配器与工具", lines: ["适配器", "与工具"],
+      en: "Adapters & Utilities", tag: "UTILITY", x: 760, y: 820, r: 44,
+      summary: "在既有组件上做接口包装或受限化，以及现代 C++ 提供的通用工具设施。核心思想是「组合复用」。",
+      points: [
+        "三类适配器：容器适配器、迭代器适配器、仿函数适配器。",
+        "适配器通过持有底层对象改变接口，而非继承。",
+        "工具类：string、smart pointer、pair/tuple/optional/variant。",
+        "C++20 Ranges 是对整个 STL 接口层的一次重构。",
+        "共同价值：减少样板代码，提升表达力与安全性。",
+      ],
+      code: `<span class="cm">// 适配器 = 持有底层对象 + 限制接口</span>
+<span class="kw">template</span>&lt;<span class="kw">class</span> <span class="tp">T</span>, <span class="kw">class</span> <span class="tp">Cont</span> = <span class="tp">std</span>::<span class="tp">deque</span>&lt;<span class="tp">T</span>&gt;&gt;
+<span class="kw">class</span> <span class="tp">stack</span> {
+  <span class="tp">Cont</span> c;                        <span class="cm">// 组合，非继承</span>
+<span class="kw">public</span>:
+  <span class="kw">void</span> <span class="fn">push</span>(<span class="kw">const</span> <span class="tp">T</span>&amp; x) { c.<span class="fn">push_back</span>(x); }
+  <span class="kw">void</span> <span class="fn">pop</span>() { c.<span class="fn">pop_back</span>(); }
+};`,
+      card: null,
+    },
+    {
+      id: "contadapt", layer: "util", title: "容器适配器", lines: ["容器", "适配器"],
+      en: "Container Adapter", tag: "STACK", x: 760, y: 1000, r: 36,
+      summary: "stack / queue / priority_queue：包装底层容器并限制接口，只暴露特定的访问方式。",
+      points: [
+        "stack 默认 deque（也可 vector / list），只允许一端进出。",
+        "queue 默认 deque；不能用 vector（缺 pop_front）。",
+        "priority_queue 默认 vector + 堆算法，默认大顶堆。",
+        "小顶堆写法：priority_queue&lt;T, vector&lt;T&gt;, greater&lt;T&gt;&gt;。",
+        "均不提供迭代器，因此无法遍历、无法用 STL 算法。",
+      ],
+      code: `<span class="cm">// 小顶堆（Top-K 常用）</span>
+<span class="tp">std</span>::<span class="tp">priority_queue</span>&lt;<span class="kw">int</span>,
+    <span class="tp">std</span>::<span class="tp">vector</span>&lt;<span class="kw">int</span>&gt;,
+    <span class="tp">std</span>::<span class="tp">greater</span>&lt;<span class="kw">int</span>&gt;&gt; pq;
+
+pq.<span class="fn">push</span>(x);
+<span class="kw">if</span> (pq.<span class="fn">size</span>() &gt; k) pq.<span class="fn">pop</span>();  <span class="cm">// 维持 K 个最大值</span>`,
+      card: null,
+    },
+    {
+      id: "string", layer: "util", title: "string", en: "String & View", tag: "STRING",
+      x: 555, y: 1000, r: 36,
+      summary: "basic_string&lt;char&gt; 是特化的序列容器，普遍实现 SSO；C++17 引入只读、不拥有的 string_view。",
+      points: [
+        "SSO：短字符串（libstdc++ 约 15 字节）直接存在对象内部，不做堆分配。",
+        "内存连续且以 '\\0' 结尾（C++11 起保证），c_str() 无额外开销。",
+        "string_view 只有指针 + 长度，传参零拷贝，但不保证以 '\\0' 结尾。",
+        "悬垂陷阱：string_view 不延长生命周期，切勿指向临时 string。",
+        "substr：string 版拷贝 O(N)，string_view 版仅移动指针 O(1)。",
+      ],
+      code: `<span class="cm">// 传参：避免不必要的拷贝</span>
+<span class="kw">void</span> <span class="fn">f</span>(<span class="tp">std</span>::<span class="tp">string_view</span> sv);   <span class="cm">// 零拷贝</span>
+
+<span class="cm">// 危险：指向已析构的临时对象</span>
+<span class="tp">std</span>::<span class="tp">string_view</span> bad = <span class="fn">make_string</span>(); <span class="cm">// 悬垂!</span>`,
+      card: null,
+    },
+    {
+      id: "smartptr", layer: "util", title: "智能指针", lines: ["智能", "指针"],
+      en: "Smart Pointer", tag: "RAII", x: 390, y: 1060, r: 36,
+      summary: "以 RAII 管理动态对象的生命周期。unique_ptr 独占、shared_ptr 共享计数、weak_ptr 弱引用。",
+      points: [
+        "unique_ptr：零额外开销（无状态删除器时与裸指针等大），只能移动。",
+        "shared_ptr：控制块含强/弱两个原子计数，拷贝有同步开销。",
+        "make_shared 把对象与控制块一次分配，少一次 new 且异常安全。",
+        "循环引用导致计数不归零 ⇒ 用 weak_ptr 打破，用 lock() 提升。",
+        "容器中存智能指针可实现「存多态对象」而不切片。",
+      ],
+      code: `<span class="kw">auto</span> p = <span class="tp">std</span>::<span class="fn">make_unique</span>&lt;<span class="tp">T</span>&gt;(args...);
+<span class="tp">std</span>::<span class="tp">vector</span>&lt;<span class="tp">std</span>::<span class="tp">unique_ptr</span>&lt;<span class="tp">Base</span>&gt;&gt; v;
+v.<span class="fn">push_back</span>(<span class="tp">std</span>::<span class="fn">make_unique</span>&lt;<span class="tp">Derived</span>&gt;()); <span class="cm">// 无切片</span>
+
+<span class="cm">// 打破循环引用</span>
+<span class="kw">struct</span> <span class="tp">Node</span> {
+  <span class="tp">std</span>::<span class="tp">shared_ptr</span>&lt;<span class="tp">Node</span>&gt; next;
+  <span class="tp">std</span>::<span class="tp">weak_ptr</span>&lt;<span class="tp">Node</span>&gt;   prev;   <span class="cm">// 弱引用</span>
+};`,
+      card: null,
+    },
+    {
+      id: "ranges", layer: "util", title: "Ranges", en: "Ranges Library", tag: "C++20",
+      x: 830, y: 1145, r: 36,
+      summary: "C++20 以 range（可迭代整体）取代「迭代器对」，并提供惰性求值的 views，可用管道运算符组合。",
+      points: [
+        "ranges::sort(v) 直接传容器，无需 begin/end，减少出错。",
+        "views 惰性：不产生中间容器，遍历时才逐元素计算。",
+        "可组合：v | views::filter(...) | views::transform(...) | views::take(3)。",
+        "算法带 concepts 约束，编译错误定位大幅改善。",
+        "注意：views 不拥有元素，底层容器销毁后视图悬垂。",
+      ],
+      code: `<span class="kw">namespace</span> rv = <span class="tp">std</span>::<span class="tp">views</span>;
+<span class="kw">auto</span> r = v | rv::<span class="fn">filter</span>([](<span class="kw">int</span> x){ <span class="kw">return</span> x % <span class="num">2</span>; })
+            | rv::<span class="fn">transform</span>([](<span class="kw">int</span> x){ <span class="kw">return</span> x * x; })
+            | rv::<span class="fn">take</span>(<span class="num">3</span>);
+<span class="kw">for</span> (<span class="kw">int</span> x : r) <span class="fn">use</span>(x);   <span class="cm">// 此时才真正计算</span>`,
+      card: null,
+    },
+  ];
+
+  const EDGES = [
+    /* 总览 → 六大组件 */
+    { from: "stl", to: "cont",  kind: "impl", label: "组件" },
+    { from: "stl", to: "iter",  kind: "impl", label: "组件" },
+    { from: "stl", to: "algo",  kind: "impl", label: "组件" },
+    { from: "stl", to: "func",  kind: "impl", label: "组件" },
+    { from: "stl", to: "alloc", kind: "impl", label: "组件" },
+    { from: "stl", to: "util",  kind: "impl", label: "组件" },
+
+    /* 容器体系 */
+    { from: "cont", to: "seq",   kind: "impl", label: "分类" },
+    { from: "cont", to: "assoc", kind: "impl", label: "分类" },
+    { from: "cont", to: "unord", kind: "impl", label: "分类" },
+    { from: "seq", to: "array",        kind: "impl", label: "固定数组" },
+    { from: "seq", to: "vector",       kind: "impl", label: "动态数组" },
+    { from: "seq", to: "deque",        kind: "impl", label: "分段数组" },
+    { from: "seq", to: "list",         kind: "impl", label: "双向链表" },
+    { from: "seq", to: "forward_list", kind: "impl", label: "单向链表" },
+    { from: "assoc", to: "set",      kind: "impl", label: "唯一键" },
+    { from: "assoc", to: "multiset", kind: "impl", label: "重复键" },
+    { from: "assoc", to: "map",      kind: "impl", label: "键值" },
+    { from: "assoc", to: "multimap", kind: "impl", label: "重复键值" },
+    { from: "set",      to: "rbtree", kind: "mech", label: "底层" },
+    { from: "multiset", to: "rbtree", kind: "mech", label: "底层" },
+    { from: "map",      to: "rbtree", kind: "mech", label: "底层" },
+    { from: "multimap", to: "rbtree", kind: "mech", label: "底层" },
+    { from: "unord", to: "unordered_set",      kind: "impl", label: "唯一键" },
+    { from: "unord", to: "unordered_multiset", kind: "impl", label: "重复键" },
+    { from: "unord", to: "unordered_map",      kind: "impl", label: "键值" },
+    { from: "unord", to: "unordered_multimap", kind: "impl", label: "重复键值" },
+    { from: "unordered_set",      to: "hashtable", kind: "mech", label: "底层" },
+    { from: "unordered_multiset", to: "hashtable", kind: "mech", label: "底层" },
+    { from: "unordered_map",      to: "hashtable", kind: "mech", label: "底层" },
+    { from: "unordered_multimap", to: "hashtable", kind: "mech", label: "底层" },
+    { from: "assoc", to: "unord",     kind: "adv",  label: "有序 vs 无序" },
+
+    /* 迭代器体系 */
+    { from: "iter", to: "itercat",   kind: "impl", label: "能力分级" },
+    { from: "iter", to: "traits",    kind: "mech", label: "类型萃取" },
+    { from: "iter", to: "invalid",   kind: "const", label: "使用陷阱" },
+    { from: "iter", to: "iteradapt", kind: "adv",  label: "包装" },
+    { from: "cont", to: "iter",      kind: "const", label: "提供 begin/end" },
+    { from: "vector", to: "invalid", kind: "const", label: "扩容失效" },
+    { from: "unord", to: "invalid",  kind: "const", label: "rehash 失效" },
+    { from: "itercat", to: "traits", kind: "mech", label: "category 标签" },
+
+    /* 算法体系 */
+    { from: "iter", to: "algo",      kind: "const", label: "区间输入" },
+    { from: "algo", to: "findalgo",   kind: "impl", label: "非变动" },
+    { from: "algo", to: "sortalgo",   kind: "impl", label: "排序" },
+    { from: "algo", to: "modifyalgo", kind: "impl", label: "变动" },
+    { from: "algo", to: "heapalgo",   kind: "impl", label: "堆/数值" },
+    { from: "itercat", to: "sortalgo", kind: "const", label: "需随机访问" },
+    { from: "modifyalgo", to: "invalid", kind: "const", label: "erase-remove" },
+    { from: "assoc", to: "findalgo",  kind: "adv",  label: "成员版更优" },
+    { from: "heapalgo", to: "contadapt", kind: "adv", label: "支撑 pq" },
+
+    /* 仿函数体系 */
+    { from: "func", to: "stdfunctor", kind: "impl", label: "标准族" },
+    { from: "func", to: "lambda",     kind: "impl", label: "语法糖" },
+    { from: "func", to: "bindfn",     kind: "impl", label: "包装" },
+    { from: "algo", to: "func",       kind: "const", label: "策略注入" },
+    { from: "stdfunctor", to: "assoc", kind: "const", label: "默认 less" },
+
+    /* 配置器体系 */
+    { from: "alloc", to: "alloc2", kind: "mech", label: "SGI 实现" },
+    { from: "alloc", to: "pmr",    kind: "adv",  label: "C++17 演进" },
+    { from: "cont", to: "alloc",   kind: "const", label: "内存来源" },
+    { from: "vector", to: "alloc", kind: "const", label: "扩容分配" },
+
+    /* 适配器与工具 */
+    { from: "util", to: "contadapt", kind: "impl", label: "容器适配器" },
+    { from: "util", to: "string",    kind: "impl", label: "字符串" },
+    { from: "util", to: "smartptr",  kind: "impl", label: "资源管理" },
+    { from: "util", to: "ranges",    kind: "adv",  label: "C++20" },
+    { from: "deque", to: "contadapt", kind: "mech", label: "默认底层" },
+    { from: "ranges", to: "algo",     kind: "adv",  label: "重构算法层" },
+    { from: "smartptr", to: "cont",   kind: "adv",  label: "存多态对象" },
+  ];
+
+  const PATHS = [
+    {
+      id: "core",
+      title: "核心主线",
+      desc: "STL → 容器 → 迭代器 → 算法 → 仿函数",
+      nodes: ["stl", "cont", "iter", "algo", "func", "itercat", "traits"],
+    },
+    {
+      id: "container",
+      title: "容器选型",
+      desc: "13 个经典容器：序列式 / 关联式 / 无序",
+      nodes: [
+        "cont", "seq", "array", "vector", "deque", "list", "forward_list",
+        "assoc", "set", "multiset", "map", "multimap", "rbtree",
+        "unord", "unordered_set", "unordered_multiset", "unordered_map",
+        "unordered_multimap", "hashtable"
+      ],
+    },
+    {
+      id: "pitfall",
+      title: "高频面试坑",
+      desc: "扩容失效 · erase-remove · rehash",
+      nodes: ["vector", "invalid", "modifyalgo", "unord", "hashtable"],
+    },
+    {
+      id: "underlying",
+      title: "底层实现",
+      desc: "红黑树 · 哈希表 · 内存池 · Introsort",
+      nodes: [
+        "set", "map", "rbtree",
+        "unordered_set", "unordered_map", "hashtable",
+        "alloc", "alloc2", "pmr", "sortalgo"
+      ],
+    },
+    {
+      id: "modern",
+      title: "现代 C++",
+      desc: "Lambda · 智能指针 · string_view · Ranges",
+      nodes: ["lambda", "bindfn", "smartptr", "string", "ranges", "pmr"],
+    },
+  ];
+
+  const EDGE_COLOR = {
+    impl: "#0d9488",
+    mech: "#2563eb",
+    const: "#d97706",
+    adv: "#7c3aed",
+  };
+
+  // count layers + remember home positions
+  for (const n of NODES) {
+    const L = LAYERS.find(l => l.id === n.layer);
+    if (L) L.count++;
+    n.homeX = n.x;
+    n.homeY = n.y;
+  }
+
+  const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
+  let activeLayer = "all";
+  let selectedId = null;
+  let pathHighlight = null;
+  let searchQuery = "";
+
+  // camera / drag
+  const cam = { x: 0, y: 0, k: 1 };
+  let panning = false;
+  let nodeDrag = null; // { id, el, n, moved, originX, originY }
+  let last = { x: 0, y: 0 };
+
+  const stage = document.getElementById("stage");
+  const detail = document.getElementById("detail");
+  const detailBody = document.getElementById("detail-body");
+  const layerList = document.getElementById("layer-list");
+  const pathList = document.getElementById("path-list");
+  const layerCount = document.getElementById("layer-count");
+  const hintBar = document.getElementById("hint-bar");
+
+  // SVG setup
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("xmlns", svgNS);
+  const defs = document.createElementNS(svgNS, "defs");
+  defs.innerHTML = `
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <radialGradient id="hubGrad" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="55%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#115e59"/>
+    </radialGradient>
+  `;
+  svg.appendChild(defs);
+
+  const gWorld = document.createElementNS(svgNS, "g");
+  gWorld.setAttribute("id", "world");
+  const gEdges = document.createElementNS(svgNS, "g");
+  const gEdgeLabels = document.createElementNS(svgNS, "g");
+  const gNodes = document.createElementNS(svgNS, "g");
+  gWorld.append(gEdges, gEdgeLabels, gNodes);
+  svg.appendChild(gWorld);
+  stage.appendChild(svg);
+
+  function layerColor(id) {
+    return LAYERS.find(l => l.id === id)?.color || "#64748b";
+  }
+
+  function shortenEdge(x1, y1, x2, y2, r1, r2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len;
+    return {
+      x1: x1 + ux * (r1 + 2),
+      y1: y1 + uy * (r1 + 2),
+      x2: x2 - ux * (r2 + 6),
+      y2: y2 - uy * (r2 + 6),
+    };
+  }
+
+  function layoutEdge(e) {
+    const a = byId[e.from], b = byId[e.to];
+    const s = shortenEdge(a.x, a.y, b.x, b.y, a.r, b.r);
+    const midX = (s.x1 + s.x2) / 2;
+    const midY = (s.y1 + s.y2) / 2 - 18;
+    e.el.setAttribute("d", `M ${s.x1} ${s.y1} Q ${midX} ${midY} ${s.x2} ${s.y2}`);
+    if (e.labelText) {
+      e.labelText.setAttribute("x", midX);
+      e.labelText.setAttribute("y", midY - 2);
+    }
+  }
+
+  function layoutEdgesForNode(id) {
+    for (const e of edgeEls) {
+      if (e.from === id || e.to === id) layoutEdge(e);
+    }
+  }
+
+  function setNodePos(n, el, x, y) {
+    n.x = x;
+    n.y = y;
+    el.setAttribute("transform", `translate(${x},${y})`);
+    layoutEdgesForNode(n.id);
+  }
+
+  function clientToWorld(clientX, clientY) {
+    const rect = stage.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left - cam.x) / cam.k,
+      y: (clientY - rect.top - cam.y) / cam.k,
+    };
+  }
+
+  // build edges
+  const edgeEls = EDGES.map(e => {
+    const path = document.createElementNS(svgNS, "path");
+    path.setAttribute("class", "edge");
+    path.dataset.from = e.from;
+    path.dataset.to = e.to;
+    const c = EDGE_COLOR[e.kind] || "#94a3b8";
+    path.style.stroke = c;
+    path.style.setProperty("--edge-c", c);
+    gEdges.appendChild(path);
+
+    const labelG = document.createElementNS(svgNS, "g");
+    labelG.setAttribute("class", "edge-label-g");
+    labelG.dataset.from = e.from;
+    labelG.dataset.to = e.to;
+
+    const labelText = document.createElementNS(svgNS, "text");
+    labelText.setAttribute("text-anchor", "middle");
+    labelText.setAttribute("dominant-baseline", "middle");
+    labelText.textContent = e.label;
+    labelG.appendChild(labelText);
+    gEdgeLabels.appendChild(labelG);
+
+    const item = { ...e, el: path, labelEl: labelG, labelText, color: c };
+    layoutEdge(item);
+    return item;
+  });
+
+  function estimateTextWidth(str, fontSize) {
+    let w = 0;
+    for (const ch of str) {
+      w += /[\u3400-\u9fff]/.test(ch) ? fontSize : fontSize * 0.62;
+    }
+    return w;
+  }
+
+  function wrapTitle(title) {
+    if (title.length <= 4) return [title];
+    const mid = Math.ceil(title.length / 2);
+    return [title.slice(0, mid), title.slice(mid)];
+  }
+
+  function buildNodeLabel(n) {
+    const margin = 8;
+    const maxW = (n.r - margin) * 1.7;
+    let lines = n.lines ? [...n.lines] : [n.title];
+    let fontSize = n.hub ? 14 : 12;
+
+    for (let guard = 0; guard < 10; guard++) {
+      const widest = Math.max(...lines.map(l => estimateTextWidth(l, fontSize)));
+      if (widest <= maxW) break;
+      if (lines.length === 1 && n.title.length >= 4) {
+        lines = wrapTitle(n.title);
+        continue;
+      }
+      fontSize = Math.max(9, fontSize - 0.5);
+    }
+
+    const tag = (n.tag || n.en || "").toUpperCase();
+    let tagSize = n.hub ? 9 : 8;
+    while (estimateTextWidth(tag, tagSize) > maxW && tagSize > 6.5) tagSize -= 0.5;
+
+    const lineH = fontSize + 1.5;
+    const hasTag = !!tag;
+    const titleBlockH = (lines.length - 1) * lineH;
+    const blockH = titleBlockH + (hasTag ? tagSize + 5 : 0);
+    const titleTop = -blockH / 2 + fontSize * 0.35;
+
+    const titleEl = document.createElementNS(svgNS, "text");
+    titleEl.setAttribute("class", "node-title");
+    titleEl.setAttribute("text-anchor", "middle");
+    titleEl.setAttribute("font-size", String(fontSize));
+    if (n.hub) titleEl.style.fill = "#fff";
+
+    lines.forEach((line, i) => {
+      const ts = document.createElementNS(svgNS, "tspan");
+      ts.setAttribute("x", "0");
+      ts.setAttribute("y", String(titleTop + i * lineH));
+      ts.textContent = line;
+      titleEl.appendChild(ts);
+    });
+
+    const enEl = document.createElementNS(svgNS, "text");
+    enEl.setAttribute("class", "node-en");
+    enEl.setAttribute("text-anchor", "middle");
+    enEl.setAttribute("font-size", String(tagSize));
+    enEl.setAttribute("y", String(titleTop + titleBlockH + tagSize + 4));
+    enEl.textContent = tag;
+    if (n.hub) enEl.style.fill = "rgba(255,255,255,0.78)";
+
+    return { titleEl, enEl };
+  }
+
+  function tightenLabels(list) {
+    for (const { n, el } of list) {
+      const r = n.r;
+      const margin = 7;
+      const texts = [...el.querySelectorAll("text")];
+      for (let k = 0; k < 8; k++) {
+        let overflow = false;
+        for (const t of texts) {
+          const b = t.getBBox();
+          const corners = [
+            [b.x, b.y], [b.x + b.width, b.y],
+            [b.x, b.y + b.height], [b.x + b.width, b.y + b.height],
+          ];
+          if (corners.some(([x, y]) => Math.hypot(x, y) > r - margin)) {
+            overflow = true;
+            const fs = parseFloat(t.getAttribute("font-size") || "12") - 0.5;
+            if (fs < 7) continue;
+            t.setAttribute("font-size", String(fs));
+          }
+        }
+        if (!overflow) break;
+      }
+    }
+  }
+
+  // build nodes
+  const nodeEls = NODES.map(n => {
+    const g = document.createElementNS(svgNS, "g");
+    g.setAttribute("class", "node" + (n.hub ? " hub" : ""));
+    g.dataset.id = n.id;
+    g.style.setProperty("--node-c", layerColor(n.layer));
+    g.setAttribute("transform", `translate(${n.x},${n.y})`);
+
+    const glow = document.createElementNS(svgNS, "circle");
+    glow.setAttribute("class", "glow");
+    glow.setAttribute("r", n.r + 14);
+
+    const ring = document.createElementNS(svgNS, "circle");
+    ring.setAttribute("class", "ring");
+    ring.setAttribute("r", n.r + 7);
+
+    const body = document.createElementNS(svgNS, "circle");
+    body.setAttribute("class", "body");
+    body.setAttribute("r", n.r);
+    body.setAttribute("filter", "url(#soft)");
+    if (n.hub) {
+      body.setAttribute("fill", "url(#hubGrad)");
+      body.setAttribute("stroke", "#99f6e4");
+      body.setAttribute("stroke-width", "2");
+    } else {
+      body.setAttribute("fill", "#ffffff");
+      body.setAttribute("stroke", layerColor(n.layer));
+      body.setAttribute("stroke-width", "2.5");
+    }
+
+    const { titleEl, enEl } = buildNodeLabel(n);
+    g.append(glow, ring, body, titleEl, enEl);
+    gNodes.appendChild(g);
+
+    g.addEventListener("mouseenter", () => {
+      if (!nodeDrag) hoverNode(n.id, true);
+    });
+    g.addEventListener("mouseleave", () => {
+      if (!nodeDrag) hoverNode(n.id, false);
+    });
+    g.addEventListener("pointerdown", (ev) => {
+      if (ev.button != null && ev.button !== 0) return;
+      ev.stopPropagation();
+      ev.preventDefault();
+      // 先置顶再 capture，避免拖拽中重排丢掉指针捕获
+      gNodes.appendChild(g);
+      const world = clientToWorld(ev.clientX, ev.clientY);
+      nodeDrag = {
+        id: n.id,
+        el: g,
+        n,
+        moved: false,
+        grabDX: n.x - world.x,
+        grabDY: n.y - world.y,
+        startX: ev.clientX,
+        startY: ev.clientY,
+        pointerId: ev.pointerId,
+      };
+      panning = false;
+      g.classList.add("dragging");
+      g.classList.remove("quiet");
+      // 在 stage 上捕获，节点未选中时拖出 hit 区也不会断
+      stage.setPointerCapture(ev.pointerId);
+    });
+
+    return { n, el: g };
+  });
+
+  // 字体就绪后再实测收缩，避免首次测量不准
+  const runTighten = () => tightenLabels(nodeEls);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(runTighten);
+  } else {
+    requestAnimationFrame(runTighten);
+  }
+
+  function neighborsOf(id) {
+    const set = new Set([id]);
+    for (const e of EDGES) {
+      if (e.from === id) set.add(e.to);
+      if (e.to === id) set.add(e.from);
+    }
+    return set;
+  }
+
+  function visibleIds() {
+    let ids = new Set(NODES.map(n => n.id));
+    if (activeLayer !== "all") {
+      ids = new Set(NODES.filter(n => n.layer === activeLayer || n.layer === "hub").map(n => n.id));
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      ids = new Set([...ids].filter(id => {
+        const n = byId[id];
+        return n.title.toLowerCase().includes(q)
+          || n.en.toLowerCase().includes(q)
+          || n.summary.toLowerCase().includes(q);
+      }));
+    }
+    return ids;
+  }
+
+  function applyVisualState(hoverId = null) {
+    const vis = visibleIds();
+    const focus = selectedId || hoverId;
+    const hot = focus ? neighborsOf(focus) : null;
+    const pathSet = pathHighlight ? new Set(pathHighlight) : null;
+    const focusing = !!(focus || pathSet);
+
+    stage.classList.toggle("focus-on", focusing);
+    stage.classList.toggle("path-on", !!pathSet);
+
+    for (const { n, el } of nodeEls) {
+      const inVis = vis.has(n.id);
+      const inPath = !pathSet || pathSet.has(n.id);
+      const inHot = !hot || hot.has(n.id);
+      const isQuiet = !inVis || !inPath || (hot && !inHot);
+      const isRelated = !!(hot && hot.has(n.id) && n.id !== focus);
+      const isSelected = n.id === selectedId || (!selectedId && n.id === hoverId);
+
+      el.classList.toggle("quiet", isQuiet);
+      el.classList.toggle("related", isRelated && !isQuiet);
+      el.classList.toggle("selected", isSelected && inVis);
+      el.classList.toggle("on-path", !!(pathSet && pathSet.has(n.id)));
+      el.style.display = inVis ? "" : "none";
+    }
+
+    for (const e of edgeEls) {
+      const bothVis = vis.has(e.from) && vis.has(e.to);
+      const bothPath = !pathSet || (pathSet.has(e.from) && pathSet.has(e.to));
+      const isHot = !!(hot && bothVis && bothPath
+        && hot.has(e.from) && hot.has(e.to)
+        && (e.from === focus || e.to === focus));
+      const isQuiet = !bothVis || !bothPath || (hot && !isHot);
+      const onPath = !!(pathSet && pathSet.has(e.from) && pathSet.has(e.to));
+
+      e.el.classList.toggle("quiet", isQuiet);
+      e.el.classList.toggle("hot", isHot);
+      e.el.classList.toggle("flow", isHot);
+      e.el.classList.toggle("on-path", onPath && bothVis);
+      e.el.style.display = bothVis ? "" : "none";
+      // hot edges keep their semantic color; quiet edges already styled via CSS
+      if (isHot) e.el.style.stroke = e.color;
+      e.labelEl.classList.toggle("show", isHot);
+      e.labelEl.style.display = bothVis ? "" : "none";
+    }
+  }
+
+  function hoverNode(id, on) {
+    if (selectedId) return;
+    applyVisualState(on ? id : null);
+  }
+
+  function selectNode(id, { keepPath = false } = {}) {
+    selectedId = id;
+    if (!keepPath) pathHighlight = null;
+    renderDetail(byId[id]);
+    detail.classList.add("has-selection");
+    applyVisualState();
+    hintBar.style.opacity = "0";
+  }
+
+  function clearSelection() {
+    selectedId = null;
+    pathHighlight = null;
+    detail.classList.remove("has-selection");
+    applyVisualState();
+    hintBar.style.opacity = "1";
+    document.querySelectorAll(".path-chip").forEach(c => {
+      c.style.borderColor = "";
+    });
+  }
+
+  function cardLinks(card) {
+    const num = card.num;
+    let slug = card.slug;
+    if (!slug && card.href) {
+      slug = card.href.split("/")[0];
+    }
+    if (!slug) return null;
+    return {
+      card: `${slug}/${num}-cpp-interview-card.html`,
+      followup: `${slug}/${num}-cpp-interview-followup.html`,
+    };
+  }
+
+  function renderDetail(n) {
+    const color = layerColor(n.layer);
+    const layerName = LAYERS.find(l => l.id === n.layer)?.name || "";
+    const rels = EDGES.filter(e => e.from === n.id || e.to === n.id).map(e => {
+      const other = e.from === n.id ? e.to : e.from;
+      const outbound = e.from === n.id;
+      return { other: byId[other], label: e.label, outbound };
+    });
+
+    detailBody.innerHTML = `
+      <div class="detail-head">
+        <div class="detail-badge" style="background:${color}">${n.title.slice(0, 1)}</div>
+        <div>
+          <h2>${n.title}</h2>
+          <div class="en">${n.en}</div>
+        </div>
+      </div>
+      <div class="pill-row">
+        <span class="pill layer">${layerName}</span>
+        ${n.card ? `<span class="pill card">卡片 #${n.card.num}</span>` : ""}
+        <span class="pill">${rels.length} 条关联</span>
+      </div>
+      <p class="desc">${n.summary}</p>
+      <div class="section-title">面试要点</div>
+      <ul class="points">
+        ${n.points.map((p, i) => `<li data-n="${String(i + 1).padStart(2, "0")}">${p}</li>`).join("")}
+      </ul>
+      ${n.table ? `<div class="section-title">推导对照表</div>${n.table}` : ""}
+      <div class="section-title">代码示意</div>
+      <div class="code-window">
+        <div class="code-chrome">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+          <span class="code-file">${n.id.replace(/_/g, "-")}.cpp</span>
+        </div>
+        <div class="code">${n.code}</div>
+      </div>
+      <div class="section-title">关联节点</div>
+      <div class="rel-list">
+        ${rels.map(r => `
+          <button class="rel-chip" data-goto="${r.other.id}" type="button">
+            <span class="dir">${r.outbound ? "通向" : "来自"} · ${r.label}</span>
+            ${r.other.title}
+          </button>`).join("")}
+      </div>
+      ${(() => {
+        const links = n.card && cardLinks(n.card);
+        if (!links) return "";
+        return `
+        <div class="section-title">系列卡片 #${n.card.num}</div>
+        <div class="card-links">
+          <a class="link-card card-ans" href="${links.card}" target="_blank" rel="noopener">
+            <span class="link-kicker">Answer</span>
+            参考回答
+            <small>card · 面试话术</small>
+          </a>
+          <a class="link-card card-fu" href="${links.followup}" target="_blank" rel="noopener">
+            <span class="link-kicker">Follow-up</span>
+            追问清单
+            <small>followup · 深挖题</small>
+          </a>
+        </div>`;
+      })()}
+    `;
+
+    detailBody.querySelectorAll("[data-goto]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.goto;
+        const keepPath = !!(pathHighlight && pathHighlight.includes(id));
+        selectNode(id, { keepPath });
+      });
+    });
+  }
+
+  // layers UI
+  function renderLayers() {
+    layerList.innerHTML = "";
+    const allBtn = document.createElement("button");
+    allBtn.className = "layer-btn" + (activeLayer === "all" ? " active" : "");
+    allBtn.type = "button";
+    allBtn.innerHTML = `<span class="swatch" style="background:#0f172a;--swatch-ring:rgba(15,23,42,.12)"></span>全部显示<span class="meta">${NODES.length}</span>`;
+    allBtn.addEventListener("click", () => setLayer("all"));
+    layerList.appendChild(allBtn);
+
+    for (const L of LAYERS) {
+      const btn = document.createElement("button");
+      btn.className = "layer-btn" + (activeLayer === L.id ? " active" : "");
+      btn.type = "button";
+      btn.innerHTML = `<span class="swatch" style="background:${L.color};--swatch-ring:${L.ring}"></span>${L.name}<span class="meta">${L.count}</span>`;
+      btn.addEventListener("click", () => setLayer(L.id));
+      layerList.appendChild(btn);
+    }
+  }
+
+  function setLayer(id) {
+    activeLayer = id;
+    pathHighlight = null;
+    layerCount.textContent = id === "all" ? "全部" : LAYERS.find(l => l.id === id).name;
+    renderLayers();
+    applyVisualState();
+  }
+
+  // paths UI
+  PATHS.forEach((p, i) => {
+    const btn = document.createElement("button");
+    btn.className = "path-chip";
+    btn.type = "button";
+    btn.innerHTML = `<span class="num">${i + 1}</span><div><strong>${p.title}</strong><span>${p.desc}</span></div>`;
+    btn.addEventListener("click", () => {
+      pathHighlight = p.nodes;
+      document.querySelectorAll(".path-chip").forEach(c => { c.style.borderColor = ""; });
+      btn.style.borderColor = "#0d9488";
+      selectNode(p.nodes[0], { keepPath: true });
+    });
+    pathList.appendChild(btn);
+  });
+
+  // camera
+  function applyCam() {
+    gWorld.setAttribute("transform", `translate(${cam.x},${cam.y}) scale(${cam.k})`);
+  }
+
+  function fitView() {
+    const pad = 80;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const n of NODES) {
+      minX = Math.min(minX, n.x - n.r);
+      minY = Math.min(minY, n.y - n.r);
+      maxX = Math.max(maxX, n.x + n.r);
+      maxY = Math.max(maxY, n.y + n.r);
+    }
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    const bw = maxX - minX + pad * 2;
+    const bh = maxY - minY + pad * 2;
+    const k = Math.min(w / bw, h / bh, 1.35);
+    cam.k = k;
+    cam.x = (w - bw * k) / 2 - (minX - pad) * k;
+    cam.y = (h - bh * k) / 2 - (minY - pad) * k;
+    applyCam();
+  }
+
+  function resetLayout() {
+    for (const { n, el } of nodeEls) {
+      setNodePos(n, el, n.homeX, n.homeY);
+    }
+    fitView();
+  }
+
+  function endNodeDrag() {
+    if (!nodeDrag) return;
+    const { el, n, pointerId } = nodeDrag;
+    el.classList.remove("dragging");
+    try { stage.releasePointerCapture(pointerId); } catch (_) {}
+    nodeDrag = null;
+    const keepPath = !!(pathHighlight && pathHighlight.includes(n.id));
+    selectNode(n.id, { keepPath });
+  }
+
+  stage.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".node") || nodeDrag) return;
+    panning = true;
+    stage.classList.add("dragging");
+    last = { x: e.clientX, y: e.clientY };
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (nodeDrag) {
+      e.preventDefault();
+      const dx = e.clientX - nodeDrag.startX;
+      const dy = e.clientY - nodeDrag.startY;
+      if (!nodeDrag.moved && Math.hypot(dx, dy) > 4) nodeDrag.moved = true;
+      if (!nodeDrag.moved) return;
+      const world = clientToWorld(e.clientX, e.clientY);
+      setNodePos(
+        nodeDrag.n,
+        nodeDrag.el,
+        world.x + nodeDrag.grabDX,
+        world.y + nodeDrag.grabDY
+      );
+      return;
+    }
+    if (!panning) return;
+    cam.x += e.clientX - last.x;
+    cam.y += e.clientY - last.y;
+    last = { x: e.clientX, y: e.clientY };
+    applyCam();
+  });
+  stage.addEventListener("pointerup", (e) => {
+    if (nodeDrag) {
+      endNodeDrag();
+      return;
+    }
+    panning = false;
+    stage.classList.remove("dragging");
+    try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+  });
+  stage.addEventListener("pointercancel", (e) => {
+    if (nodeDrag) {
+      endNodeDrag();
+      return;
+    }
+    panning = false;
+    stage.classList.remove("dragging");
+    try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+  });
+  stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const rect = stage.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const prev = cam.k;
+    const next = Math.min(2.2, Math.max(0.45, cam.k * (e.deltaY < 0 ? 1.08 : 0.92)));
+    const wx = (mx - cam.x) / prev;
+    const wy = (my - cam.y) / prev;
+    cam.k = next;
+    cam.x = mx - wx * next;
+    cam.y = my - wy * next;
+    applyCam();
+  }, { passive: false });
+
+  document.getElementById("btn-fit").addEventListener("click", fitView);
+  document.getElementById("btn-reset").addEventListener("click", resetLayout);
+  document.getElementById("btn-clear").addEventListener("click", clearSelection);
+  document.getElementById("btn-tour").addEventListener("click", () => {
+    pathList.querySelector(".path-chip")?.click();
+  });
+  document.getElementById("search").addEventListener("input", (e) => {
+    searchQuery = e.target.value.trim();
+    applyVisualState();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") clearSelection();
+  });
+
+  // 右侧栏拖拽改宽
+  (function setupDetailResize() {
+    const appEl = document.querySelector(".app");
+    const handle = document.getElementById("detail-resizer");
+    if (!appEl || !handle) return;
+
+    const MIN_W = 280;
+    const MAX_W = 720;
+    const KEY = "kg-detail-w";
+
+    const saved = Number(localStorage.getItem(KEY));
+    if (Number.isFinite(saved) && saved >= MIN_W && saved <= MAX_W) {
+      appEl.style.setProperty("--detail-w", `${saved}px`);
+    }
+
+    let resizing = false;
+
+    const applyWidth = (clientX) => {
+      const rect = appEl.getBoundingClientRect();
+      let w = rect.right - clientX;
+      w = Math.min(MAX_W, Math.max(MIN_W, w));
+      appEl.style.setProperty("--detail-w", `${w}px`);
+      return w;
+    };
+
+    handle.addEventListener("pointerdown", (e) => {
+      if (window.matchMedia("(max-width: 1100px)").matches) return;
+      e.preventDefault();
+      resizing = true;
+      handle.classList.add("is-dragging");
+      document.body.classList.add("is-resizing-detail");
+      handle.setPointerCapture(e.pointerId);
+      applyWidth(e.clientX);
+    });
+
+    handle.addEventListener("pointermove", (e) => {
+      if (!resizing) return;
+      applyWidth(e.clientX);
+    });
+
+    const endResize = (e) => {
+      if (!resizing) return;
+      resizing = false;
+      handle.classList.remove("is-dragging");
+      document.body.classList.remove("is-resizing-detail");
+      const w = applyWidth(e.clientX);
+      localStorage.setItem(KEY, String(Math.round(w)));
+      fitView();
+    };
+
+    handle.addEventListener("pointerup", endResize);
+    handle.addEventListener("pointercancel", endResize);
+
+    handle.addEventListener("dblclick", () => {
+      appEl.style.setProperty("--detail-w", "360px");
+      localStorage.setItem(KEY, "360");
+      fitView();
+    });
+  })();
+
+  window.addEventListener("resize", () => fitView());
+
+  renderLayers();
+  applyVisualState();
+  requestAnimationFrame(() => {
+    fitView();
+    // gentle entrance: select hub after brief delay
+    setTimeout(() => selectNode("stl"), 400);
+  });
+})();
+</script>
+</body>
+</html>

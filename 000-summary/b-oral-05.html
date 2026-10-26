@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>口述稿 · 05 被泛化：模板与编译期</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --theme: #3b5bdb; --theme-2: #2746b0; --theme-soft: #eef1fb;
+    --theme-deep: #1e3266; --theme-rgb: 59,91,219; --theme2-rgb: 39,70,176;
+    --ink: #243041; --muted: #667385;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f3f5f9; color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 96px 16px 48px;
+  }
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 12px 16px; background: rgba(255,255,255,.96);
+    border-bottom: 1px solid #e4e8ef;
+  }
+  .btn {
+    border: none; cursor: pointer; background: var(--theme); color: #fff;
+    font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 8px;
+  }
+  .toolbar span, .toolbar a { color: var(--muted); font-size: 12px; text-decoration: none; }
+  .pages { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame { width: 720px; height: 1280px; background: #f0f3f8; padding: 18px; }
+  .panel {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: #fff; border: 1px solid #e2e8f4; border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(74,127,232,.07);
+    display: flex; flex-direction: column;
+  }
+  .panel::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px;
+    background: linear-gradient(180deg, var(--theme), var(--theme-2));
+  }
+  .cover { padding: 52px 52px 40px 60px; color: var(--ink); }
+  .cover .wm {
+    position: absolute; right: -20px; bottom: 40px;
+    font-size: 280px; line-height: .8; font-weight: 900; letter-spacing: -.06em;
+    color: transparent; -webkit-text-stroke: 2px rgba(var(--theme-rgb), .08);
+  }
+  .top, .hero, .kicker, h1, .rule, .hook, .foot, .beats, .bridge { position: relative; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; letter-spacing: 1px; }
+  .no { color: var(--theme); font-size: 28px; font-weight: 900; }
+  .kicker {
+    align-self: flex-start; margin-top: 54px;
+    color: var(--theme-deep); background: var(--theme-soft);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; font-weight: 800; letter-spacing: 2px;
+  }
+  .hero { display: flex; align-items: flex-end; gap: 16px; margin-top: 28px; }
+  .big {
+    font-size: 118px; line-height: .82; font-weight: 900; letter-spacing: -.04em;
+    background: linear-gradient(135deg, var(--theme), var(--theme-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .act { padding-bottom: 12px; border-left: 3px solid var(--theme-2); padding-left: 14px; font-size: 20px; font-weight: 800; }
+  .cover h1 { margin-top: 34px; max-width: 560px; font-size: 58px; line-height: 1.18; }
+  .rule { width: 116px; height: 4px; margin: 24px 0; border-radius: 2px; background: linear-gradient(90deg, var(--theme), var(--theme-2)); }
+  .hook { max-width: 540px; color: #4f5d6f; font-size: 22px; line-height: 1.75; }
+  .order {
+    position: relative; margin-top: 26px; max-width: 580px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  }
+  .order span {
+    padding: 5px 10px; border-radius: 7px; background: var(--theme-soft);
+    color: var(--theme-deep); font-size: 15px; font-weight: 800;
+  }
+  .order i { color: var(--muted); font-style: normal; font-size: 14px; }
+  .foot {
+    margin-top: auto; padding-top: 22px; border-top: 1px solid #e8ecf2;
+    display: flex; justify-content: space-between; color: var(--muted); font-size: 13px;
+  }
+  .script { padding: 34px 36px 28px 46px; }
+  .script .no { font-size: 22px; }
+  .script .no small { color: var(--muted); font-size: 14px; font-weight: 700; }
+  .script h1 { margin: 22px 0 18px; font-size: 32px; line-height: 1.25; }
+  .bridge { margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: var(--theme-soft); }
+  .bridge.out { margin-top: 16px; margin-bottom: 0; background: #fff8ee; }
+  .bridge .tag { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .bridge b { color: var(--theme-deep); font-size: 13px; letter-spacing: 1px; }
+  .bridge.out b { color: #9a6230; }
+  .bridge .tag span { color: var(--muted); font-size: 11px; letter-spacing: 1px; }
+  .bridge p { color: #3e4b5e; font-size: 17px; line-height: 1.7; }
+  .beats { display: flex; flex-direction: column; gap: 16px; }
+  .beat {
+    display: grid; grid-template-columns: 58px 1fr; gap: 14px;
+    padding: 16px 16px 16px 12px; border: 1px solid #e7edf5; border-radius: 12px;
+    background: #f9fbfe;
+  }
+  .side { display: flex; flex-direction: column; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 28px; border-radius: 7px; background: var(--theme); color: #fff;
+    font-size: 13px; font-weight: 800;
+  }
+  .chip.ghost { background: #e7edf5; color: #9aa6b5; }
+  .beat p { color: #2d3948; font-size: 18px; line-height: 1.75; }
+  code {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: .92em; color: var(--theme-deep); background: var(--theme-soft);
+    padding: 0 5px; border-radius: 4px;
+  }
+  .script .foot b { color: var(--theme); font-size: 16px; }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportAll" class="btn">导出本幕口述稿 (PNG)</button>
+    <span>第 05 幕 · 720 × 1280</span>
+    <a href="index-oral.html">← 返回口述稿目录</a>
+  </div>
+  <div class="pages" id="pages"><div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-05-00"><div class="panel cover"><div class="wm">05</div><div class="top"><div><div class="brand">C++ ORAL SCRIPT</div><div class="sub">口述稿 · 可以直接照着讲</div></div><div class="no">OBJECT LIFE</div></div><div class="kicker">05</div><div class="hero"><div class="big">05</div><div class="act">ACT 05</div></div><h1>被泛化：模板与编译期</h1><div class="rule"></div><p class="hook">幕 4 的每个容器、每个算法，本质上都是模板。现在把 <code>LogMessage</code> 的缓冲泛化成 <code>Queue&lt;T&gt;</code>。</p><div class="order"><span>032</span><i>→</i><span>026</span><i>→</i><span>033</span><i>→</i><span>034</span><i>→</i><span>030</span><i>→</i><span>035</span><i>→</i><span>036</span><i>→</i><span>027</span><i>→</i><span>037</span><i>→</i><span>028</span></div><div class="foot"><span>8 段口述 · 10 张原卡 · 共 5 页</span><span>篇一 · 一个对象的一生</span></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-05-01"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">1 <small>/ 4</small></div></div><h1>被泛化：模板与编译期</h1><section class="bridge in"><div class="tag"><b>承上</b><span>FROM LAST ACT</span></div><p>幕 4 的每个容器、每个算法，本质上都是模板。现在把 <code>LogMessage</code> 的缓冲泛化成 <code>Queue&lt;T&gt;</code>。</p></section><div class="beats"><article class="beat"><div class="side"><span class="chip">032</span></div><p>模板不是代码，而是生成代码的配方。只有用到 <code>Queue&lt;LogMessage&gt;</code> 时，编译器才会实例化出一份真正的类。这带来两个后果：模板的定义通常要放在头文件里，因为每个编译单元都要看到它才能实例化；类型用得多了，代码会膨胀。</p></article><article class="beat"><div class="side"><span class="chip">026</span></div><p>实例化时编译器要推导 <code>T</code> 是什么，<code>auto</code> 用的就是同一套规则：按值推导时会去掉引用和顶层 const；<code>decltype</code> 则原样保留声明的类型，<code>decltype((x))</code> 还会得到引用；<code>auto&amp;&amp;</code> 是万能引用，这就是 <code>std::forward</code> 的前提。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>2 / 5</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-05-02"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">2 <small>/ 4</small></div></div><h1>被泛化：模板与编译期</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">033</span></div><p>把模板看成编译期的程序：类型是变量，那特化就是分支。全特化给某个具体类型单独一份实现；偏特化只针对类模板，比如针对所有指针类型。函数模板不能偏特化，要用重载代替。</p></article><article class="beat"><div class="side"><span class="chip">034</span><span class="chip">030</span></div><p>有了分支，就要能按条件选择重载，这是 SFINAE：替换模板参数时如果失败，不算错误，只是把这个候选去掉。<code>enable_if</code> 就是利用这一点。它能用，但报错信息像天书。C++20 的 Concepts给约束起了名字：<code>template &lt;std::integral T&gt;</code>，报错直接说&quot;不满足哪个概念&quot;，可读性好很多。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>3 / 5</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-05-03"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">3 <small>/ 4</small></div></div><h1>被泛化：模板与编译期</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">035</span></div><p>有了分支，还要能循环，这就是可变参数模板。参数包可以递归展开，C++17 起可以用折叠表达式一行展开。这里回收幕 3 的 <code>std::forward</code>：<code>emplace_back(Args&amp;&amp;... args)</code> 把参数原样完美转发给元素的构造函数，直接在容器里原地构造，连一次移动都省了。</p></article><article class="beat"><div class="side"><span class="chip">036</span><span class="chip">027</span></div><p>变量、分支、循环都有了，模板元编程就成立了：在编译期计算，<code>type_traits</code> 就是这么实现的。但用递归模板算数字太别扭，于是 C++11 有了 <code>constexpr</code>。<code>const</code> 只保证只读，值可能要到运行期才知道；<code>constexpr</code> 表示可以在编译期求值。<code>constexpr</code> 函数把大量元编程变回了普通代码，C++17 的 <code>if constexpr</code> 还取代了很多 SFINAE 和标签分派。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>4 / 5</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-05-04"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">4 <small>/ 4</small></div></div><h1>被泛化：模板与编译期</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">037</span></div><p>模板还能做另一种多态：CRTP。基类以派生类为模板参数，<code>Base&lt;Derived&gt;</code> 里 <code>static_cast&lt;Derived*&gt;(this)</code> 直接调派生类的方法。它没有虚表、可以内联，这是编译期多态，正好和幕 2 的运行期多态对照：一个灵活，一个零开销。</p></article><article class="beat"><div class="side"><span class="chip">028</span></div><p>最后一个便利语法，结构化绑定：<code>for (auto&amp; [id, msg] : table)</code> 直接把 pair、tuple 或结构体拆开，底层依赖的正是 tuple 协议那一套模板机制。</p></article></div><section class="bridge out"><div class="tag"><b>启下</b><span>INTO NEXT ACT</span></div><p>数据被泛化了。那对这些数据的&quot;操作&quot;呢？比如&quot;这条日志写完后要做什么&quot;，这种回调怎么传、怎么存？</p></section><div class="foot"><span>卡号不用念出来</span><b>5 / 5</b></div></div></div></div></div></div>
+<script>
+var W = 720, H = 1280;
+var viewports = Array.prototype.slice.call(document.querySelectorAll('.viewport'));
+function fit() {
+  var scale = Math.min(1, (window.innerWidth - 32) / W, (window.innerHeight - 144) / H);
+  viewports.forEach(function (v) {
+    v.querySelector('.stage').style.transform = 'scale(' + scale + ')';
+    v.style.width = (W * scale) + 'px';
+    v.style.height = (H * scale) + 'px';
+  });
+}
+window.addEventListener('resize', fit); fit();
+function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); }); }
+document.getElementById('exportAll').addEventListener('click', async function () {
+  if (typeof html2canvas !== 'function') { alert('html2canvas 尚未加载。'); return; }
+  var btn = this, label = btn.textContent; btn.disabled = true;
+  viewports.forEach(function (v) { v.querySelector('.stage').style.transform = 'none'; v.style.width = W + 'px'; v.style.height = H + 'px'; });
+  await nextFrame();
+  try {
+    for (var i = 0; i < viewports.length; i++) {
+      btn.textContent = '导出中 ' + (i + 1) + '/' + viewports.length + '…';
+      var frame = viewports[i].querySelector('.frame');
+      var canvas = await html2canvas(frame, { scale: 2, backgroundColor: '#f0f3f8', useCORS: true, logging: false, width: W, height: H, windowWidth: W, windowHeight: H });
+      var a = document.createElement('a'); a.download = frame.dataset.name + '.png'; a.href = canvas.toDataURL('image/png'); a.click();
+      await new Promise(function (r) { setTimeout(r, 300); });
+    }
+  } catch (e) { alert('导出失败：' + e.message); }
+  finally { btn.disabled = false; btn.textContent = label; fit(); }
+});
+</script>
+</body>
+</html>

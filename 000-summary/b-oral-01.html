@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>口述稿 · 01 诞生：它住哪、谁拥有它</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --theme: #3b5bdb; --theme-2: #2746b0; --theme-soft: #eef1fb;
+    --theme-deep: #1e3266; --theme-rgb: 59,91,219; --theme2-rgb: 39,70,176;
+    --ink: #243041; --muted: #667385;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f3f5f9; color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 96px 16px 48px;
+  }
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 12px 16px; background: rgba(255,255,255,.96);
+    border-bottom: 1px solid #e4e8ef;
+  }
+  .btn {
+    border: none; cursor: pointer; background: var(--theme); color: #fff;
+    font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 8px;
+  }
+  .toolbar span, .toolbar a { color: var(--muted); font-size: 12px; text-decoration: none; }
+  .pages { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame { width: 720px; height: 1280px; background: #f0f3f8; padding: 18px; }
+  .panel {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: #fff; border: 1px solid #e2e8f4; border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(74,127,232,.07);
+    display: flex; flex-direction: column;
+  }
+  .panel::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px;
+    background: linear-gradient(180deg, var(--theme), var(--theme-2));
+  }
+  .cover { padding: 52px 52px 40px 60px; color: var(--ink); }
+  .cover .wm {
+    position: absolute; right: -20px; bottom: 40px;
+    font-size: 280px; line-height: .8; font-weight: 900; letter-spacing: -.06em;
+    color: transparent; -webkit-text-stroke: 2px rgba(var(--theme-rgb), .08);
+  }
+  .top, .hero, .kicker, h1, .rule, .hook, .foot, .beats, .bridge { position: relative; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; letter-spacing: 1px; }
+  .no { color: var(--theme); font-size: 28px; font-weight: 900; }
+  .kicker {
+    align-self: flex-start; margin-top: 54px;
+    color: var(--theme-deep); background: var(--theme-soft);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; font-weight: 800; letter-spacing: 2px;
+  }
+  .hero { display: flex; align-items: flex-end; gap: 16px; margin-top: 28px; }
+  .big {
+    font-size: 118px; line-height: .82; font-weight: 900; letter-spacing: -.04em;
+    background: linear-gradient(135deg, var(--theme), var(--theme-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .act { padding-bottom: 12px; border-left: 3px solid var(--theme-2); padding-left: 14px; font-size: 20px; font-weight: 800; }
+  .cover h1 { margin-top: 34px; max-width: 560px; font-size: 58px; line-height: 1.18; }
+  .rule { width: 116px; height: 4px; margin: 24px 0; border-radius: 2px; background: linear-gradient(90deg, var(--theme), var(--theme-2)); }
+  .hook { max-width: 540px; color: #4f5d6f; font-size: 22px; line-height: 1.75; }
+  .order {
+    position: relative; margin-top: 26px; max-width: 580px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  }
+  .order span {
+    padding: 5px 10px; border-radius: 7px; background: var(--theme-soft);
+    color: var(--theme-deep); font-size: 15px; font-weight: 800;
+  }
+  .order i { color: var(--muted); font-style: normal; font-size: 14px; }
+  .foot {
+    margin-top: auto; padding-top: 22px; border-top: 1px solid #e8ecf2;
+    display: flex; justify-content: space-between; color: var(--muted); font-size: 13px;
+  }
+  .script { padding: 34px 36px 28px 46px; }
+  .script .no { font-size: 22px; }
+  .script .no small { color: var(--muted); font-size: 14px; font-weight: 700; }
+  .script h1 { margin: 22px 0 18px; font-size: 32px; line-height: 1.25; }
+  .bridge { margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: var(--theme-soft); }
+  .bridge.out { margin-top: 16px; margin-bottom: 0; background: #fff8ee; }
+  .bridge .tag { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .bridge b { color: var(--theme-deep); font-size: 13px; letter-spacing: 1px; }
+  .bridge.out b { color: #9a6230; }
+  .bridge .tag span { color: var(--muted); font-size: 11px; letter-spacing: 1px; }
+  .bridge p { color: #3e4b5e; font-size: 17px; line-height: 1.7; }
+  .beats { display: flex; flex-direction: column; gap: 16px; }
+  .beat {
+    display: grid; grid-template-columns: 58px 1fr; gap: 14px;
+    padding: 16px 16px 16px 12px; border: 1px solid #e7edf5; border-radius: 12px;
+    background: #f9fbfe;
+  }
+  .side { display: flex; flex-direction: column; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 28px; border-radius: 7px; background: var(--theme); color: #fff;
+    font-size: 13px; font-weight: 800;
+  }
+  .chip.ghost { background: #e7edf5; color: #9aa6b5; }
+  .beat p { color: #2d3948; font-size: 18px; line-height: 1.75; }
+  code {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: .92em; color: var(--theme-deep); background: var(--theme-soft);
+    padding: 0 5px; border-radius: 4px;
+  }
+  .script .foot b { color: var(--theme); font-size: 16px; }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportAll" class="btn">导出本幕口述稿 (PNG)</button>
+    <span>第 01 幕 · 720 × 1280</span>
+    <a href="index-oral.html">← 返回口述稿目录</a>
+  </div>
+  <div class="pages" id="pages"><div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-01-00"><div class="panel cover"><div class="wm">01</div><div class="top"><div><div class="brand">C++ ORAL SCRIPT</div><div class="sub">口述稿 · 可以直接照着讲</div></div><div class="no">OBJECT LIFE</div></div><div class="kicker">01</div><div class="hero"><div class="big">01</div><div class="act">ACT 01</div></div><h1>诞生：它住哪、谁拥有它</h1><div class="rule"></div><p class="hook">一个对象出生，第一个问题不是语法，而是：它住在哪？谁负责让它死？</p><div class="order"><span>004</span><i>→</i><span>005</span><i>→</i><span>007</span><i>→</i><span>008</span><i>→</i><span>001</span><i>→</i><span>003</span><i>→</i><span>002</span></div><div class="foot"><span>7 段口述 · 7 张原卡 · 共 5 页</span><span>篇一 · 一个对象的一生</span></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-01-01"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">1 <small>/ 4</small></div></div><h1>诞生：它住哪、谁拥有它</h1><section class="bridge in"><div class="tag"><b>承上</b><span>FROM LAST ACT</span></div><p>一个对象出生，第一个问题不是语法，而是：它住在哪？谁负责让它死？</p></section><div class="beats"><article class="beat"><div class="side"><span class="chip">004</span></div><p>它可以住在栈上，也可以住在堆上。栈上的对象跟着函数走：进函数时分配，只是挪一下栈指针，所以很快；函数返回自动析构。代价是栈空间小，Linux 默认 8MB 左右，生命周期也不能超过函数。日志消息要在线程之间传递，活得比创建它的函数长，所以得放到堆上。</p></article><article class="beat"><div class="side"><span class="chip">005</span></div><p>放到堆上，就要问怎么造。<code>malloc</code> 只给一块原始内存，不认识类型；<code>new</code> 是两步：先调 <code>operator new</code> 拿内存，再调构造函数。<code>delete</code> 反过来：先析构，再释放。所以 <code>new</code> 和 <code>delete</code>、<code>new[]</code> 和 <code>delete[]</code> 必须配对，混用就是未定义行为。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>2 / 5</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-01-02"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">2 <small>/ 4</small></div></div><h1>诞生：它住哪、谁拥有它</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">007</span></div><p>拿到内存，对象在里面怎么排？CPU 按对齐的地址读数据最快，有的架构读不对齐的地址会直接出错，所以编译器会在成员之间插填充。成员按从大到小排能省空间，<code>alignas</code> 能强制对齐。这一点后面还会遇到两次：内存池分配时要对齐，并发时要用 <code>alignas(64)</code> 防止伪共享。</p></article><article class="beat"><div class="side"><span class="chip">008</span></div><p>既然&quot;分配&quot;和&quot;构造&quot;本来就是两步，能不能拆开？这就是 placement new：在已有的一块内存上只做构造。代价是你要手动调析构函数。内存池、<code>vector</code> 的 <code>reserve</code> 都靠它。我们的 <code>LogMessage</code> 就可以从预先分配好的池子里 placement new 出来。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>3 / 5</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-01-03"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">3 <small>/ 4</small></div></div><h1>诞生：它住哪、谁拥有它</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">001</span></div><p>对象造好了，别人怎么找到它？用指针或引用。引用必须一出生就绑定、不能改绑、没有空引用，底层通常也是指针，但语义上是&quot;别名&quot;。指针可以为空、可以改指向，所以它能表达&quot;可能没有&quot;和&quot;换一个&quot;。</p></article><article class="beat"><div class="side"><span class="chip">003</span></div><p>最关键的问题：谁负责让它死？手写 <code>delete</code> 迟早会漏，比如中途 <code>return</code>，或者抛异常。C++ 的答案是 RAII：把资源的生命周期绑定到一个栈对象上，构造时获取、析构时释放。析构函数在栈展开时一定会被调用，所以异常也漏不掉。锁、文件、socket 都是这个套路。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>4 / 5</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-01-04"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇一 · 一个对象的一生</div></div><div class="no">4 <small>/ 4</small></div></div><h1>诞生：它住哪、谁拥有它</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">002</span></div><p>把 RAII 用到堆内存上，就是智能指针。<code>unique_ptr</code> 表示独占所有权，没有额外开销，只能移动不能拷贝；<code>shared_ptr</code> 用引用计数表示共享，控制块里的计数是原子操作，<code>make_shared</code> 可以把对象和控制块一次分配出来；<code>weak_ptr</code> 用来打破循环引用。所以 <code>LogMessage</code> 从池子里造出来后，用 <code>unique_ptr</code> 持有，所有权一目了然。</p></article></div><section class="bridge out"><div class="tag"><b>启下</b><span>INTO NEXT ACT</span></div><p>对象有了住处、有了主人。但一个&quot;消息&quot;往往不只一种，有文本日志、有指标、有追踪。同一个指针指向不同的东西，还能调对函数吗？这就是身份的问题。</p></section><div class="foot"><span>卡号不用念出来</span><b>5 / 5</b></div></div></div></div></div></div>
+<script>
+var W = 720, H = 1280;
+var viewports = Array.prototype.slice.call(document.querySelectorAll('.viewport'));
+function fit() {
+  var scale = Math.min(1, (window.innerWidth - 32) / W, (window.innerHeight - 144) / H);
+  viewports.forEach(function (v) {
+    v.querySelector('.stage').style.transform = 'scale(' + scale + ')';
+    v.style.width = (W * scale) + 'px';
+    v.style.height = (H * scale) + 'px';
+  });
+}
+window.addEventListener('resize', fit); fit();
+function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); }); }
+document.getElementById('exportAll').addEventListener('click', async function () {
+  if (typeof html2canvas !== 'function') { alert('html2canvas 尚未加载。'); return; }
+  var btn = this, label = btn.textContent; btn.disabled = true;
+  viewports.forEach(function (v) { v.querySelector('.stage').style.transform = 'none'; v.style.width = W + 'px'; v.style.height = H + 'px'; });
+  await nextFrame();
+  try {
+    for (var i = 0; i < viewports.length; i++) {
+      btn.textContent = '导出中 ' + (i + 1) + '/' + viewports.length + '…';
+      var frame = viewports[i].querySelector('.frame');
+      var canvas = await html2canvas(frame, { scale: 2, backgroundColor: '#f0f3f8', useCORS: true, logging: false, width: W, height: H, windowWidth: W, windowHeight: H });
+      var a = document.createElement('a'); a.download = frame.dataset.name + '.png'; a.href = canvas.toDataURL('image/png'); a.click();
+      await new Promise(function (r) { setTimeout(r, 300); });
+    }
+  } catch (e) { alert('导出失败：' + e.message); }
+  finally { btn.disabled = false; btn.textContent = label; fit(); }
+});
+</script>
+</body>
+</html>

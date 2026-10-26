@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>口述稿 · 12 持久化与规模：数据库与分布式</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --theme: #0891b2; --theme-2: #0e7490; --theme-soft: #e6f7fb;
+    --theme-deep: #0f4c5c; --theme-rgb: 8,145,178; --theme2-rgb: 14,116,144;
+    --ink: #243041; --muted: #667385;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f3f5f9; color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 96px 16px 48px;
+  }
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 12px 16px; background: rgba(255,255,255,.96);
+    border-bottom: 1px solid #e4e8ef;
+  }
+  .btn {
+    border: none; cursor: pointer; background: var(--theme); color: #fff;
+    font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 8px;
+  }
+  .toolbar span, .toolbar a { color: var(--muted); font-size: 12px; text-decoration: none; }
+  .pages { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame { width: 720px; height: 1280px; background: #f0f3f8; padding: 18px; }
+  .panel {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: #fff; border: 1px solid #e2e8f4; border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(74,127,232,.07);
+    display: flex; flex-direction: column;
+  }
+  .panel::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px;
+    background: linear-gradient(180deg, var(--theme), var(--theme-2));
+  }
+  .cover { padding: 52px 52px 40px 60px; color: var(--ink); }
+  .cover .wm {
+    position: absolute; right: -20px; bottom: 40px;
+    font-size: 280px; line-height: .8; font-weight: 900; letter-spacing: -.06em;
+    color: transparent; -webkit-text-stroke: 2px rgba(var(--theme-rgb), .08);
+  }
+  .top, .hero, .kicker, h1, .rule, .hook, .foot, .beats, .bridge { position: relative; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; letter-spacing: 1px; }
+  .no { color: var(--theme); font-size: 28px; font-weight: 900; }
+  .kicker {
+    align-self: flex-start; margin-top: 54px;
+    color: var(--theme-deep); background: var(--theme-soft);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; font-weight: 800; letter-spacing: 2px;
+  }
+  .hero { display: flex; align-items: flex-end; gap: 16px; margin-top: 28px; }
+  .big {
+    font-size: 118px; line-height: .82; font-weight: 900; letter-spacing: -.04em;
+    background: linear-gradient(135deg, var(--theme), var(--theme-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .act { padding-bottom: 12px; border-left: 3px solid var(--theme-2); padding-left: 14px; font-size: 20px; font-weight: 800; }
+  .cover h1 { margin-top: 34px; max-width: 560px; font-size: 58px; line-height: 1.18; }
+  .rule { width: 116px; height: 4px; margin: 24px 0; border-radius: 2px; background: linear-gradient(90deg, var(--theme), var(--theme-2)); }
+  .hook { max-width: 540px; color: #4f5d6f; font-size: 22px; line-height: 1.75; }
+  .order {
+    position: relative; margin-top: 26px; max-width: 580px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  }
+  .order span {
+    padding: 5px 10px; border-radius: 7px; background: var(--theme-soft);
+    color: var(--theme-deep); font-size: 15px; font-weight: 800;
+  }
+  .order i { color: var(--muted); font-style: normal; font-size: 14px; }
+  .foot {
+    margin-top: auto; padding-top: 22px; border-top: 1px solid #e8ecf2;
+    display: flex; justify-content: space-between; color: var(--muted); font-size: 13px;
+  }
+  .script { padding: 34px 36px 28px 46px; }
+  .script .no { font-size: 22px; }
+  .script .no small { color: var(--muted); font-size: 14px; font-weight: 700; }
+  .script h1 { margin: 22px 0 18px; font-size: 32px; line-height: 1.25; }
+  .bridge { margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: var(--theme-soft); }
+  .bridge.out { margin-top: 16px; margin-bottom: 0; background: #fff8ee; }
+  .bridge .tag { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .bridge b { color: var(--theme-deep); font-size: 13px; letter-spacing: 1px; }
+  .bridge.out b { color: #9a6230; }
+  .bridge .tag span { color: var(--muted); font-size: 11px; letter-spacing: 1px; }
+  .bridge p { color: #3e4b5e; font-size: 17px; line-height: 1.7; }
+  .beats { display: flex; flex-direction: column; gap: 16px; }
+  .beat {
+    display: grid; grid-template-columns: 58px 1fr; gap: 14px;
+    padding: 16px 16px 16px 12px; border: 1px solid #e7edf5; border-radius: 12px;
+    background: #f9fbfe;
+  }
+  .side { display: flex; flex-direction: column; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 28px; border-radius: 7px; background: var(--theme); color: #fff;
+    font-size: 13px; font-weight: 800;
+  }
+  .chip.ghost { background: #e7edf5; color: #9aa6b5; }
+  .beat p { color: #2d3948; font-size: 18px; line-height: 1.75; }
+  code {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: .92em; color: var(--theme-deep); background: var(--theme-soft);
+    padding: 0 5px; border-radius: 4px;
+  }
+  .script .foot b { color: var(--theme); font-size: 16px; }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportAll" class="btn">导出本幕口述稿 (PNG)</button>
+    <span>第 12 幕 · 720 × 1280</span>
+    <a href="index-oral.html">← 返回口述稿目录</a>
+  </div>
+  <div class="pages" id="pages"><div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-12-00"><div class="panel cover"><div class="wm">12</div><div class="top"><div><div class="brand">C++ ORAL SCRIPT</div><div class="sub">口述稿 · 可以直接照着讲</div></div><div class="no">REQUEST JOURNEY</div></div><div class="kicker">12</div><div class="hero"><div class="big">12</div><div class="act">ACT 12</div></div><h1>持久化与规模：数据库与分布式</h1><div class="rule"></div><p class="hook">日志最终要落盘，而且要能查。这一幕的顺序是：先保证正确，再追求速度，最后扩展到多台机器。</p><div class="order"><span>078</span><i>→</i><span>082</span><i>→</i><span>081</span><i>→</i><span>079</span><i>→</i><span>080</span><i>→</i><span>086</span><i>→</i><span>084</span><i>→</i><span>085</span><i>→</i><span>083</span></div><div class="foot"><span>9 段口述 · 9 张原卡 · 共 7 页</span><span>篇三 · 一次请求的旅程</span></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-12-01"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇三 · 一次请求的旅程</div></div><div class="no">1 <small>/ 6</small></div></div><h1>持久化与规模：数据库与分布式</h1><section class="bridge in"><div class="tag"><b>承上</b><span>FROM LAST ACT</span></div><p>日志最终要落盘，而且要能查。这一幕的顺序是：先保证正确，再追求速度，最后扩展到多台机器。</p></section><div class="beats"><article class="beat"><div class="side"><span class="chip">078</span></div><p>先讲正确性，事务的 ACID：原子性、一致性、隔离性、持久性。其中隔离性是可以调节的，有四个级别：读未提交会读到别人没提交的数据，也就是脏读；读已提交解决了脏读，但同一事务里两次读的结果可能不同，也就是不可重复读；可重复读是 InnoDB 的默认级别；串行化最严格，性能最差。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>2 / 7</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-12-02"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇三 · 一次请求的旅程</div></div><div class="no">2 <small>/ 6</small></div></div><h1>持久化与规模：数据库与分布式</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">082</span></div><p>隔离级别怎么实现？如果全靠加锁，读写会互相阻塞。InnoDB 用 MVCC：每一行有隐藏的事务 ID 和回滚指针，指向 undo log 里的旧版本，形成一条版本链。读的时候生成一个 ReadView，沿着版本链找到自己可见的那个版本，于是读不阻塞写。读已提交是每条语句生成一个新的 ReadView，可重复读是整个事务只用第一次生成的那个，这就是两者的本质区别。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>3 / 7</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-12-03"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇三 · 一次请求的旅程</div></div><div class="no">3 <small>/ 6</small></div></div><h1>持久化与规模：数据库与分布式</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">081</span></div><p>MVCC 用到了 undo log，这就引出三种日志：undo log 用于回滚和 MVCC，保证原子性；redo log 是 InnoDB 的物理日志，先写日志再改数据页，也就是 WAL，崩溃后靠它恢复，保证持久性；binlog 是 MySQL 服务层的逻辑日志，用于主从复制和按时间点恢复。redo log 和 binlog 之间用两阶段提交，保证两份日志一致。这和幕 8 的强保证是同一个思想：要么都成功，要么都回滚。</p></article><article class="beat"><div class="side"><span class="chip">079</span></div><p>数据存得对了，接下来是查得快：索引。InnoDB 用 B+ 树：扇出很大，千万级数据通常只有三到四层，磁盘 IO 次数很少；数据只存在叶子节点，叶子之间用链表连起来，范围查询很快。主键索引是聚簇索引，叶子节点存的就是整行数据；二级索引的叶子节点存的是主键，查到主键之后还要回主键索引再查一次，这叫回表。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>4 / 7</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-12-04"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇三 · 一次请求的旅程</div></div><div class="no">4 <small>/ 6</small></div></div><h1>持久化与规模：数据库与分布式</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">080</span></div><p>所以索引优化的核心就是：遵守最左前缀原则，联合索引要从最左边的列开始用；尽量用覆盖索引，让要查的列都在索引里，避免回表；不要在索引列上用函数或做隐式类型转换，否则索引会失效。</p></article><article class="beat"><div class="side"><span class="chip">086</span></div><p>磁盘再快也快不过内存，于是加一层缓存，Redis。它快的原因是：数据全在内存里；命令执行是单线程的，没有锁竞争，6.0 之后网络 IO 可以多线程；网络层用的正是幕 11 讲的 epoll；底层数据结构针对内存做了专门优化。内存有限，所以要有过期和淘汰：过期键靠惰性删除加定期删除，内存满了按策略淘汰，比如 LRU 或 LFU。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>5 / 7</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-12-05"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇三 · 一次请求的旅程</div></div><div class="no">5 <small>/ 6</small></div></div><h1>持久化与规模：数据库与分布式</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">084</span></div><p>Redis 常用的结构有 string、hash、list、set、zset。其中 zset 用跳表加哈希表实现，适合排行榜这类场景。有了缓存，就有一致性问题，最常用的是 Cache Aside：先更新数据库，再删除缓存，而不是更新缓存。并发下还可能读到旧值写回缓存，可以用延迟双删，或者订阅 binlog 异步删除缓存。</p></article><article class="beat"><div class="side"><span class="chip">085</span></div><p>缓存用不好，会出三类问题：穿透，查一个根本不存在的键，每次都打到数据库，用布隆过滤器或者缓存空值解决；击穿，一个热点键过期的瞬间，大量请求同时打到数据库，用互斥锁只让一个请求去重建，或者设置逻辑过期；雪崩，大量键同时过期，或者 Redis 整个挂了，用随机过期时间、集群高可用、限流降级来解决。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>6 / 7</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-12-06"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇三 · 一次请求的旅程</div></div><div class="no">6 <small>/ 6</small></div></div><h1>持久化与规模：数据库与分布式</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">083</span></div><p>最后，单台机器会挂，数据要复制到多台，那就要保证多台机器之间一致，这就是 Raft。它把问题拆成三块：选主，用任期号和随机超时，拿到多数票的节点成为 leader；日志复制，leader 把日志发给 follower，多数节点确认后才算提交；安全性，保证已提交的日志不会丢失。Raft 只防节点宕机，不防节点撒谎，也就是不防拜占庭错误。因为数据中心内部的节点是可信的，防拜占庭至少要 3f+1 个节点，代价高得多。</p></article></div><section class="bridge out"><div class="tag"><b>启下</b><span>INTO NEXT ACT</span></div><p>到这里，零件都讲完了：对象、编译、进程、网络、存储。最后一步，把它们装成一个能上线的组件。</p></section><div class="foot"><span>卡号不用念出来</span><b>7 / 7</b></div></div></div></div></div></div>
+<script>
+var W = 720, H = 1280;
+var viewports = Array.prototype.slice.call(document.querySelectorAll('.viewport'));
+function fit() {
+  var scale = Math.min(1, (window.innerWidth - 32) / W, (window.innerHeight - 144) / H);
+  viewports.forEach(function (v) {
+    v.querySelector('.stage').style.transform = 'scale(' + scale + ')';
+    v.style.width = (W * scale) + 'px';
+    v.style.height = (H * scale) + 'px';
+  });
+}
+window.addEventListener('resize', fit); fit();
+function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); }); }
+document.getElementById('exportAll').addEventListener('click', async function () {
+  if (typeof html2canvas !== 'function') { alert('html2canvas 尚未加载。'); return; }
+  var btn = this, label = btn.textContent; btn.disabled = true;
+  viewports.forEach(function (v) { v.querySelector('.stage').style.transform = 'none'; v.style.width = W + 'px'; v.style.height = H + 'px'; });
+  await nextFrame();
+  try {
+    for (var i = 0; i < viewports.length; i++) {
+      btn.textContent = '导出中 ' + (i + 1) + '/' + viewports.length + '…';
+      var frame = viewports[i].querySelector('.frame');
+      var canvas = await html2canvas(frame, { scale: 2, backgroundColor: '#f0f3f8', useCORS: true, logging: false, width: W, height: H, windowWidth: W, windowHeight: H });
+      var a = document.createElement('a'); a.download = frame.dataset.name + '.png'; a.href = canvas.toDataURL('image/png'); a.click();
+      await new Promise(function (r) { setTimeout(r, 300); });
+    }
+  } catch (e) { alert('导出失败：' + e.message); }
+  finally { btn.disabled = false; btn.textContent = label; fit(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ 面试总结 · 总开场 · 一个对象的一生 · 9:16</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Chakra+Petch:wght@700&display=swap" />
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --theme: #3b5bdb;
+    --theme-2: #2746b0;
+    --theme-soft: #eef1fb;
+    --theme-deep: #1e3266;
+    --theme-rgb: 59,91,219;
+    --paper: #ffffff;
+    --carbon: #243041;
+    --muted: #6b7585;
+    --ink-soft: #4f5d6f;
+    --cover-num-font: "Russo One", "Chakra Petch", "Arial Black", sans-serif;
+    --c1: #3b5bdb;
+    --c2: #6d28d9;
+    --c3: #0891b2;
+    --c4: #059669;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+    background: #f3f5f9;
+    color: var(--carbon);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 96px 16px 48px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,.96);
+    border-bottom: 1px solid #e4e8ef;
+    box-shadow: 0 4px 18px rgba(36,48,65,.06);
+  }
+  .btn {
+    border: none; cursor: pointer; background: var(--theme); color: #fff;
+    font-size: 14px; font-weight: 700; letter-spacing: 1px;
+    padding: 10px 18px; border-radius: 8px;
+  }
+  .btn:disabled { opacity: .6; cursor: default; }
+  .hint { font-size: 12px; color: #6b7585; }
+  .toolbar a { color: #6b7585; font-size: 12px; text-decoration: none; }
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame { width: 720px; height: 1280px; background: #f0f3f8; padding: 20px; }
+
+  .panel-cover {
+    position: relative; width: 100%; height: 100%;
+    background: linear-gradient(165deg, #ffffff 0%, #f8fbff 42%, var(--theme-soft) 100%);
+    border: 1px solid #e2e8f4; border-radius: 16px;
+    padding: 36px 48px 28px;
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 18px 44px rgba(var(--theme-rgb),.08);
+  }
+  .panel-cover::after {
+    content: ""; position: absolute; left: 48px; right: 48px; top: 112px;
+    height: 1px; background: linear-gradient(90deg, var(--theme), var(--c2), var(--c3), var(--c4));
+  }
+  .grid-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(var(--theme-rgb),.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(var(--theme-rgb),.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .glow-a, .glow-b { position: absolute; border-radius: 50%; pointer-events: none; }
+  .glow-a {
+    width: 620px; height: 620px; top: -230px; right: -200px;
+    background: radial-gradient(circle, rgba(59,91,219,.12), transparent 68%);
+  }
+  .glow-b {
+    width: 420px; height: 420px; bottom: -180px; left: -140px;
+    background: radial-gradient(circle, rgba(5,150,105,.1), transparent 70%);
+  }
+  .cover-wm {
+    position: absolute; right: -18px; top: 18%;
+    font-family: var(--cover-num-font);
+    font-size: 280px; line-height: 1; letter-spacing: -.04em;
+    color: transparent; -webkit-text-stroke: 2px rgba(var(--theme-rgb),.06);
+    pointer-events: none; user-select: none;
+  }
+  .layer { position: relative; z-index: 1; }
+
+  .cover-brand { display: flex; align-items: center; gap: 16px; }
+  .logo { width: 52px; height: 52px; flex-shrink: 0; }
+  .logo svg { width: 100%; height: 100%; display: block; }
+  .brand-title { flex: 1; }
+  .brand-title .en { font-size: 19px; font-weight: 700; letter-spacing: 1.5px; color: var(--carbon); }
+  .brand-title .cn { margin-top: 4px; font-size: 12.5px; color: var(--muted); letter-spacing: 3px; }
+  .brand-no { text-align: right; }
+  .brand-no .num {
+    font-family: var(--cover-num-font); font-size: 28px; font-weight: 400;
+    color: var(--theme); letter-spacing: .04em;
+  }
+  .brand-no .tag { margin-top: 4px; font-size: 12px; color: var(--muted); letter-spacing: 2px; }
+
+  .kicker {
+    align-self: flex-start; display: inline-flex; align-items: center; gap: 10px;
+    margin-top: 28px;
+    background: var(--theme-soft); border: 1px solid rgba(var(--theme-rgb),.14);
+    color: var(--theme-deep); border-radius: 6px; padding: 8px 14px;
+    font-size: 13px; font-weight: 700; letter-spacing: 3px;
+  }
+  .kicker .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--theme-2); }
+  .cover-title {
+    margin-top: 16px; font-size: 56px; font-weight: 800; line-height: 1.1;
+    letter-spacing: 1px; color: var(--carbon);
+  }
+  .cover-en {
+    margin-top: 12px; font-size: 15px; letter-spacing: 4px;
+    color: var(--theme); font-weight: 700;
+  }
+  .cover-rule {
+    width: 124px; height: 4px; border-radius: 2px; margin: 14px 0 12px;
+    background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3), var(--c4));
+  }
+  .cover-line {
+    font-size: 18px; line-height: 1.65; color: var(--ink-soft); font-weight: 500;
+    border-left: 3px solid var(--theme-2); padding-left: 16px;
+    max-width: 560px;
+  }
+  .cover-line code {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: 18px; color: var(--theme-deep);
+    background: var(--theme-soft); padding: 1px 6px; border-radius: 4px;
+  }
+
+  .arc {
+    flex: 1; min-height: 0; margin-top: 18px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; z-index: 1; padding: 2px 0 2px 0;
+  }
+  .arc::before {
+    content: ""; position: absolute; left: 16.5px; top: 18px; bottom: 18px; width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--c1) 0%, var(--c1) 52%, var(--c2) 64%, var(--c3) 80%, var(--c4) 100%);
+  }
+  .beat {
+    display: grid; grid-template-columns: 36px 1fr auto; gap: 16px; align-items: center;
+    position: relative;
+  }
+  .beat .n {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 4px #f8fbff;
+    position: relative; z-index: 1;
+  }
+  .beat .n svg { width: 18px; height: 18px; display: block; }
+  .beat .n svg * {
+    fill: none; stroke: #fff; stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .beat .n svg .dot { fill: #fff; stroke: none; }
+  .beat .txt { min-width: 0; }
+  .beat .h { font-size: 20px; font-weight: 800; letter-spacing: .5px; color: var(--carbon); line-height: 1.2; }
+  .beat .s { margin-top: 2px; font-size: 14px; color: #5c6778; letter-spacing: .3px; }
+  .beat .tag {
+    font-size: 11px; font-weight: 800; letter-spacing: 1px;
+    padding: 4px 8px; border-radius: 4px;
+  }
+  .b1 .n { background: var(--c1); }
+  .b2 .n { background: var(--c2); }
+  .b3 .n { background: var(--c3); }
+  .b4 .n { background: var(--c4); }
+
+  .cover-foot-divider { height: 1px; background: #e4e8ef; margin: 16px 0 14px; position: relative; z-index: 1; }
+  .cover-footer { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
+  .cover-footer .slogan { font-size: 12px; color: var(--muted); letter-spacing: 3px; }
+  .cover-footer .dots { display: flex; gap: 9px; }
+  .cover-footer .dots i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+  .cover-footer .dots i:nth-child(1) { background: var(--c1); }
+  .cover-footer .dots i:nth-child(2) { background: var(--c2); }
+  .cover-footer .dots i:nth-child(3) { background: var(--c3); }
+  .cover-footer .dots i:nth-child(4) { background: var(--c4); }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportAll" class="btn">⬇ 导出封面 (PNG)</button>
+    <span class="hint">总开场 · 一个对象的一生 · 720 × 1280 · 2× 高清</span>
+    <a href="index-b.html">← 返回方案B目录</a>
+  </div>
+
+  <div class="viewport">
+    <div class="stage">
+      <div class="frame" data-name="b-opening">
+        <div class="panel-cover">
+          <div class="grid-bg"></div>
+          <div class="glow-a"></div>
+          <div class="glow-b"></div>
+          <div class="cover-wm">00</div>
+
+          <div class="layer cover-brand">
+            <div class="logo">
+              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#3b5bdb"/>
+                    <stop offset="1" stop-color="#1e3266"/>
+                  </linearGradient>
+                </defs>
+                <path d="M26 6 H74 A20 20 0 0 1 94 26 V74 A20 20 0 0 1 74 94 H26 L6 74 V26 A20 20 0 0 1 26 6 Z" fill="url(#lg)"/>
+                <path d="M6 74 L26 94 H16 A10 10 0 0 1 6 84 Z" fill="#2746b0"/>
+                <path d="M48.6 36.2 A18 18 0 1 0 48.6 63.8" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+                <g fill="#fff">
+                  <rect x="58" y="48" width="12" height="4" rx="1.6"/>
+                  <rect x="62" y="44" width="4" height="12" rx="1.6"/>
+                  <rect x="72" y="48" width="12" height="4" rx="1.6"/>
+                  <rect x="76" y="44" width="4" height="12" rx="1.6"/>
+                </g>
+              </svg>
+            </div>
+            <div class="brand-title">
+              <div class="en">C++ INTERVIEW CARD</div>
+              <div class="cn">追问链叙事 · STORYLINE</div>
+            </div>
+            <div class="brand-no">
+              <div class="num">00</div>
+              <div class="tag">总开场</div>
+            </div>
+          </div>
+
+          <div class="layer kicker"><span class="dot"></span>OPENING · 一条主线</div>
+          <div class="layer cover-title">一个对象的一生</div>
+          <div class="layer cover-en">LIFE OF AN OBJECT</div>
+          <div class="layer cover-rule"></div>
+          <div class="layer cover-line">拿一条日志消息 <code>LogMessage</code>，把 C++ 从对象讲到系统。</div>
+
+          <div class="arc">
+            <div class="beat b1"><div class="n"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="3"/><path d="M12 8.5v7M8.5 12h7"/></svg></div><div class="txt"><div class="h">诞生</div><div class="s">住哪 · 归谁管</div></div><div class="tag" style="color:#1e3266;background:#eef1fb">篇一</div></div>
+            <div class="beat b1"><div class="n"><svg viewBox="0 0 24 24"><rect x="8" y="4" width="11" height="13" rx="2"/><rect x="5" y="7" width="11" height="13" rx="2"/></svg></div><div class="txt"><div class="h">身份</div><div class="s">多态</div></div></div>
+            <div class="beat b1"><div class="n"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 15V6.5A1.5 1.5 0 0 1 6.5 5H15"/></svg></div><div class="txt"><div class="h">流转</div><div class="s">复制 · 移动 · 进容器</div></div></div>
+            <div class="beat b1"><div class="n"><svg viewBox="0 0 24 24"><path d="M8 6c5 0 7 3.2 6 8L9 20M11.5 12H17"/></svg></div><div class="txt"><div class="h">被使用</div><div class="s">模板 · lambda · 多线程</div></div></div>
+            <div class="beat b1"><div class="n"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M9 12h6"/></svg></div><div class="txt"><div class="h">死亡</div><div class="s">语言层面到此讲完</div></div></div>
+            <div class="beat b2"><div class="n"><svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.6"/><path d="M9.5 4v3M14.5 4v3M9.5 17v3M14.5 17v3M4 9.5h3M4 14.5h3M17 9.5h3M17 14.5h3"/></svg></div><div class="txt"><div class="h">变成指令</div><div class="s">镜头拉远 · 编译与底层</div></div><div class="tag" style="color:#3b1570;background:#f4f0ff">篇二</div></div>
+            <div class="beat b3"><div class="n"><svg viewBox="0 0 24 24"><circle class="dot" cx="6" cy="12" r="2.1"/><circle class="dot" cx="18" cy="6.5" r="2.1"/><circle class="dot" cx="18" cy="17.5" r="2.1"/><path d="M8 12h7.2M8.2 11.2 16 7.4M8.2 12.8 16 16.6"/></svg></div><div class="txt"><div class="h">跑起来</div><div class="s">进程 · 网络 · 数据库</div></div><div class="tag" style="color:#0f4c5c;background:#e6f7fb">篇三</div></div>
+            <div class="beat b4"><div class="n"><svg viewBox="0 0 24 24"><path d="M7 4.5h7.2L18.5 9v10.2a1.3 1.3 0 0 1-1.3 1.3H7A1.3 1.3 0 0 1 5.7 19.2V5.8A1.3 1.3 0 0 1 7 4.5z"/><path d="M14 4.5V9h4.5M8.5 12.5h6M8.5 16h4"/></svg></div><div class="txt"><div class="h">装成系统</div><div class="s">一个真正的日志系统</div></div><div class="tag" style="color:#064e3b;background:#ecfdf5">终章</div></div>
+          </div>
+
+          <div class="cover-foot-divider"></div>
+          <div class="cover-footer">
+            <div class="slogan">MAKE EACH ANSWER COUNT.</div>
+            <div class="dots"><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+var W = 720, H = 1280;
+var vp = document.querySelector('.viewport');
+function fit() {
+  var scale = Math.min(1, (window.innerWidth - 32) / W, (window.innerHeight - 144) / H);
+  vp.querySelector('.stage').style.transform = 'scale(' + scale + ')';
+  vp.style.width = (W * scale) + 'px';
+  vp.style.height = (H * scale) + 'px';
+}
+window.addEventListener('resize', fit);
+fit();
+
+function nextFrame() {
+  return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); });
+}
+
+(function () {
+  var proto = CanvasRenderingContext2D.prototype, orig = proto.createPattern;
+  var blank = document.createElement('canvas');
+  blank.width = blank.height = 1;
+  proto.createPattern = function (img, repetition) {
+    if (img && (img.width === 0 || img.height === 0)) img = blank;
+    return orig.call(this, img, repetition);
+  };
+})();
+
+document.getElementById('exportAll').addEventListener('click', async function () {
+  if (typeof html2canvas !== 'function') {
+    alert('html2canvas 尚未加载（可能网络受限）。请联网后重试，或使用系统截图。');
+    return;
+  }
+  var btn = this, label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '导出中…';
+  vp.querySelector('.stage').style.transform = 'none';
+  vp.style.width = W + 'px';
+  vp.style.height = H + 'px';
+  await nextFrame();
+  try {
+    var frame = document.querySelector('.frame');
+    var canvas = await html2canvas(frame, {
+      scale: 2, backgroundColor: '#f0f3f8', useCORS: true, logging: false,
+      width: W, height: H, windowWidth: W, windowHeight: H
+    });
+    var a = document.createElement('a');
+    a.download = frame.dataset.name + '.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  } catch (e) {
+    alert('导出失败：' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+    fit();
+  }
+});
+</script>
+</body>
+</html>

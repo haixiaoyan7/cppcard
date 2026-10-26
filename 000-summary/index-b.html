@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ 面试口袋卡片 · 方案B 追问链叙事目录</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background:
+      radial-gradient(circle at 8% 0%, #ffffff 0%, transparent 26%),
+      #f3f5f9;
+    color: #243041; padding: 44px 20px 72px;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+  .head {
+    position: relative; overflow: hidden;
+    background: linear-gradient(165deg, #ffffff 0%, #f8fbff 48%, #eef1fb 100%);
+    border: 1px solid #e2e8f4;
+    border-radius: 16px; padding: 46px 48px 44px; margin-bottom: 14px;
+    box-shadow: 0 16px 40px rgba(59,91,219,.08); color: #243041;
+  }
+  .head::before {
+    content: "01 — 15"; position: absolute; right: -12px; top: -38px;
+    font-size: 154px; line-height: 1; font-weight: 900; letter-spacing: -.08em;
+    color: transparent; -webkit-text-stroke: 2px rgba(59,91,219,.07);
+    pointer-events: none;
+  }
+  .head::after {
+    content: ""; position: absolute; left: 48px; right: 48px; bottom: 0; height: 4px;
+    background: linear-gradient(90deg, #3b5bdb 0%, #6d28d9 34%, #0891b2 67%, #059669 100%);
+  }
+  .head .k { font-size: 11px; letter-spacing: 4px; color: #3b5bdb; font-weight: 800; }
+  .head h1 { position: relative; margin-top: 18px; font-size: 40px; letter-spacing: .5px; }
+  .head p {
+    position: relative; margin-top: 16px; max-width: 900px;
+    font-size: 15px; line-height: 1.9; color: #5a6573;
+  }
+  .head .switch { position: relative; margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .head .switch a {
+    display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: 1px;
+    text-decoration: none; color: #3b5bdb; border: 1px solid #d6def5;
+    background: #ffffff; padding: 9px 15px; border-radius: 8px;
+  }
+  .part {
+    margin-top: 34px; --theme: #3b5bdb; --theme2: #2746b0;
+    --soft: #eef1fb; --deep: #1e3266;
+  }
+  .part-head {
+    display: grid; grid-template-columns: auto auto 1fr; align-items: baseline;
+    gap: 14px; margin-bottom: 14px; padding: 0 4px;
+  }
+  .part-head .cn { font-size: 23px; font-weight: 900; letter-spacing: .5px; }
+  .part-head .en { font-size: 11px; letter-spacing: 3px; color: var(--theme); font-weight: 800; }
+  .part-head .rule {
+    height: 1px; align-self: center;
+    background: linear-gradient(90deg, var(--theme), transparent 78%);
+  }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+  a.card {
+    display: grid; grid-template-columns: 72px 1fr; column-gap: 18px;
+    text-decoration: none; color: inherit;
+    background: #ffffff; border: 1px solid #e4e8ef; border-radius: 12px;
+    padding: 22px 24px 22px 18px; position: relative; overflow: hidden;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  a.card::before {
+    content: attr(data-no); grid-row: 1 / span 5;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 1px; border-right: 1px solid #e8ecf2;
+    font-size: 36px; line-height: 1; font-weight: 900; letter-spacing: -.04em;
+    color: var(--theme);
+  }
+  a.card::after {
+    content: ""; position: absolute; left: 0; top: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--theme), var(--theme2));
+  }
+  a.card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(var(--rgb),.35);
+    box-shadow: 0 12px 28px rgba(var(--rgb),.08);
+  }
+  .card .no { font-size: 10px; letter-spacing: 1.6px; color: #8a8f9b; font-weight: 800; }
+  .card h2 { margin-top: 7px; font-size: 21px; letter-spacing: .2px; line-height: 1.3; }
+  .card .en { margin-top: 5px; font-size: 10px; letter-spacing: 1.8px; color: var(--theme); font-weight: 800; }
+  .card .line { margin-top: 11px; font-size: 13.5px; line-height: 1.65; color: #555c69; }
+  .card .foot { margin-top: 13px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag {
+    font-size: 10px; letter-spacing: 1px; padding: 5px 9px; border-radius: 4px;
+    background: var(--soft); color: var(--deep); font-weight: 800;
+  }
+  .tag.gold { background: #faf0e0; color: #9a6a28; }
+  @media (max-width: 760px) {
+    body { padding: 18px 12px 44px; }
+    .head { padding: 34px 26px 32px; }
+    .head::after { left: 26px; right: 26px; }
+    .head h1 { font-size: 30px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="k">STORYLINE EDITION · 追问链叙事版</div>
+      <h1>C++ 面试口袋卡片 · 方案B 总结</h1>
+      <p>同样 86 题，换一种组织：不按知识分类，而按<b>一个对象从生到死</b>——四篇、十五幕。贯穿例子是一条 LogMessage：诞生、身份、复制转移、进容器、被泛化、被操作、被并发访问、死亡；篇二、篇三把镜头拉远到指令、进程、网络和存储，终章装回一台能跑的机器。每张卡片仍标注原始卡号（001–086），方便与方案A对照。</p>
+      <div class="switch"><a href="index.html">← 切换到方案A（按知识主题分 10 个 topic）</a><a href="index-oral.html">口述稿卡片 →</a></div>
+    </div>
+    <div class="part" style="--theme:#3b5bdb;--theme2:#2746b0;--soft:#eef1fb;--deep:#1e3266;--rgb:59,91,219">
+      <div class="part-head"><span class="cn">篇一 · 一个对象的一生</span><span class="en">PART I · LIFE OF AN OBJECT</span><span class="rule"></span></div>
+      <div class="grid">
+        <a class="card" data-no="01" href="b-act-01-birth.html">
+          <div class="no">ACT 01 · PART I · LIFE OF AN OBJECT</div>
+          <h2>诞生：住哪 · 谁拥有</h2>
+          <div class="en">BIRTH · MEMORY & OWNERSHIP</div>
+          <div class="line">对象的第一课：它住在哪、怎么造出来、由谁归还。</div>
+          <div class="foot"><span class="tag">7 题 / 3 页</span><span class="tag gold">2 个高频</span></div>
+        </a>
+        <a class="card" data-no="02" href="b-act-02-polymorphism.html">
+          <div class="no">ACT 02 · PART I · LIFE OF AN OBJECT</div>
+          <h2>身份：多态与类型转换</h2>
+          <div class="en">POLYMORPHISM & CASTS</div>
+          <div class="line">同一个指针，怎么调到对的函数，又怎么在类型之间转换？</div>
+          <div class="foot"><span class="tag">11 题 / 4 页</span><span class="tag gold">5 个高频</span></div>
+        </a>
+        <a class="card" data-no="03" href="b-act-03-value.html">
+          <div class="no">ACT 03 · PART I · LIFE OF AN OBJECT</div>
+          <h2>复制与转移</h2>
+          <div class="en">COPY & MOVE · VALUE SEMANTICS</div>
+          <div class="line">有了对象，面试官立刻追问：复制它会发生什么？</div>
+          <div class="foot"><span class="tag">4 题 / 2 页</span><span class="tag gold">3 个高频</span></div>
+        </a>
+        <a class="card" data-no="04" href="b-act-04-container.html">
+          <div class="no">ACT 04 · PART I · LIFE OF AN OBJECT</div>
+          <h2>进容器：STL 与布局</h2>
+          <div class="en">CONTAINERS · STL & LAYOUT</div>
+          <div class="line">对象被放进容器：存哪、怎么搬、旧元素怎么死。</div>
+          <div class="foot"><span class="tag">7 题 / 3 页</span><span class="tag gold">2 个高频</span></div>
+        </a>
+        <a class="card" data-no="05" href="b-act-05-compiletime.html">
+          <div class="no">ACT 05 · PART I · LIFE OF AN OBJECT</div>
+          <h2>被泛化：模板与编译期</h2>
+          <div class="en">TEMPLATES · COMPILE-TIME</div>
+          <div class="line">对象被抽象成任意类型：模板是编译期的语言。</div>
+          <div class="foot"><span class="tag">10 题 / 4 页</span><span class="tag gold">0 个高频</span></div>
+        </a>
+        <a class="card" data-no="06" href="b-act-06-modern.html">
+          <div class="no">ACT 06 · PART I · LIFE OF AN OBJECT</div>
+          <h2>被函数式操作</h2>
+          <div class="en">CALLABLES · TYPE SAFETY</div>
+          <div class="line">用 lambda / function 操作对象，用 optional / variant 取代魔法值。</div>
+          <div class="foot"><span class="tag">3 题 / 2 页</span><span class="tag gold">1 个高频</span></div>
+        </a>
+        <a class="card" data-no="07" href="b-act-07-concurrency.html">
+          <div class="no">ACT 07 · PART I · LIFE OF AN OBJECT</div>
+          <h2>被并发访问</h2>
+          <div class="en">CONCURRENCY · SHARED DATA & ASYNC</div>
+          <div class="line">多线程同时碰它：加锁、无锁，还是挂起等待？</div>
+          <div class="foot"><span class="tag">10 题 / 4 页</span><span class="tag gold">3 个高频</span></div>
+        </a>
+        <a class="card" data-no="08" href="b-act-08-death.html">
+          <div class="no">ACT 08 · PART I · LIFE OF AN OBJECT</div>
+          <h2>死亡：异常、泄漏与谢幕</h2>
+          <div class="en">DEATH · EXCEPTIONS & LEAKS</div>
+          <div class="line">正常死亡已散落前幕；此处收异常中途的死亡与泄漏。</div>
+          <div class="foot"><span class="tag">2 题 / 2 页</span><span class="tag gold">1 个高频</span></div>
+        </a>
+      </div>
+    </div>
+    <div class="part" style="--theme:#6d28d9;--theme2:#4c1d95;--soft:#f4f0ff;--deep:#3b1570;--rgb:109,40,217">
+      <div class="part-head"><span class="cn">篇二 · 一行代码到一条指令</span><span class="en">PART II · CODE TO INSTRUCTION</span><span class="rule"></span></div>
+      <div class="grid">
+        <a class="card" data-no="09" href="b-act-09-lowlevel.html">
+          <div class="no">ACT 09 · PART II · CODE TO INSTRUCTION</div>
+          <h2>编译链接与底层机制</h2>
+          <div class="en">COMPILE · LINK · RUNTIME</div>
+          <div class="line">跳出单个对象：一行代码怎样变成一条指令，又跑得多快？</div>
+          <div class="foot"><span class="tag">8 题 / 3 页</span><span class="tag gold">5 个高频</span></div>
+        </a>
+      </div>
+    </div>
+    <div class="part" style="--theme:#0891b2;--theme2:#0e7490;--soft:#e6f7fb;--deep:#0f4c5c;--rgb:8,145,178">
+      <div class="part-head"><span class="cn">篇三 · 一次请求的旅程</span><span class="en">PART III · JOURNEY OF A REQUEST</span><span class="rule"></span></div>
+      <div class="grid">
+        <a class="card" data-no="10" href="b-act-10-os-exec.html">
+          <div class="no">ACT 10 · PART III · JOURNEY OF A REQUEST</div>
+          <h2>执行单元：进程 · fork · IPC</h2>
+          <div class="en">OS · PROCESS · IPC</div>
+          <div class="line">可执行文件跑起来：谁在处理、怎么多进程、进程间怎么说话。</div>
+          <div class="foot"><span class="tag">3 题 / 2 页</span><span class="tag gold">1 个高频</span></div>
+        </a>
+        <a class="card" data-no="11" href="b-act-11-net-io.html">
+          <div class="no">ACT 11 · PART III · JOURNEY OF A REQUEST</div>
+          <h2>网络 IO 栈</h2>
+          <div class="en">NETWORK · MULTIPLEX · OPTIMIZE</div>
+          <div class="line">对外服务：建连接、等事件、分发、少搬数据。</div>
+          <div class="foot"><span class="tag">6 题 / 3 页</span><span class="tag gold">5 个高频</span></div>
+        </a>
+        <a class="card" data-no="12" href="b-act-12-database.html">
+          <div class="no">ACT 12 · PART III · JOURNEY OF A REQUEST</div>
+          <h2>持久化与规模：数据库与分布式</h2>
+          <div class="en">DATABASE & DISTRIBUTED</div>
+          <div class="line">请求落到存储层：正确性与速度如何两全？</div>
+          <div class="foot"><span class="tag">9 题 / 4 页</span><span class="tag gold">6 个高频</span></div>
+        </a>
+      </div>
+    </div>
+    <div class="part" style="--theme:#059669;--theme2:#047857;--soft:#ecfdf5;--deep:#064e3b;--rgb:5,150,105">
+      <div class="part-head"><span class="cn">终章 · 架构的落地</span><span class="en">FINALE · ARCHITECTURE IN PRACTICE</span><span class="rule"></span></div>
+      <div class="grid">
+        <a class="card" data-no="13" href="b-act-13-create.html">
+          <div class="no">ACT 13 · FINALE · ARCHITECTURE IN PRACTICE</div>
+          <h2>创建与生命周期</h2>
+          <div class="en">CREATION & LIFETIME</div>
+          <div class="line">组件的第一问：谁负责造它？全局要几个？</div>
+          <div class="foot"><span class="tag">2 题 / 2 页</span><span class="tag gold">0 个高频</span></div>
+        </a>
+        <a class="card" data-no="14" href="b-act-14-decouple.html">
+          <div class="no">ACT 14 · FINALE · ARCHITECTURE IN PRACTICE</div>
+          <h2>解耦与封装</h2>
+          <div class="en">DECOUPLING & ENCAPSULATION</div>
+          <div class="line">组件的第二问：怎么通知外界？怎么藏实现？</div>
+          <div class="foot"><span class="tag">2 题 / 2 页</span><span class="tag gold">0 个高频</span></div>
+        </a>
+        <a class="card" data-no="15" href="b-act-15-perf.html">
+          <div class="no">ACT 15 · FINALE · ARCHITECTURE IN PRACTICE</div>
+          <h2>性能工程</h2>
+          <div class="en">PERFORMANCE ENGINEERING</div>
+          <div class="line">组件的第三问：热路径怎么分配？高并发怎么观测？</div>
+          <div class="foot"><span class="tag">2 题 / 2 页</span><span class="tag gold">2 个高频</span></div>
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

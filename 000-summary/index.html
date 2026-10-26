@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ 面试口袋卡片 · 主题总结目录</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #e9ebf0; color: #1f232c; padding: 48px 20px 64px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  .head {
+    background: linear-gradient(165deg, #ffffff 0%, #f4f7ff 45%, #e8eefc 100%);
+    border: 1px solid #dfe5f4;
+    border-radius: 20px; padding: 40px 42px; margin-bottom: 26px;
+    box-shadow: 0 14px 34px rgba(40,55,100,.08);
+  }
+  .head .k { font-size: 12px; letter-spacing: 4px; color: #0b7c8c; font-weight: 700; }
+  .head h1 { margin-top: 14px; font-size: 38px; letter-spacing: 1px; }
+  .head p { margin-top: 14px; font-size: 15px; line-height: 1.8; color: #4a4f5a; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  a.card {
+    display: block; text-decoration: none; color: inherit;
+    background: #fff; border: 1px solid #e2e5ec; border-radius: 16px;
+    padding: 22px 24px; position: relative; overflow: hidden;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  a.card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+    background: linear-gradient(180deg, #4c6ef5, #3b5bdb 55%, #12b5c9);
+  }
+  a.card:hover { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(40,55,100,.14); }
+  .card .no { font-size: 12px; letter-spacing: 2px; color: #9aa0ac; font-weight: 700; }
+  .card h2 { margin-top: 8px; font-size: 22px; letter-spacing: .5px; }
+  .card .en { margin-top: 6px; font-size: 11px; letter-spacing: 2px; color: #c4c9d4; }
+  .card .line { margin-top: 12px; font-size: 13.5px; line-height: 1.65; color: #4a4f5a; }
+  .card .foot { margin-top: 14px; display: flex; gap: 8px; }
+  .tag {
+    font-size: 11px; letter-spacing: 1px; padding: 5px 10px; border-radius: 999px;
+    background: #eef1fa; color: #3949ab; font-weight: 700;
+  }
+  .tag.gold { background: #e7fbfd; color: #0b7c8c; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="k">SERIES COMPLETE · 全系列收官</div>
+      <h1>C++ 面试口袋卡片 · 主题总结</h1>
+      <p>86 题 · 10 个主题。每个主题一份 HTML，内含 1 张封面页 + 若干张知识点串讲页（题目 + 一句话回答 + 卡片序号），可一键批量导出 9:16 高清图。</p>
+    </div>
+    <div class="grid">
+      <a class="card" href="topic-01-memory.html">
+        <div class="no">MODULE 01 · 001 - 008</div>
+        <h2>指针与内存管理</h2>
+        <div class="en">POINTER & MEMORY</div>
+        <div class="line">一切内存问题，本质都是「谁拥有它，谁在什么时候释放它」。</div>
+        <div class="foot"><span class="tag">8 题 / 3 页</span><span class="tag gold">2 个高频</span></div>
+      </a>
+      <a class="card" href="topic-02-oop.html">
+        <div class="no">MODULE 02 · 009 - 019</div>
+        <h2>面向对象</h2>
+        <div class="en">OBJECT ORIENTED</div>
+        <div class="line">把每道题归类到「编译期决议」还是「运行期决议」，细节就不会混。</div>
+        <div class="foot"><span class="tag">11 题 / 3 页</span><span class="tag gold">5 个高频</span></div>
+      </a>
+      <a class="card" href="topic-03-modern.html">
+        <div class="no">MODULE 03 · 020 - 031</div>
+        <h2>现代 C++ 特性</h2>
+        <div class="en">MODERN C++ 11/14/17/20</div>
+        <div class="line">现代 C++ 干两件事：把拷贝换成移动，把开销搬到编译期。</div>
+        <div class="foot"><span class="tag">12 题 / 3 页</span><span class="tag gold">5 个高频</span></div>
+      </a>
+      <a class="card" href="topic-04-template.html">
+        <div class="no">MODULE 04 · 032 - 037</div>
+        <h2>模板与泛型编程</h2>
+        <div class="en">TEMPLATE & GENERIC</div>
+        <div class="line">把模板看成「编译期的一门语言」：有变量、有分支、有循环。</div>
+        <div class="foot"><span class="tag">6 题 / 2 页</span><span class="tag gold">0 个高频</span></div>
+      </a>
+      <a class="card" href="topic-05-stl.html">
+        <div class="no">MODULE 05 · 038 - 044</div>
+        <h2>STL 与数据结构</h2>
+        <div class="en">STL & DATA STRUCTURE</div>
+        <div class="line">容器选型的答案永远先看访问模式，因为内存布局决定性能。</div>
+        <div class="foot"><span class="tag">7 题 / 2 页</span><span class="tag gold">2 个高频</span></div>
+      </a>
+      <a class="card" href="topic-06-concurrency.html">
+        <div class="no">MODULE 06 · 045 - 053</div>
+        <h2>并发与多线程</h2>
+        <div class="en">CONCURRENCY</div>
+        <div class="line">共享数据只有三条路：不共享、加锁共享、无锁共享。</div>
+        <div class="foot"><span class="tag">9 题 / 3 页</span><span class="tag gold">3 个高频</span></div>
+      </a>
+      <a class="card" href="topic-07-lowlevel.html">
+        <div class="no">MODULE 07 · 054 - 062</div>
+        <h2>编译链接与底层机制</h2>
+        <div class="en">BUILD & LOW LEVEL</div>
+        <div class="line">从一行代码到一条指令：符号能否对上，指令跑得多快。</div>
+        <div class="foot"><span class="tag">9 题 / 3 页</span><span class="tag gold">5 个高频</span></div>
+      </a>
+      <a class="card" href="topic-08-design.html">
+        <div class="no">MODULE 08 · 063 - 068</div>
+        <h2>设计模式与系统设计</h2>
+        <div class="en">PATTERN & SYSTEM DESIGN</div>
+        <div class="line">模式是用一层间接换可变性；系统设计是用指标证明你的取舍。</div>
+        <div class="foot"><span class="tag">6 题 / 2 页</span><span class="tag gold">2 个高频</span></div>
+      </a>
+      <a class="card" href="topic-09-net-os.html">
+        <div class="no">MODULE 09 · 069 - 077</div>
+        <h2>网络编程与操作系统</h2>
+        <div class="en">NETWORK & OS</div>
+        <div class="line">跟着一次请求的数据流走：网卡 → 内核 → 用户态 → 执行单元。</div>
+        <div class="foot"><span class="tag">9 题 / 3 页</span><span class="tag gold">6 个高频</span></div>
+      </a>
+      <a class="card" href="topic-10-database.html">
+        <div class="no">MODULE 10 · 078 - 086</div>
+        <h2>数据库与分布式</h2>
+        <div class="en">DATABASE & DISTRIBUTED</div>
+        <div class="line">持久化的两个命题：正确性靠日志与 MVCC，速度靠索引与内存。</div>
+        <div class="foot"><span class="tag">9 题 / 3 页</span><span class="tag gold">6 个高频</span></div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

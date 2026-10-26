@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ 面试卡片 · 导航索引</title>
+<style>
+  :root {
+    --blue: #3d5afe;
+    --blue-deep: #3949ab;
+    --blue-soft: #eef2ff;
+    --ink: #1f232c;
+    --ink-soft: #4a4f5a;
+    --muted: #8b919e;
+    --line: #e8eaef;
+    --panel: #ffffff;
+    --page: #e9ebf0;
+    --hot: #e8590c;
+    --hot-bg: #fff4e6;
+    --super: #c92a2a;
+    --super-bg: #ffe3e3;
+    --ok: #2b8a3e;
+    --shadow: 0 8px 30px rgba(31, 35, 44, 0.08);
+    --radius: 14px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB",
+      "Helvetica Neue", Arial, sans-serif;
+    background: var(--page);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(24, 28, 44, 0.94);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .topbar-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .brand-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #4c6ef5, #3b5bdb);
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 13px;
+  }
+  .brand-text h1 {
+    font-size: 16px; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .brand-text p {
+    font-size: 11px; color: #b9c0d6; margin-top: 1px;
+  }
+
+  .search-wrap {
+    flex: 1; min-width: 200px; max-width: 420px;
+  }
+  .search {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-radius: 10px;
+    padding: 9px 14px 9px 36px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .search:focus {
+    border-color: rgba(76,110,245,0.8);
+    background: rgba(255,255,255,0.12);
+  }
+  .search-box { position: relative; }
+  .search-box svg {
+    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    opacity: 0.55;
+  }
+  .search::placeholder { color: #8891a8; }
+
+  .top-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn {
+    border: none; cursor: pointer;
+    background: linear-gradient(135deg, #4c6ef5, #3b5bdb);
+    color: #fff; font-size: 13px; font-weight: 600;
+    padding: 8px 14px; border-radius: 9px;
+    transition: transform 0.12s, box-shadow 0.12s;
+    white-space: nowrap;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(61,90,254,0.35); }
+  .btn-ghost {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+  }
+  .btn-ghost:hover { box-shadow: none; background: rgba(255,255,255,0.14); }
+
+  .layout {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .sidebar { position: sticky; top: 88px; }
+  .side-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .side-panel h2 {
+    font-size: 12px; font-weight: 700; color: var(--muted);
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .stat-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    margin-bottom: 16px;
+  }
+  .stat {
+    background: var(--blue-soft);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .stat .val { font-size: 22px; font-weight: 800; color: var(--blue-deep); }
+  .stat .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .mod-nav { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+  .mod-link {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 10px; border-radius: 8px;
+    font-size: 13px; color: var(--ink-soft);
+    text-decoration: none; transition: background 0.12s;
+  }
+  .mod-link:hover { background: var(--blue-soft); color: var(--blue-deep); }
+  .mod-link .cnt {
+    font-size: 11px; color: var(--muted);
+    background: var(--page); padding: 1px 7px; border-radius: 999px;
+  }
+
+  .res-list { display: flex; flex-direction: column; gap: 6px; }
+  .res-link {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px; border-radius: 8px;
+    font-size: 13px; color: var(--ink);
+    text-decoration: none; border: 1px solid var(--line);
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .res-link:hover { border-color: var(--blue); background: var(--blue-soft); }
+  .res-tag {
+    font-size: 10px; font-weight: 600; color: var(--blue-deep);
+    background: var(--blue-soft); padding: 2px 7px; border-radius: 999px;
+  }
+
+  .main { min-width: 0; }
+
+  .filters {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 18px;
+  }
+  .filter {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink-soft);
+    font-size: 13px; font-weight: 500;
+    padding: 7px 14px; border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .filter:hover { border-color: var(--blue); color: var(--blue-deep); }
+  .filter.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+  }
+  .filter .n {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 11px; opacity: 0.75;
+  }
+
+  .result-bar {
+    font-size: 13px; color: var(--muted);
+    margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .result-bar strong { color: var(--ink); }
+
+  .module-block {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .module-block.hidden { display: none; }
+
+  .module-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    background: linear-gradient(90deg, var(--blue-soft), transparent 70%);
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    user-select: none;
+  }
+  .module-head h3 {
+    font-size: 15px; font-weight: 700; color: var(--ink);
+  }
+  .module-head .range {
+    font-size: 12px; color: var(--muted); font-weight: 500;
+    margin-left: 8px;
+  }
+  .module-head .toggle {
+    font-size: 12px; color: var(--muted);
+    transition: transform 0.2s;
+  }
+  .module-block.collapsed .module-head .toggle { transform: rotate(-90deg); }
+  .module-block.collapsed .topic-list { display: none; }
+
+  .topic-list { padding: 6px 0; }
+
+  .topic-row {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--line);
+    transition: background 0.1s;
+  }
+  .topic-row:last-child { border-bottom: none; }
+  .topic-row:hover { background: #fafbfc; }
+  .topic-row.hidden { display: none; }
+
+  .topic-num {
+    font-size: 13px; font-weight: 800; color: var(--blue);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .topic-main { min-width: 0; }
+  .topic-title {
+    font-size: 14px; font-weight: 600; color: var(--ink);
+    line-height: 1.45;
+  }
+  .topic-meta {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;
+  }
+  .badge {
+    font-size: 11px; font-weight: 600;
+    padding: 1px 8px; border-radius: 999px;
+  }
+  .badge-hot { background: var(--hot-bg); color: var(--hot); }
+  .badge-super { background: var(--super-bg); color: var(--super); }
+  .badge-stars { background: var(--page); color: var(--muted); }
+  .badge-track {
+    background: var(--blue-soft); color: var(--blue-deep);
+    font-weight: 500;
+  }
+
+  .topic-links {
+    display: flex; gap: 6px; flex-shrink: 0;
+  }
+  .link-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 44px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px; font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    background: var(--panel);
+    transition: all 0.12s;
+  }
+  .link-btn:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: var(--blue-soft);
+  }
+  .link-btn.primary {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+  }
+  .link-btn.primary:hover {
+    background: var(--blue-deep);
+    border-color: var(--blue-deep);
+    color: #fff;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+    display: none;
+  }
+  .empty-state.show { display: block; }
+
+  .footer {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 20px 32px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+    .mod-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .topic-row {
+      grid-template-columns: 48px 1fr;
+      grid-template-rows: auto auto;
+    }
+    .topic-links {
+      grid-column: 2;
+      justify-content: flex-start;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-icon">C++</div>
+      <div class="brand-text">
+        <h1>面试口袋卡片</h1>
+        <p>86 题 · 10 模块 · 回答 + 追问</p>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+          <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
+        </svg>
+        <input class="search" id="search" type="search" placeholder="搜索题号或关键词…" autocomplete="off" />
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-ghost" id="btnExpand">展开全部</button>
+      <a class="btn btn-ghost" href="flashcard.html" style="text-decoration:none;display:inline-flex;align-items:center;">闪卡模式</a>
+      <button class="btn" id="btnRandom">随机一题</button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-panel">
+      <h2>概览</h2>
+      <div class="stat-grid">
+        <div class="stat"><div class="val">86</div><div class="lbl">题目</div></div>
+        <div class="stat"><div class="val">10</div><div class="lbl">模块</div></div>
+        <div class="stat"><div class="val" id="statHot">—</div><div class="lbl">🔥 高频</div></div>
+        <div class="stat"><div class="val">172</div><div class="lbl">卡片页</div></div>
+      </div>
+
+      <h2>模块跳转</h2>
+      <nav class="mod-nav" id="modNav"></nav>
+
+      <h2>辅助资料</h2>
+      <div class="res-list">
+        <a class="res-link" href="flashcard.html"><span>闪卡模式</span><span class="res-tag">复习</span></a>
+        <a class="res-link" href="stl-knowledge-sheet.html"><span>STL 知识全景卡</span><span class="res-tag">速查</span></a>
+        <a class="res-link" href="stl-knowledge-graph.html"><span>STL 知识图谱</span><span class="res-tag">图谱</span></a>
+        <a class="res-link" href="cpu-memory-cheatsheet.html"><span>CPU / 内存速查</span><span class="res-tag">速查</span></a>
+        <a class="res-link" href="cpp-interview-qa.md"><span>八股 Q&A 汇总</span><span class="res-tag">文本</span></a>
+        <a class="res-link" href="SERIES.md"><span>系列编排 SERIES</span><span class="res-tag">索引</span></a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="filters" id="filters">
+      <button class="filter active" data-filter="all">全部<span class="n">86</span></button>
+      <button class="filter" data-filter="hot">🔥 高频<span class="n" id="cntHot"></span></button>
+      <button class="filter" data-filter="super">🔥🔥 超高频<span class="n" id="cntSuper"></span></button>
+      <button class="filter" data-filter="backend">后端冲刺<span class="n" id="cntBackend"></span></button>
+      <button class="filter" data-filter="client">客户端<span class="n" id="cntClient"></span></button>
+      <button class="filter" data-filter="huawei">华为突击<span class="n" id="cntHuawei"></span></button>
+    </div>
+
+    <div class="result-bar">
+      <span>显示 <strong id="visibleCount">86</strong> / 86 题</span>
+      <span id="filterHint"></span>
+    </div>
+
+    <div id="moduleContainer"></div>
+
+    <div class="empty-state" id="emptyState">
+      <p style="font-size:15px;margin-bottom:6px;">没有匹配的题目</p>
+      <p>试试换个关键词或清除筛选</p>
+    </div>
+  </main>
+</div>
+
+<footer class="footer">
+  C++ 面试卡片系列 · 面向 5+ 年高级/资深工程师 · 基于 2026 春招/秋招大厂面经
+</footer>
+
+<script>
+const DATA = {"modules": [{"name": "一：指针与内存管理", "start": 1, "end": 8, "items": [{"num": 1, "title": "指针和引用有什么区别？", "hot": false, "superHot": false, "stars": 2, "folder": "001-pointer&reference", "tracks": ["huawei"]}, {"num": 2, "title": "什么是智能指针？", "hot": true, "superHot": false, "stars": 2, "folder": "002-smart-pointer", "tracks": ["huawei"]}, {"num": 3, "title": "RAII 是什么？除了智能指针还有哪些应用？", "hot": false, "superHot": false, "stars": 3, "folder": "003-raii", "tracks": ["huawei"]}, {"num": 4, "title": "栈内存和堆内存的区别？对象应该分配在哪里？", "hot": false, "superHot": false, "stars": 2, "folder": "004-stack-vs-heap", "tracks": ["huawei"]}, {"num": 5, "title": "new/delete 和 malloc/free 的区别？", "hot": false, "superHot": false, "stars": 2, "folder": "005-malloc-vs-new", "tracks": ["huawei"]}, {"num": 6, "title": "内存泄漏的常见场景及检测手段？", "hot": false, "superHot": false, "stars": 3, "folder": "006-memory-leak", "tracks": ["huawei"]}, {"num": 7, "title": "内存对齐是什么？为什么需要？", "hot": true, "superHot": false, "stars": 3, "folder": "007-memory-alignment", "tracks": ["huawei"]}, {"num": 8, "title": "placement new 是什么？什么场景用？", "hot": false, "superHot": false, "stars": 3, "folder": "008-placement-new", "tracks": ["huawei"]}]}, {"name": "二：面向对象", "start": 9, "end": 19, "items": [{"num": 9, "title": "虚函数的实现原理（vtable）？", "hot": true, "superHot": false, "stars": 3, "folder": "009-virtual-function", "tracks": ["huawei"]}, {"num": 10, "title": "纯虚函数和抽象类的作用？", "hot": false, "superHot": false, "stars": 2, "folder": "010-abstract-class", "tracks": ["huawei"]}, {"num": 11, "title": "多重继承的菱形问题及虚继承？", "hot": false, "superHot": false, "stars": 3, "folder": "011-virtual-inheritance", "tracks": ["huawei"]}, {"num": 12, "title": "构造函数和析构函数能是虚函数吗？为什么？", "hot": false, "superHot": false, "stars": 2, "folder": "012-virtual-ctor-dtor", "tracks": ["huawei"]}, {"num": 13, "title": "深拷贝 vs 浅拷贝？Rule of Three/Five？", "hot": false, "superHot": false, "stars": 3, "folder": "013-deep-shallow-copy", "tracks": ["huawei"]}, {"num": 14, "title": "RTTI 和 dynamic_cast 的原理和代价？", "hot": true, "superHot": false, "stars": 3, "folder": "014-rtti", "tracks": ["huawei"]}, {"num": 15, "title": "类型转换", "hot": false, "superHot": false, "stars": 2, "folder": "015-type-casting", "tracks": ["huawei"]}, {"num": 16, "title": "访问控制（public/protected/private 继承）有什么区别？", "hot": false, "superHot": false, "stars": 2, "folder": "016-access-control", "tracks": ["huawei"]}, {"num": 17, "title": "函数重载 / 重写(override) / 隐藏(hide) 的区别？", "hot": true, "superHot": false, "stars": 2, "folder": "017-overload-override-hide", "tracks": ["client", "huawei"]}, {"num": 18, "title": "static 关键字的多种含义（变量/函数/类成员）？", "hot": true, "superHot": false, "stars": 2, "folder": "018-static-keyword", "tracks": ["client", "huawei"]}, {"num": 19, "title": "explicit 关键字与隐式类型转换？（构造/转换函数何时被隐式调用）", "hot": true, "superHot": false, "stars": 2, "folder": "019-explicit-keyword", "tracks": ["client", "huawei"]}]}, {"name": "三：C++11/14/17/20 新特性", "start": 20, "end": 31, "items": [{"num": 20, "title": "左值 vs 右值？移动语义解决什么问题？", "hot": false, "superHot": false, "stars": 3, "folder": "020-lvalue-rvalue", "tracks": []}, {"num": 21, "title": "std::move 和 std::forward 分别做了什么？", "hot": true, "superHot": false, "stars": 3, "folder": "021-move-forward", "tracks": []}, {"num": 22, "title": "RVO / NRVO 与拷贝消除？C++17 的「保证拷贝消除」？", "hot": true, "superHot": false, "stars": 3, "folder": "022-rvo-nrvo", "tracks": []}, {"num": 23, "title": "异常安全的三种保证（basic/strong/nothrow）与 noexcept？", "hot": true, "superHot": false, "stars": 3, "folder": "023-exception-safety", "tracks": []}, {"num": 24, "title": "lambda 表达式的本质是什么？捕获列表怎么工作？", "hot": true, "superHot": false, "stars": 2, "folder": "024-lambda", "tracks": []}, {"num": 25, "title": "std::function 的原理与开销？类型擦除是什么？", "hot": false, "superHot": false, "stars": 3, "folder": "025-std-function", "tracks": []}, {"num": 26, "title": "auto / decltype 的推导规则？", "hot": false, "superHot": false, "stars": 2, "folder": "026-auto-decltype", "tracks": []}, {"num": 27, "title": "constexpr 和 const 的区别？编译期计算？", "hot": false, "superHot": false, "stars": 3, "folder": "027-const-constexpr", "tracks": []}, {"num": 28, "title": "结构化绑定（structured bindings）怎么用？", "hot": false, "superHot": false, "stars": 2, "folder": "028-structured-bindings", "tracks": []}, {"num": 29, "title": "std::optional / std::variant / std::any 各解决什么问题？", "hot": false, "superHot": false, "stars": 3, "folder": "029-optional-variant-any", "tracks": []}, {"num": 30, "title": "C++20 Concepts 是什么？解决什么痛点？", "hot": false, "superHot": false, "stars": 3, "folder": "030-concepts", "tracks": []}, {"num": 31, "title": "协程（coroutines）的基本原理和应用场景？", "hot": false, "superHot": false, "stars": 3, "folder": "031-coroutines", "tracks": []}]}, {"name": "四：模板与泛型编程", "start": 32, "end": 37, "items": [{"num": 32, "title": "函数模板和类模板的实例化过程？", "hot": false, "superHot": false, "stars": 2, "folder": "032-template-instantiation", "tracks": []}, {"num": 33, "title": "模板特化和偏特化的区别和用法？", "hot": false, "superHot": false, "stars": 3, "folder": "033-template-specialization", "tracks": []}, {"num": 34, "title": "SFINAE 是什么？enable_if 怎么用？", "hot": false, "superHot": false, "stars": 3, "folder": "034-sfinae-enable-if", "tracks": []}, {"num": 35, "title": "可变参数模板（variadic templates）怎么展开？", "hot": false, "superHot": false, "stars": 3, "folder": "035-variadic-templates", "tracks": []}, {"num": 36, "title": "模板元编程的基本思路？编译期 vs 运行期？", "hot": false, "superHot": false, "stars": 3, "folder": "036-template-metaprogramming", "tracks": []}, {"num": 37, "title": "CRTP（奇异递归模板模式）是什么？", "hot": false, "superHot": false, "stars": 3, "folder": "037-crtp", "tracks": []}]}, {"name": "五：STL 与数据结构", "start": 38, "end": 44, "items": [{"num": 38, "title": "vector 的扩容策略和迭代器失效？", "hot": true, "superHot": false, "stars": 2, "folder": "038-vector-growth", "tracks": ["client"]}, {"num": 39, "title": "map vs unordered_map 底层实现和性能对比？", "hot": true, "superHot": false, "stars": 2, "folder": "039-map-unordered-map", "tracks": ["client"]}, {"num": 40, "title": "deque 的底层结构是什么？", "hot": false, "superHot": false, "stars": 3, "folder": "040-deque-structure", "tracks": ["client"]}, {"num": 41, "title": "STL 迭代器的分类和设计思想？", "hot": false, "superHot": false, "stars": 2, "folder": "041-stl-iterators", "tracks": []}, {"num": 42, "title": "常见排序算法在 STL 中的实现（introsort）？", "hot": false, "superHot": false, "stars": 3, "folder": "042-stl-sorting", "tracks": []}, {"num": 43, "title": "allocator 的作用和自定义 allocator？", "hot": false, "superHot": false, "stars": 3, "folder": "043-allocator", "tracks": []}, {"num": 44, "title": "string 的 SSO（短字符串优化）是什么？", "hot": false, "superHot": false, "stars": 3, "folder": "044-string-sso", "tracks": []}]}, {"name": "六：并发与多线程", "start": 45, "end": 53, "items": [{"num": 45, "title": "std::thread 的基本用法和线程生命周期管理？", "hot": false, "superHot": false, "stars": 2, "folder": "045-std-thread", "tracks": ["backend"]}, {"num": 46, "title": "mutex / lock_guard / unique_lock 的区别和用法？", "hot": false, "superHot": false, "stars": 2, "folder": "046-mutex-locks", "tracks": ["backend"]}, {"num": 47, "title": "条件变量（condition_variable）怎么用？虚假唤醒？", "hot": false, "superHot": false, "stars": 3, "folder": "047-condition-variable", "tracks": ["backend"]}, {"num": 48, "title": "std::async / future / promise / packaged_task 各解决什么？", "hot": false, "superHot": false, "stars": 3, "folder": "048-async-future-promise", "tracks": ["backend"]}, {"num": 49, "title": "原子操作和内存序（memory_order）？", "hot": true, "superHot": false, "stars": 3, "folder": "049-atomic-memory-order", "tracks": ["backend"]}, {"num": 50, "title": "无锁编程的基本思路？CAS 操作？", "hot": true, "superHot": false, "stars": 3, "folder": "050-lock-free", "tracks": ["backend"]}, {"num": 51, "title": "线程池的设计与实现？", "hot": true, "superHot": false, "stars": 3, "folder": "051-thread-pool", "tracks": ["backend"]}, {"num": 52, "title": "互斥锁 / 读写锁 / 自旋锁 / 信号量的区别与选型？", "hot": false, "superHot": false, "stars": 3, "folder": "052-lock-types", "tracks": ["backend"]}, {"num": 53, "title": "死锁的四个必要条件与破解方法？", "hot": false, "superHot": false, "stars": 2, "folder": "053-deadlock", "tracks": ["backend"]}]}, {"name": "七：编译链接与底层机制", "start": 54, "end": 62, "items": [{"num": 54, "title": "编译的四个阶段（预处理→编译→汇编→链接）？", "hot": false, "superHot": false, "stars": 2, "folder": "054-compile-stages", "tracks": ["client"]}, {"num": 55, "title": "静态链接 vs 动态链接？符号解析过程？", "hot": true, "superHot": false, "stars": 3, "folder": "055-static-dynamic-link", "tracks": ["client"]}, {"num": 56, "title": "ODR（One Definition Rule）违反会怎样？", "hot": true, "superHot": false, "stars": 3, "folder": "056-odr", "tracks": ["client"]}, {"num": 57, "title": "ABI 兼容性问题和 extern \"C\"？", "hot": false, "superHot": false, "stars": 3, "folder": "057-abi-extern-c", "tracks": ["client"]}, {"num": 58, "title": "C++ 对象的内存布局（含虚表指针）？", "hot": false, "superHot": false, "stars": 3, "folder": "058-object-layout", "tracks": []}, {"num": 59, "title": "虚拟内存是什么？虚拟地址→物理地址的转换（页表）？", "hot": true, "superHot": false, "stars": 3, "folder": "059-virtual-memory", "tracks": []}, {"num": 60, "title": "内存碎片（内部/外部）？分段与分页的区别？", "hot": false, "superHot": false, "stars": 3, "folder": "060-memory-fragmentation", "tracks": []}, {"num": 61, "title": "用户态 vs 内核态？系统调用的开销来自哪里？", "hot": true, "superHot": false, "stars": 2, "folder": "061-user-kernel-mode", "tracks": []}, {"num": 62, "title": "cache-friendly 代码？cacheline 与 false sharing？", "hot": true, "superHot": false, "stars": 3, "folder": "062-cache-false-sharing", "tracks": []}]}, {"name": "八：设计模式与系统设计", "start": 63, "end": 68, "items": [{"num": 63, "title": "单例模式的线程安全实现（Meyer's Singleton）？", "hot": false, "superHot": false, "stars": 2, "folder": "063-singleton", "tracks": []}, {"num": 64, "title": "工厂模式和抽象工厂在 C++ 中怎么实现？", "hot": false, "superHot": false, "stars": 2, "folder": "064-factory", "tracks": []}, {"num": 65, "title": "观察者模式 / 发布-订阅在 C++ 中的实现？", "hot": false, "superHot": false, "stars": 3, "folder": "065-observer-pubsub", "tracks": []}, {"num": 66, "title": "PIMPL 惯用法解决什么问题？", "hot": false, "superHot": false, "stars": 3, "folder": "066-pimpl", "tracks": []}, {"num": 67, "title": "如何设计一个高性能的日志系统？", "hot": false, "superHot": false, "stars": 3, "folder": "067-logging", "tracks": []}, {"num": 68, "title": "如何设计一个内存池（memory pool）？", "hot": true, "superHot": true, "stars": 3, "folder": "068-memory-pool", "tracks": []}]}, {"name": "九：网络编程与操作系统", "start": 69, "end": 77, "items": [{"num": 69, "title": "epoll 的 ET 和 LT 模式区别？如何避免漏读？", "hot": true, "superHot": false, "stars": 3, "folder": "069-epoll-et-lt", "tracks": ["backend"]}, {"num": 70, "title": "select / poll / epoll 的底层数据结构差异？为什么 epoll 是 O(1)？", "hot": true, "superHot": false, "stars": 3, "folder": "070-select-poll-epoll", "tracks": ["backend"]}, {"num": 71, "title": "Reactor 模型？主从 Reactor / one loop per thread？", "hot": true, "superHot": false, "stars": 3, "folder": "071-reactor", "tracks": ["backend"]}, {"num": 72, "title": "TCP 三次握手、四次挥手与 TIME_WAIT（2MSL）？", "hot": true, "superHot": false, "stars": 3, "folder": "072-tcp-handshake", "tracks": ["backend"]}, {"num": 73, "title": "零拷贝与 mmap 的原理？数据如何从网卡到用户态？", "hot": true, "superHot": false, "stars": 3, "folder": "073-zero-copy", "tracks": ["backend"]}, {"num": 74, "title": "io_uring 与惊群（thundering herd）问题？eventfd 为何存在？", "hot": false, "superHot": false, "stars": 3, "folder": "074-io-uring", "tracks": ["backend"]}, {"num": 75, "title": "进程 / 线程 / 协程的区别？", "hot": true, "superHot": false, "stars": 2, "folder": "075-process-thread-coroutine", "tracks": ["backend"]}, {"num": 76, "title": "fork 的写时拷贝（COW）机制？fork 返回值怎么实现？", "hot": false, "superHot": false, "stars": 3, "folder": "076-fork-cow", "tracks": ["backend"]}, {"num": 77, "title": "进程间通信（IPC）有哪些方式？各自适用场景？", "hot": true, "superHot": false, "stars": 3, "folder": "077-ipc", "tracks": ["backend"]}]}, {"name": "十：数据库与分布式", "start": 78, "end": 86, "items": [{"num": 78, "title": "事务的 ACID 与四种隔离级别？各级别用什么锁？", "hot": true, "superHot": false, "stars": 3, "folder": "078-acid-isolation", "tracks": ["backend", "elective"]}, {"num": 79, "title": "MySQL InnoDB 索引（B+ 树）？聚簇 vs 非聚簇索引？", "hot": false, "superHot": false, "stars": 3, "folder": "079-innodb-btree-index", "tracks": ["backend", "elective"]}, {"num": 80, "title": "MySQL 索引优化：最左前缀 / 覆盖索引 / 回表 / 索引失效？", "hot": true, "superHot": true, "stars": 3, "folder": "080-index-optimization", "tracks": ["backend", "elective"]}, {"num": 81, "title": "undolog / redolog / binlog 的作用与区别？", "hot": false, "superHot": false, "stars": 3, "folder": "081-mysql-logs", "tracks": ["backend", "elective"]}, {"num": 82, "title": "MVCC 的实现原理？", "hot": true, "superHot": false, "stars": 3, "folder": "082-mvcc", "tracks": ["backend", "elective"]}, {"num": 83, "title": "Raft 一致性算法？为什么不能解决拜占庭问题？", "hot": false, "superHot": false, "stars": 3, "folder": "083-raft", "tracks": ["backend", "elective"]}, {"num": 84, "title": "Redis 常见数据结构与使用场景？缓存一致性怎么保证？", "hot": false, "superHot": false, "stars": 2, "folder": "084-redis-structures", "tracks": ["backend", "elective"]}, {"num": 85, "title": "缓存穿透 / 击穿 / 雪崩的区别与解决？", "hot": true, "superHot": true, "stars": 2, "folder": "085-cache-failures", "tracks": ["backend", "elective"]}, {"num": 86, "title": "Redis 为什么快？过期策略与内存淘汰（LRU/LFU）？", "hot": true, "superHot": false, "stars": 2, "folder": "086-redis-performance", "tracks": ["backend", "elective"]}]}]};
+
+function pad(n) { return String(n).padStart(3, '0'); }
+
+function itemPath(item, type) {
+  const n = pad(item.num);
+  const base = `${item.folder}/${n}-cpp-interview-${type}.html`;
+  return base;
+}
+
+function allItems() {
+  return DATA.modules.flatMap(m => m.items.map(it => ({ ...it, moduleName: m.name, moduleStart: m.start })));
+}
+
+function starsText(n) { return '★'.repeat(n) + '☆'.repeat(3 - n); }
+
+function matchesFilter(item, filter) {
+  if (filter === 'all') return true;
+  if (filter === 'hot') return item.hot;
+  if (filter === 'super') return item.superHot;
+  return item.tracks.includes(filter);
+}
+
+function matchesSearch(item, q) {
+  if (!q) return true;
+  const hay = `#${pad(item.num)} ${item.title} ${item.moduleName}`.toLowerCase();
+  return hay.includes(q.toLowerCase());
+}
+
+let currentFilter = 'all';
+let searchQuery = '';
+
+function render() {
+  const items = allItems();
+  const hotCount = items.filter(i => i.hot).length;
+  const superCount = items.filter(i => i.superHot).length;
+  const backendCount = items.filter(i => i.tracks.includes('backend')).length;
+  const clientCount = items.filter(i => i.tracks.includes('client')).length;
+  const huaweiCount = items.filter(i => i.tracks.includes('huawei')).length;
+
+  document.getElementById('statHot').textContent = hotCount;
+  document.getElementById('cntHot').textContent = hotCount;
+  document.getElementById('cntSuper').textContent = superCount;
+  document.getElementById('cntBackend').textContent = backendCount;
+  document.getElementById('cntClient').textContent = clientCount;
+  document.getElementById('cntHuawei').textContent = huaweiCount;
+
+  const container = document.getElementById('moduleContainer');
+  container.innerHTML = '';
+
+  let visibleTotal = 0;
+
+  DATA.modules.forEach((mod, mi) => {
+    const block = document.createElement('section');
+    block.className = 'module-block';
+    block.id = `mod-${mi + 1}`;
+
+    const visibleItems = mod.items.filter(it =>
+      matchesFilter(it, currentFilter) && matchesSearch(it, searchQuery)
+    );
+
+    if (visibleItems.length === 0) {
+      block.classList.add('hidden');
+    } else {
+      visibleTotal += visibleItems.length;
+    }
+
+    block.innerHTML = `
+      <div class="module-head" data-mod="${mi}">
+        <h3>模块${mod.name}<span class="range">#${pad(mod.start)}–${pad(mod.end)}</span></h3>
+        <span class="toggle">▼</span>
+      </div>
+      <div class="topic-list"></div>
+    `;
+
+    const list = block.querySelector('.topic-list');
+
+    mod.items.forEach(item => {
+      const show = matchesFilter(item, currentFilter) && matchesSearch(item, searchQuery);
+      const row = document.createElement('div');
+      row.className = 'topic-row' + (show ? '' : ' hidden');
+      row.dataset.num = item.num;
+
+      const badges = [];
+      if (item.superHot) badges.push('<span class="badge badge-super">🔥🔥</span>');
+      else if (item.hot) badges.push('<span class="badge badge-hot">🔥 高频</span>');
+      badges.push(`<span class="badge badge-stars">${starsText(item.stars)}</span>`);
+
+      row.innerHTML = `
+        <div class="topic-num">#${pad(item.num)}</div>
+        <div class="topic-main">
+          <div class="topic-title">${item.title}</div>
+          <div class="topic-meta">${badges.join('')}</div>
+        </div>
+        <div class="topic-links">
+          <a class="link-btn primary" href="${itemPath(item, 'card')}" title="参考回答">回答</a>
+          <a class="link-btn" href="${itemPath(item, 'followup')}" title="追问">追问</a>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+
+    block.querySelector('.module-head').addEventListener('click', () => {
+      block.classList.toggle('collapsed');
+    });
+
+    container.appendChild(block);
+  });
+
+  document.getElementById('visibleCount').textContent = visibleTotal;
+  document.getElementById('emptyState').classList.toggle('show', visibleTotal === 0);
+
+  const hints = {
+    all: '', hot: '仅显示面经高频考点', super: '仅显示 🔥🔥 超高频/手撕相关',
+    backend: '并发 + 网络/OS + 数据库', client: '编译链接 + 语言细节 + STL',
+    huawei: '模块一～二：指针内存 + 面向对象'
+  };
+  document.getElementById('filterHint').textContent = hints[currentFilter] || '';
+}
+
+function buildModNav() {
+  const nav = document.getElementById('modNav');
+  DATA.modules.forEach((mod, i) => {
+    const a = document.createElement('a');
+    a.className = 'mod-link';
+    a.href = `#mod-${i + 1}`;
+    a.innerHTML = `<span>模块${mod.name.split('：')[0]}</span><span class="cnt">${mod.items.length}</span>`;
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const el = document.getElementById(`mod-${i + 1}`);
+      el.classList.remove('collapsed', 'hidden');
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    nav.appendChild(a);
+  });
+}
+
+document.getElementById('filters').addEventListener('click', e => {
+  const btn = e.target.closest('.filter');
+  if (!btn) return;
+  currentFilter = btn.dataset.filter;
+  document.querySelectorAll('.filter').forEach(b => b.classList.toggle('active', b === btn));
+  render();
+});
+
+document.getElementById('search').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  render();
+});
+
+document.getElementById('btnExpand').addEventListener('click', () => {
+  const blocks = [...document.querySelectorAll('.module-block')];
+  const anyCollapsed = blocks.some(b => b.classList.contains('collapsed'));
+  blocks.forEach(b => b.classList.toggle('collapsed', !anyCollapsed));
+  document.getElementById('btnExpand').textContent = anyCollapsed ? '收起全部' : '展开全部';
+});
+
+document.getElementById('btnRandom').addEventListener('click', () => {
+  const pool = allItems().filter(it =>
+    matchesFilter(it, currentFilter) && matchesSearch(it, searchQuery)
+  );
+  if (!pool.length) return;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  window.location.href = itemPath(pick, 'card');
+});
+
+buildModNav();
+render();
+</script>
+</body>
+</html>

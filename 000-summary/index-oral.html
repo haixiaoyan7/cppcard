@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ 面试口述稿卡片</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #f3f5f9; color: #243041; padding: 42px 20px 70px; }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+  .head { position: relative; overflow: hidden; background: linear-gradient(165deg, #fff, #f8fbff 50%, #eef4ff); border: 1px solid #e2e8f4; border-radius: 16px; padding: 42px 46px 38px; box-shadow: 0 16px 40px rgba(74,127,232,.08); }
+  .head::after { content: ""; position: absolute; left: 46px; right: 46px; bottom: 0; height: 4px; background: linear-gradient(90deg, #3b5bdb 0%, #6d28d9 34%, #0891b2 67%, #059669 100%); }
+  .k { color: #2eb8a8; font-size: 12px; font-weight: 800; letter-spacing: 3px; }
+  h1 { margin-top: 14px; font-size: 38px; }
+  p { max-width: 860px; margin-top: 14px; color: #5a6573; font-size: 15px; line-height: 1.85; }
+  .switch { display: flex; gap: 10px; margin-top: 18px; }
+  .switch a { color: #4a7fe8; text-decoration: none; font-weight: 700; font-size: 13px; border: 1px solid #d6e2f7; background: #fff; border-radius: 8px; padding: 9px 14px; }
+  .part { margin-top: 32px; }
+  .part h2 { font-size: 22px; }
+  .part .en { margin-left: 12px; color: var(--theme); font-size: 11px; letter-spacing: 2px; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+  a.card { display: grid; grid-template-columns: 72px 1fr; gap: 16px; position: relative; overflow: hidden; text-decoration: none; color: inherit; background: #fff; border: 1px solid #e4e8ef; border-radius: 12px; padding: 20px 20px 18px 16px; }
+  a.card::before { content: attr(data-no); display: flex; justify-content: center; color: var(--theme); font-size: 32px; font-weight: 900; border-right: 1px solid #e8ecf2; }
+  a.card::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: linear-gradient(90deg, var(--theme), var(--theme2)); }
+  .card h3 { font-size: 20px; line-height: 1.35; }
+  .card .en2 { margin-top: 7px; color: var(--theme); font-size: 11px; font-weight: 800; letter-spacing: 1px; }
+  .card .line { margin-top: 8px; color: #556170; font-size: 14px; line-height: 1.6; }
+  .tag { display: inline-block; margin-top: 12px; margin-right: 6px; background: var(--soft); color: var(--deep); border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: 800; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .head, body { padding-left: 16px; padding-right: 16px; } }
+</style>
+</head>
+<body><div class="wrap">
+  <div class="head">
+    <div class="k">ORAL SCRIPT · 口述稿卡片</div>
+    <h1>把每一幕讲出来</h1>
+    <p>这是和串讲卡分开的一套卡片。串讲卡负责题目和一句话答案；口述稿卡片按「承上 → 口述 → 启下」分页，字号按朗读距离排，原卡号只标在旁边，讲的时候不用念。</p>
+    <div class="switch"><a href="index-b.html">← 返回方案B串讲</a></div>
+  </div>
+  <section class="part" style="--theme:#3b5bdb;--theme2:#2746b0;--soft:#eef1fb;--deep:#1e3266"><h2>篇一 · 一个对象的一生<span class="en">OBJECT LIFE</span></h2><div class="grid"><a class="card" data-no="00" href="b-oral-00-open.html"><div><h3>总开场（30 秒）</h3><div class="en2">OBJECT LIFE</div><div class="line">我想用一个对象的一生，把 C++ 串起来。拿一条日志消息 `LogMessage` </div><span class="tag">2 页</span></div></a><a class="card" data-no="01" href="b-oral-01.html"><div><h3>诞生：它住哪、谁拥有它</h3><div class="en2">OBJECT LIFE</div><div class="line">一个对象出生，第一个问题不是语法，而是：它住在哪？谁负责让它死？</div><span class="tag">5 页</span></div></a><a class="card" data-no="02" href="b-oral-02.html"><div><h3>身份：多态与类型转换</h3><div class="en2">OBJECT LIFE</div><div class="line">`LogMessage` 继承自 `MessageBase`，我拿一个基类指针调 `format()`，怎么就调到了派生类的版本？</div><span class="tag">6 页</span></div></a><a class="card" data-no="03" href="b-oral-03.html"><div><h3>复制与转移：值语义</h3><div class="en2">OBJECT LIFE</div><div class="line">C++ 默认是值语义，赋值就是复制。那复制一个管理着资源的对象，会怎样？</div><span class="tag">4 页</span></div></a><a class="card" data-no="04" href="b-oral-04.html"><div><h3>进容器：STL 与布局</h3><div class="en2">OBJECT LIFE</div><div class="line">幕 3 说对象可以移动。容器正是最频繁移动对象的地方。</div><span class="tag">5 页</span></div></a><a class="card" data-no="05" href="b-oral-05.html"><div><h3>被泛化：模板与编译期</h3><div class="en2">OBJECT LIFE</div><div class="line">幕 4 的每个容器、每个算法，本质上都是模板。现在把 `LogMessage` 的缓冲泛化成 `Queue&lt;T&gt;`。</div><span class="tag">5 页</span></div></a><a class="card" data-no="06" href="b-oral-06.html"><div><h3>被函数式操作：可调用体与类型安全</h3><div class="en2">OBJECT LIFE</div><div class="line">日志写完后通知谁、按什么规则过滤，这些都是&quot;行为&quot;。C++ 怎么把行为当成数据来传？</div><span class="tag">4 页</span></div></a><a class="card" data-no="07" href="b-oral-07.html"><div><h3>被并发访问：共享数据与异步</h3><div class="en2">OBJECT LIFE</div><div class="line">前面的一切都默认只有一个线程。现在业务线程生产 `LogMessage`，后台线程消费，它们共享一个队列。</div><span class="tag">6 页</span></div></a><a class="card" data-no="08" href="b-oral-08.html"><div><h3>死亡：异常、泄漏与谢幕</h3><div class="en2">OBJECT LIFE</div><div class="line">正常的死亡已经散落在前面：幕 1 的 RAII 和智能指针，幕 2 的虚析构，幕 3 被移动后的空壳仍要析构，幕 4 扩容时销毁旧元素。这一幕只讲两种不正常：死到一半出了异常，以及该死却没死。</div><span class="tag">4 页</span></div></a></div></section>
+<section class="part" style="--theme:#6d28d9;--theme2:#4c1d95;--soft:#f4f0ff;--deep:#3b1570"><h2>篇二 · 一行代码到一条指令<span class="en">CODE TO INSTRUCTION</span></h2><div class="grid"><a class="card" data-no="09" href="b-oral-09.html"><div><h3>编译链接与底层机制</h3><div class="en2">CODE TO INSTRUCTION</div><div class="line">篇一讲的都是语言。可是 CPU 不认识类、模板、lambda，它只认识指令。中间发生了什么？</div><span class="tag">6 页</span></div></a></div></section>
+<section class="part" style="--theme:#0891b2;--theme2:#0e7490;--soft:#e6f7fb;--deep:#0f4c5c"><h2>篇三 · 一次请求的旅程<span class="en">REQUEST JOURNEY</span></h2><div class="grid"><a class="card" data-no="10" href="b-oral-10.html"><div><h3>执行单元：进程、fork 与 IPC</h3><div class="en2">REQUEST JOURNEY</div><div class="line">可执行文件被加载，就成了一个进程。服务先要跑起来，才能接请求。</div><span class="tag">4 页</span></div></a><a class="card" data-no="11" href="b-oral-11.html"><div><h3>网络 IO 栈：连接、多路复用与优化</h3><div class="en2">REQUEST JOURNEY</div><div class="line">进程准备好了，现在客户端要连上来，把一批 `LogMessage` 发给我们，或者从我们这里拉走。</div><span class="tag">5 页</span></div></a><a class="card" data-no="12" href="b-oral-12.html"><div><h3>持久化与规模：数据库与分布式</h3><div class="en2">REQUEST JOURNEY</div><div class="line">日志最终要落盘，而且要能查。这一幕的顺序是：先保证正确，再追求速度，最后扩展到多台机器。</div><span class="tag">7 页</span></div></a></div></section>
+<section class="part" style="--theme:#059669;--theme2:#047857;--soft:#ecfdf5;--deep:#064e3b"><h2>终章 · 架构的落地<span class="en">ARCHITECTURE</span></h2><div class="grid"><a class="card" data-no="13" href="b-oral-13.html"><div><h3>创建与生命周期</h3><div class="en2">ARCHITECTURE</div><div class="line">现在要真正做一个日志组件。设计的第一个问题，和幕 1 一样：谁来创建它？要创建几个？</div><span class="tag">3 页</span></div></a><a class="card" data-no="14" href="b-oral-14.html"><div><h3>解耦与封装</h3><div class="en2">ARCHITECTURE</div><div class="line">组件造出来了，接下来的问题是：怎么让别人订阅它？怎么改内部实现，又不影响用它的人？</div><span class="tag">3 页</span></div></a><a class="card" data-no="15" href="b-oral-15.html"><div><h3>性能工程</h3><div class="en2">ARCHITECTURE</div><div class="line">日志是在业务的热路径上打的，它必须快到几乎不影响业务。性能的第一个瓶颈，通常是内存分配。</div><span class="tag">3 页</span></div></a><a class="card" data-no="16" href="b-oral-16-close.html"><div><h3>总收尾（30 秒）</h3><div class="en2">ARCHITECTURE</div><div class="line">回头看，一条 `LogMessage` 从内存池里 placement new 出生</div><span class="tag">2 页</span></div></a></div></section>
+</div></body></html>

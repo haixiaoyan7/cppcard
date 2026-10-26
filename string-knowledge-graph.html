@@ -1,0 +1,2657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ std::string · 知识图谱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0c1222;
+    --ink-soft: #1a2438;
+    --paper: #f3f6fb;
+    --panel: rgba(255, 255, 255, 0.92);
+    --panel-solid: #ffffff;
+    --line: #d5deec;
+    --muted: #6b7a94;
+    --text: #1e2a3f;
+    --cyan: #0d9488;
+    --cyan-deep: #0f766e;
+    --cyan-soft: #ccfbf1;
+    --amber: #d97706;
+    --amber-soft: #fef3c7;
+    --blue: #2563eb;
+    --blue-soft: #dbeafe;
+    --rose: #e11d48;
+    --rose-soft: #ffe4e6;
+    --violet: #7c3aed;
+    --violet-soft: #ede9fe;
+    --shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    color: var(--text);
+    font-family: "Noto Sans SC", "DM Sans", sans-serif;
+    background: var(--paper);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 80% 50% at 10% -10%, rgba(13, 148, 136, 0.14), transparent 50%),
+      radial-gradient(ellipse 60% 40% at 90% 0%, rgba(37, 99, 235, 0.10), transparent 45%),
+      radial-gradient(ellipse 50% 40% at 70% 100%, rgba(217, 119, 6, 0.08), transparent 50%),
+      linear-gradient(165deg, #eef2f8 0%, #f5f7fb 40%, #e8eef6 100%);
+  }
+
+  .app {
+    --detail-w: 360px;
+    display: grid;
+    grid-template-columns: 280px 1fr 6px var(--detail-w);
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    gap: 0;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 16px 28px;
+    border-bottom: 1px solid rgba(213, 222, 236, 0.8);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px);
+    z-index: 20;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background:
+      linear-gradient(145deg, #0d9488 0%, #0f766e 55%, #115e59 100%);
+    box-shadow: 0 8px 20px rgba(13, 148, 136, 0.35);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .brand-mark svg { width: 22px; height: 22px; }
+
+  .brand-text h1 {
+    font-family: "DM Sans", "Noto Sans SC", sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .brand-text p {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .search {
+    position: relative;
+    width: min(280px, 36vw);
+  }
+
+  .search input {
+    width: 100%;
+    height: 40px;
+    padding: 0 14px 0 40px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    font: 500 13px/1 "Noto Sans SC", sans-serif;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .search input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  }
+
+  .search svg {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .tool-btn {
+    height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    font: 600 12px/1 "Noto Sans SC", sans-serif;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  }
+
+  .tool-btn:hover {
+    background: #f8fafc;
+    border-color: #b8c5d8;
+  }
+
+  .tool-btn:active { transform: scale(0.97); }
+
+  .tool-btn.primary {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.28);
+  }
+
+  .tool-btn.primary:hover { filter: brightness(1.05); }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    padding: 22px 18px 28px;
+    border-right: 1px solid rgba(213, 222, 236, 0.8);
+    background: rgba(255, 255, 255, 0.55);
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  .side-block + .side-block { margin-top: 28px; }
+
+  .side-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .layer-list, .legend-list, .path-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .layer-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--text);
+    font: 500 13px/1.3 "Noto Sans SC", sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .layer-btn:hover { background: rgba(255, 255, 255, 0.8); }
+
+  .layer-btn.active {
+    background: #fff;
+    border-color: var(--line);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  }
+
+  .layer-btn .swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px var(--swatch-ring);
+  }
+
+  .layer-btn .meta {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    font-family: "DM Sans", sans-serif;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .legend-item i {
+    width: 28px;
+    height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .path-chip {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    text-align: left;
+    width: 100%;
+    font: inherit;
+    color: inherit;
+  }
+
+  .path-chip:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 6px 18px rgba(13, 148, 136, 0.1);
+  }
+
+  .path-chip .num {
+    width: 22px;
+    height: 22px;
+    border-radius: 8px;
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+    font: 700 11px/22px "DM Sans", sans-serif;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .path-chip strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+
+  .path-chip span {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  /* ── Graph stage ── */
+  .stage-wrap {
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .stage {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .stage.dragging { cursor: grabbing; }
+
+  .stage svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .edge {
+    fill: none;
+    stroke: #c5d0e0;
+    stroke-width: 1.5;
+    opacity: 0.7;
+    transition: opacity 0.25s ease, stroke 0.25s ease, stroke-width 0.25s ease;
+  }
+
+  /* 焦点模式：无关边变细、变浅灰，不消失 */
+  .stage.focus-on .edge.quiet {
+    stroke: #dde4ef;
+    stroke-width: 1;
+    opacity: 0.45;
+  }
+
+  .edge.hot {
+    opacity: 1;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+  }
+
+  .edge.hot.flow {
+    stroke-dasharray: 6 10;
+    animation: edge-flow 1.1s linear infinite;
+  }
+
+  @keyframes edge-flow {
+    to { stroke-dashoffset: -16; }
+  }
+
+  .edge-label-g {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .edge-label-g.show { opacity: 1; }
+
+  .edge-label-g text {
+    font-size: 10px;
+    fill: #64748b;
+    font-family: "DM Sans", "Noto Sans SC", sans-serif;
+    font-weight: 600;
+  }
+
+  .node {
+    cursor: grab;
+  }
+
+  .node.dragging {
+    cursor: grabbing;
+  }
+
+  .node.dragging .body {
+    filter: drop-shadow(0 8px 18px rgba(13, 148, 136, 0.28));
+  }
+
+  .node .glow {
+    fill: #0d9488;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .node .ring {
+    fill: none;
+    stroke: #0d9488;
+    stroke-width: 1.75;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .node .body {
+    transition: fill 0.22s ease, stroke 0.22s ease, stroke-width 0.22s ease, filter 0.22s ease;
+  }
+
+  .node-title {
+    font-family: "Noto Sans SC", "DM Sans", sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    fill: var(--ink);
+    pointer-events: none;
+    transition: fill 0.22s ease;
+  }
+
+  .node-en {
+    font-family: "DM Sans", sans-serif;
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    fill: var(--muted);
+    pointer-events: none;
+    text-transform: uppercase;
+    transition: fill 0.22s ease;
+  }
+
+  .node.hub .node-title { font-size: 14px; fill: #fff; }
+  .node.hub .node-en { fill: rgba(255, 255, 255, 0.78); font-size: 9px; }
+
+  /* 关联：细虚线青环，描边改青色 */
+  .node.related .ring {
+    opacity: 0.7;
+    stroke-dasharray: 3.5 3.5;
+  }
+  .node.related:not(.hub) .body {
+    stroke: #0d9488 !important;
+    stroke-width: 2.2;
+  }
+
+  /* 选中：统一青色描边 + 轻投影 */
+  .node.selected .glow { opacity: 0.08; }
+  .node.selected .ring {
+    opacity: 1;
+    stroke-width: 1.8;
+    stroke-dasharray: none;
+  }
+  .node.selected:not(.hub) .body {
+    fill: #f0fdfa;
+    stroke: #0d9488 !important;
+    stroke-width: 2.6;
+    filter: drop-shadow(0 4px 12px rgba(13, 148, 136, 0.18));
+  }
+  .node.selected.hub .body {
+    filter: drop-shadow(0 6px 16px rgba(13, 148, 136, 0.32));
+  }
+
+  /* 无关：压低描边与英文，中文仍可读 */
+  .stage.focus-on .node.quiet:not(.hub) .body {
+    fill: #f8fafc;
+    stroke: #dbe2ec;
+    stroke-width: 1.4;
+    filter: none;
+  }
+  .stage.focus-on .node.quiet .node-title { fill: #a0aec0; }
+  .stage.focus-on .node.quiet .node-en { fill: #d0d7e2; }
+  .stage.focus-on .node.quiet.hub .body { opacity: 0.5; }
+  .stage.focus-on .node.quiet .glow,
+  .stage.focus-on .node.quiet .ring { opacity: 0 !important; }
+
+  .stage.path-on .node.on-path:not(.quiet):not(.selected):not(.hub) .body {
+    stroke-width: 2.4;
+  }
+  .edge.on-path:not(.hot) {
+    opacity: 0.8;
+    stroke-width: 1.9;
+  }
+
+  .hint-bar {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: rgba(12, 18, 34, 0.88);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 12px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 12px 32px rgba(12, 18, 34, 0.25);
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .hint-bar kbd {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #fff;
+  }
+
+  /* ── Detail panel ── */
+  .detail-resizer {
+    position: relative;
+    z-index: 15;
+    cursor: col-resize;
+    background: transparent;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .detail-resizer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+    background: rgba(213, 222, 236, 0.95);
+    transition: background 0.15s, width 0.15s, box-shadow 0.15s;
+  }
+
+  .detail-resizer::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 36px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: #c5d0e0;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+  }
+
+  .detail-resizer:hover::before,
+  .detail-resizer.is-dragging::before {
+    width: 2px;
+    background: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .detail-resizer:hover::after,
+  .detail-resizer.is-dragging::after {
+    opacity: 1;
+    background: var(--cyan);
+  }
+
+  body.is-resizing-detail {
+    cursor: col-resize;
+    user-select: none;
+  }
+
+  body.is-resizing-detail * {
+    cursor: col-resize !important;
+  }
+
+  .detail {
+    border-left: none;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(12px);
+    overflow-y: auto;
+    padding: 0;
+    z-index: 10;
+    min-width: 0;
+  }
+
+  .detail-empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 28px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .detail-empty .orb {
+    width: 72px;
+    height: 72px;
+    border-radius: 24px;
+    margin-bottom: 18px;
+    background:
+      linear-gradient(145deg, var(--cyan-soft), var(--blue-soft));
+    display: grid;
+    place-items: center;
+  }
+
+  .detail-empty h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .detail-empty p {
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 240px;
+  }
+
+  .detail-body { display: none; padding: 24px 22px 36px; }
+  .detail.has-selection .detail-empty { display: none; }
+  .detail.has-selection .detail-body { display: block; }
+
+  .detail-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .detail-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font: 700 14px/1 "DM Sans", sans-serif;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .detail-head h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  .detail-head .en {
+    margin-top: 4px;
+    font-family: "DM Sans", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .pill {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: var(--muted);
+  }
+
+  .pill.layer { background: var(--cyan-soft); color: var(--cyan-deep); }
+  .pill.card { background: var(--blue-soft); color: var(--blue); }
+
+  .section-title {
+    margin: 22px 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .detail-body p.desc {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .points {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .points li {
+    position: relative;
+    padding: 12px 14px 12px 36px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .points li::before {
+    content: attr(data-n);
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+    font: 700 10px/18px "DM Sans", sans-serif;
+    text-align: center;
+  }
+
+  .rule-table-wrap {
+    margin-top: 4px;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #e8eef6;
+    background: #fff;
+  }
+
+  .rule-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+
+  .rule-table th,
+  .rule-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #eef2f7;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .rule-table th {
+    background: #f8fafc;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .rule-table tr:last-child td { border-bottom: none; }
+
+  .rule-table .form {
+    font-family: "SF Mono", Menlo, "JetBrains Mono", monospace;
+    font-weight: 700;
+    color: var(--cyan-deep);
+    white-space: nowrap;
+  }
+
+  .rule-table .mono {
+    font-family: "SF Mono", Menlo, "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #334155;
+  }
+
+  .rule-table .err {
+    color: #e11d48;
+    font-weight: 700;
+  }
+
+  .rule-table .note {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .code-window {
+    margin-top: 4px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #1f1f24;
+    border: 1px solid #2c2c34;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+  }
+
+  .code-chrome {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 14px 8px;
+    background: linear-gradient(180deg, #2a2a30 0%, #232328 100%);
+    border-bottom: 1px solid #18181c;
+  }
+
+  .code-chrome .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.25);
+  }
+
+  .code-chrome .dot.red { background: #ff5f57; }
+  .code-chrome .dot.yellow { background: #febc2e; }
+  .code-chrome .dot.green { background: #28c840; }
+
+  .code-chrome .code-file {
+    margin-left: 8px;
+    font-family: "SF Mono", Menlo, Monaco, "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: #9a9aa2;
+    letter-spacing: 0.02em;
+  }
+
+  .code {
+    margin: 0;
+    padding: 14px 16px 16px;
+    background: #1f1f24;
+    color: #dfdfe0;
+    font-family: "SF Mono", Menlo, Monaco, "Cascadia Code", "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  /* Xcode Dark Default 语法色 */
+  .code .kw { color: #ff7ab2; }   /* keyword */
+  .code .tp { color: #6bdfff; }   /* type / system type */
+  .code .fn { color: #a8e6a1; }   /* function / declaration */
+  .code .cm { color: #6c7986; }   /* comment */
+  .code .str { color: #ff8170; }  /* string */
+  .code .num { color: #d0a8ff; }  /* number / constant */
+
+  .rel-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rel-chip {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .rel-chip:hover {
+    border-color: var(--cyan);
+    background: var(--cyan-soft);
+    color: var(--cyan-deep);
+  }
+
+  .rel-chip .dir {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .card-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .link-card {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform 0.12s, border-color 0.15s, background 0.15s;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--text);
+  }
+
+  .link-card:hover { transform: translateY(-1px); }
+
+  .link-card.card-ans {
+    background: linear-gradient(135deg, #eff6ff, #f8fbff);
+    border-color: #dbeafe;
+    color: var(--blue);
+  }
+
+  .link-card.card-fu {
+    background: linear-gradient(135deg, #f0fdfa, #f7fffc);
+    border-color: #ccfbf1;
+    color: var(--cyan-deep);
+  }
+
+  .link-card .link-kicker {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .link-card small {
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1100px) {
+    .app {
+      --detail-w: auto;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto 1fr auto;
+      height: auto;
+      min-height: 100vh;
+      overflow: auto;
+    }
+    body { overflow: auto; }
+    .sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-height: none;
+    }
+    .side-block:last-child { grid-column: 1 / -1; }
+    .stage-wrap { height: 62vh; min-height: 420px; }
+    .detail-resizer { display: none; }
+    .detail {
+      border-left: none;
+      border-top: 1px solid var(--line);
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .topbar { flex-direction: column; align-items: stretch; }
+    .search { width: 100%; }
+    .top-actions { justify-content: stretch; }
+    .sidebar { grid-template-columns: 1fr; }
+    .brand-text h1 { font-size: 16px; }
+    .hint-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M6.6 6.5C5.2 8 4.6 9.6 4.6 11.4h2.9V16H4V11.4C4 9 4.8 7.2 6.6 6.5Z" fill="#fff"/>
+          <path d="M13.6 6.5C12.2 8 11.6 9.6 11.6 11.4h2.9V16H11V11.4C11 9 11.8 7.2 13.6 6.5Z" fill="#fff"/>
+          <path d="M18 8v8" stroke="#99f6e4" stroke-width="2" stroke-linecap="round"/>
+          <path d="M16.4 8h3.2M16.4 16h3.2" stroke="#99f6e4" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>C++ std::string · 知识图谱</h1>
+        <p>SSO  ·  MEMORY  ·  API  ·  STRING_VIEW</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+        <input id="search" type="search" placeholder="搜索知识点…" autocomplete="off" />
+      </div>
+      <button class="tool-btn" id="btn-fit" type="button">适应画布</button>
+      <button class="tool-btn" id="btn-reset" type="button">复位布局</button>
+      <button class="tool-btn" id="btn-clear" type="button">清除高亮</button>
+      <button class="tool-btn primary" id="btn-tour" type="button">学习路径</button>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <div class="side-block">
+      <div class="side-label"><span>知识分层</span><span id="layer-count">全部</span></div>
+      <div class="layer-list" id="layer-list"></div>
+    </div>
+    <div class="side-block">
+      <div class="side-label"><span>关系图例</span></div>
+      <div class="legend-list">
+        <div class="legend-item"><i style="background:#0d9488"></i>组成 / 属于</div>
+        <div class="legend-item"><i style="background:#2563eb"></i>底层实现</div>
+        <div class="legend-item"><i style="background:#d97706"></i>协作 / 依赖</div>
+        <div class="legend-item"><i style="background:#7c3aed"></i>应用 / 演进</div>
+      </div>
+    </div>
+    <div class="side-block">
+      <div class="side-label"><span>推荐路径</span></div>
+      <div class="path-list" id="path-list"></div>
+    </div>
+  </aside>
+
+  <main class="stage-wrap">
+    <div class="stage" id="stage"></div>
+    <div class="hint-bar" id="hint-bar">
+      <span>拖拽节点重排 · 空白处平移 · 滚轮缩放</span>
+      <span><kbd>Esc</kbd> 清除</span>
+    </div>
+  </main>
+
+  <div class="detail-resizer" id="detail-resizer" title="拖动调整右侧栏宽度" role="separator" aria-orientation="vertical" aria-label="调整右侧栏宽度"></div>
+
+  <aside class="detail" id="detail">
+    <div class="detail-empty">
+      <div class="orb">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="3" stroke="#0d9488" stroke-width="2"/>
+          <circle cx="12" cy="12" r="8" stroke="#0d9488" stroke-width="1.5" opacity=".4"/>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>选择一个知识点</h2>
+      <p>点击图谱中的节点，查看内部表示、性能代价、面试要点与代码示意。</p>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </aside>
+</div>
+
+<script>
+(() => {
+  const LAYERS = [
+    { id: "hub",   name: "总览",       color: "#0f766e", ring: "rgba(15,118,110,.20)", count: 0 },
+    { id: "repr",  name: "内部表示",   color: "#2563eb", ring: "rgba(37,99,235,.18)",  count: 0 },
+    { id: "mem",   name: "内存与性能", color: "#0891b2", ring: "rgba(8,145,178,.18)",  count: 0 },
+    { id: "api",   name: "接口与操作", color: "#d97706", ring: "rgba(217,119,6,.18)",  count: 0 },
+    { id: "view",  name: "视图与转换", color: "#7c3aed", ring: "rgba(124,58,237,.16)", count: 0 },
+    { id: "char",  name: "字符与编码", color: "#059669", ring: "rgba(5,150,105,.16)",  count: 0 },
+    { id: "trap",  name: "高频陷阱",   color: "#e11d48", ring: "rgba(225,29,72,.15)",  count: 0 },
+  ];
+
+  const NODES = [
+    {
+      id: "string", layer: "hub", title: "std::string", lines: ["std::", "string"],
+      en: "basic_string&lt;char&gt;", tag: "STRING", x: 900, y: 620, r: 58, hub: true,
+      summary: "std::string 是 basic_string&lt;char&gt; 的别名：一个管理连续字符缓冲区、带 SSO 优化的值语义容器，同时满足「C 风格字符串兼容」与「RAII 自动管理内存」两个目标。",
+      points: [
+        "本质是容器：连续存储、动态扩容、支持迭代器与大部分 STL 算法。",
+        "值语义：拷贝即深拷贝，析构自动释放；C++11 起禁止 COW 实现。",
+        "短字符串走对象内部缓冲区（SSO），长字符串才走堆分配。",
+        "C++11 起 c_str() / data() 保证以 '\\0' 结尾，可直接喂给 C API。",
+        "三个模板参数：CharT、Traits、Allocator，衍生 wstring / u8string / pmr::string。",
+      ],
+      code: `<span class="cm">// 一个对象，两种存储形态</span>
+<span class="tp">std</span>::<span class="tp">string</span> s1 = <span class="str">"hi"</span>;                <span class="cm">// 短：数据在对象内部</span>
+<span class="tp">std</span>::<span class="tp">string</span> s2(<span class="num">100</span>, <span class="str">'x'</span>);            <span class="cm">// 长：数据在堆上</span>
+
+s1 += <span class="str">" there"</span>;                       <span class="cm">// 均摊 O(1)</span>
+<span class="fn">puts</span>(s1.<span class="fn">c_str</span>());                    <span class="cm">// 与 C API 兼容</span>`,
+      card: { num: "044", slug: "044-string-sso" },
+    },
+
+    /* ───────── 内部表示 ───────── */
+    {
+      id: "basic_string", layer: "repr", title: "basic_string", lines: ["basic", "string"],
+      en: "Class Template", tag: "TEMPLATE", x: 600, y: 400, r: 44,
+      summary: "所有字符串类型的同一份模板实现：basic_string&lt;CharT, Traits, Allocator&gt;。把「字符类型」「字符语义」「内存来源」三件事都做成了可替换的模板参数。",
+      points: [
+        "标准别名：string / wstring / u8string / u16string / u32string 只是 CharT 不同。",
+        "Traits 决定字符怎么比较、怎么求长度；Allocator 决定内存从哪来。",
+        "所有成员函数按模板实例化，长字符串处理逻辑内联性好、无虚函数开销。",
+        "不同模板参数就是不同类型：pmr::string 与 string 之间不能直接赋值。",
+        "标准库通常显式实例化 string / wstring，减少重复实例化的编译开销。",
+      ],
+      code: `<span class="kw">template</span>&lt;<span class="kw">class</span> <span class="tp">CharT</span>,
+         <span class="kw">class</span> <span class="tp">Traits</span> = <span class="tp">std</span>::<span class="tp">char_traits</span>&lt;<span class="tp">CharT</span>&gt;,
+         <span class="kw">class</span> <span class="tp">Alloc</span> = <span class="tp">std</span>::<span class="tp">allocator</span>&lt;<span class="tp">CharT</span>&gt;&gt;
+<span class="kw">class</span> <span class="tp">basic_string</span>;
+
+<span class="kw">using</span> <span class="tp">string</span>  = <span class="tp">basic_string</span>&lt;<span class="kw">char</span>&gt;;
+<span class="kw">using</span> <span class="tp">wstring</span> = <span class="tp">basic_string</span>&lt;<span class="kw">wchar_t</span>&gt;;`,
+      card: { num: "032", slug: "032-template-instantiation" },
+    },
+    {
+      id: "sso", layer: "repr", title: "SSO 短串优化", lines: ["SSO", "短串优化"],
+      en: "Small String Optimization", tag: "SSO", x: 560, y: 175, r: 42,
+      summary: "长度不超过阈值的字符串直接存放在 string 对象自带的小缓冲区里，完全不触发堆分配——这是 string 与 vector 最大的实现差异。",
+      points: [
+        "libstdc++：sizeof 32 字节，内部缓冲 16 字节，可存 15 个字符 + '\\0'。",
+        "libc++：sizeof 24 字节，短串容量 22；MSVC：sizeof 32，短串容量 15。",
+        "实现手法是 union：短串时复用 capacity 字段所在空间当缓冲区。",
+        "收益：短串的构造/拷贝/析构无 malloc/free，缓存局部性也更好。",
+        "代价：对象变大；SSO 不是标准强制的，阈值也不可假设。",
+      ],
+      code: `<span class="cm">// libstdc++ 的布局（示意）</span>
+<span class="kw">struct</span> <span class="tp">string</span> {
+  <span class="kw">char</span>* ptr;              <span class="cm">// 指向数据（可能就是 buf）</span>
+  <span class="tp">size_t</span> len;
+  <span class="kw">union</span> { <span class="tp">size_t</span> cap; <span class="kw">char</span> buf[<span class="num">16</span>]; };
+};
+
+<span class="tp">std</span>::<span class="tp">string</span> s = <span class="str">"12345678901234"</span>;   <span class="cm">// 14 字符：无堆分配</span>
+<span class="fn">assert</span>(s.<span class="fn">data</span>() == <span class="kw">reinterpret_cast</span>&lt;<span class="kw">char</span>*&gt;(&amp;s) + <span class="num">16</span>); <span class="cm">// 实现相关</span>`,
+      card: { num: "044", slug: "044-string-sso" },
+    },
+    {
+      id: "heapbuf", layer: "repr", title: "堆缓冲区", lines: ["堆", "缓冲区"],
+      en: "Heap Buffer", tag: "HEAP", x: 800, y: 205, r: 36,
+      summary: "长度越过 SSO 阈值后切换为「指针 + 长度 + 容量」的堆表示；此后与 vector 类似，通过重新分配来增长。",
+      points: [
+        "切换是单向的：越过阈值后即便再变短，通常也不会自动回到内部缓冲区。",
+        "堆表示下 capacity() 与 size() 分离，尾部预留供 append 均摊使用。",
+        "一次切换 = 一次 allocate + 拷贝已有字符 + 写 '\\0'。",
+        "拷贝构造会再分配一次；移动构造只搬指针，这时才真正「零拷贝」。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> s;
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">40</span>; ++i) {
+  s += <span class="str">'x'</span>;
+  <span class="tp">std</span>::<span class="tp">cout</span> &lt;&lt; s.<span class="fn">size</span>() &lt;&lt; <span class="str">"/"</span> &lt;&lt; s.<span class="fn">capacity</span>() &lt;&lt; <span class="str">"\\n"</span>;
+}
+<span class="cm">// 15/15 -&gt; 16/30 -&gt; ... 阈值处发生一次搬迁</span>`,
+      card: null,
+    },
+    {
+      id: "layout", layer: "repr", title: "对象布局", lines: ["对象", "布局"],
+      en: "Object Layout", tag: "LAYOUT", x: 345, y: 300, r: 36,
+      summary: "string 对象自身固定大小（常见 24 或 32 字节），与字符串长度无关；成员通常是「数据指针 + 长度 + 容量/内部缓冲」三部分。",
+      points: [
+        "sizeof(std::string) 是编译期常量，不随内容变化；跨标准库不一致。",
+        "对齐要求由指针/size_t 决定，通常 8 字节；内部缓冲随对象一起对齐。",
+        "把 string 放进结构体会显著放大结构体体积，热数据结构要评估。",
+        "调试时看 ptr 是否指向对象自身范围内，就能判断当前是否处于 SSO 状态。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">cout</span> &lt;&lt; <span class="kw">sizeof</span>(<span class="tp">std</span>::<span class="tp">string</span>);  <span class="cm">// libstdc++ 32 / libc++ 24</span>
+
+<span class="kw">struct</span> <span class="tp">Row</span> {              <span class="cm">// 一行 3 个 string = 96 字节</span>
+  <span class="tp">std</span>::<span class="tp">string</span> a, b, c;     <span class="cm">// 热路径可考虑 string_view / 索引</span>
+};`,
+      card: { num: "007", slug: "007-memory-alignment" },
+    },
+    {
+      id: "traits", layer: "repr", title: "char_traits", lines: ["char", "traits"],
+      en: "Character Traits", tag: "TRAITS", x: 330, y: 470, r: 34,
+      summary: "把「字符怎么比较、怎么拷贝、怎么求长度」抽出成策略类，string 的所有比较/查找都通过它转发，因此可以替换出自定义语义的字符串类型。",
+      points: [
+        "核心接口：eq / lt / compare / length / copy / move / find / eof。",
+        "标准特化只覆盖 char、wchar_t、char8_t、char16_t、char32_t。",
+        "char_traits&lt;char&gt;::compare 按 unsigned char 比较，语义等价 memcmp。",
+        "自定义 traits 可实现大小写不敏感字符串，但它是与 string 不同的类型。",
+      ],
+      code: `<span class="kw">struct</span> <span class="tp">CiTraits</span> : <span class="tp">std</span>::<span class="tp">char_traits</span>&lt;<span class="kw">char</span>&gt; {
+  <span class="kw">static</span> <span class="kw">bool</span> <span class="fn">eq</span>(<span class="kw">char</span> a, <span class="kw">char</span> b) {
+    <span class="kw">return</span> <span class="fn">tolower</span>(a) == <span class="fn">tolower</span>(b);
+  }
+};
+<span class="kw">using</span> <span class="tp">CiString</span> = <span class="tp">std</span>::<span class="tp">basic_string</span>&lt;<span class="kw">char</span>, <span class="tp">CiTraits</span>&gt;;
+<span class="cm">// 注意：CiString 与 std::string 是两个类型</span>`,
+      card: { num: "033", slug: "033-template-specialization" },
+    },
+    {
+      id: "nullterm", layer: "repr", title: "空终止保证", lines: ["空终止", "保证"],
+      en: "Null Termination", tag: "NUL-TERM", x: 150, y: 385, r: 34,
+      summary: "C++11 起标准要求内部缓冲区在 [size()] 位置存有 '\\0'，且 c_str() 与 data() 必须返回同一块内存——这让 string 成为 C API 的安全载体。",
+      points: [
+        "c_str() 与 data() 返回同一指针，且均为 O(1)、不分配、不修改内容。",
+        "s[s.size()] 合法，返回值为 '\\0' 的引用，但写入它是未定义行为。",
+        "C++17 起提供非 const 的 data()，可以把 string 当输出缓冲区用。",
+        "字符串内部允许含 '\\0'：size() 不受影响，但 c_str() 传给 C API 会被截断。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> s = <span class="str">"ab"</span>;
+s.<span class="fn">push_back</span>(<span class="str">'\\0'</span>);
+s += <span class="str">"cd"</span>;
+s.<span class="fn">size</span>();           <span class="cm">// 5</span>
+<span class="fn">strlen</span>(s.<span class="fn">c_str</span>());  <span class="cm">// 2 —— C API 只看到 "ab"</span>
+
+<span class="cm">// C++17：直接写入 string 的缓冲区</span>
+s.<span class="fn">resize</span>(<span class="num">64</span>);
+<span class="kw">int</span> n = <span class="fn">snprintf</span>(s.<span class="fn">data</span>(), s.<span class="fn">size</span>(), <span class="str">"%d"</span>, <span class="num">42</span>);
+s.<span class="fn">resize</span>(n);`,
+      card: null,
+    },
+    {
+      id: "cow", layer: "repr", title: "COW 历史", lines: ["COW", "历史"],
+      en: "Copy On Write", tag: "LEGACY", x: 615, y: 615, r: 34,
+      summary: "写时拷贝曾是 GCC 的 string 实现（引用计数共享缓冲区），但 C++11 的接口要求把它判了死刑，如今已被 SSO + 移动语义取代。",
+      points: [
+        "C++11 要求 operator[] / data() 为 O(1) 且不引发失效，COW 无法满足。",
+        "COW 的引用计数在多线程下需要原子操作，短串场景反而更慢。",
+        "GCC 5 起默认新 ABI；_GLIBCXX_USE_CXX11_ABI=0 才回到旧 COW 实现。",
+        "混用两种 ABI 编译的目标文件会出现 string 相关的链接/崩溃问题。",
+        "现代替代方案：短串用 SSO，转移所有权用 std::move。",
+      ],
+      code: `<span class="cm">// 旧 COW 时代的隐患（现已不存在）</span>
+<span class="tp">std</span>::<span class="tp">string</span> b = a;      <span class="cm">// 曾经只加引用计数</span>
+<span class="kw">char</span>&amp; c = b[<span class="num">0</span>];         <span class="cm">// 触发一次真实拷贝</span>
+
+<span class="cm">// 现代做法：显式转移所有权</span>
+<span class="tp">std</span>::<span class="tp">string</span> d = <span class="tp">std</span>::<span class="fn">move</span>(a);  <span class="cm">// 长串只搬指针</span>`,
+      card: { num: "021", slug: "021-move-forward" },
+    },
+
+    /* ───────── 内存与性能 ───────── */
+    {
+      id: "growth", layer: "mem", title: "扩容策略", lines: ["扩容", "策略"],
+      en: "Growth Policy", tag: "GROWTH", x: 620, y: 860, r: 40,
+      summary: "与 vector 同源的几何扩容：容量不足时申请更大的块、拷贝旧字符、释放旧块，使 append 的均摊代价保持 O(1)。",
+      points: [
+        "倍率由实现决定：libstdc++ 约 2x，MSVC 约 1.5x；容量可能超出请求值。",
+        "单次 append 大块数据时，新容量取 max(2 * old, 需要的长度)。",
+        "均摊 O(1) 的代价是「偶发的 O(N) 搬迁」，尾延迟敏感场景要 reserve。",
+        "标准要求 string 的成员函数抛异常时「无任何效果」，即强异常保证。",
+        "扩容会调用 allocator；短串阶段完全不碰分配器。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> s;
+<span class="tp">size_t</span> cap = s.<span class="fn">capacity</span>();
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">1000000</span>; ++i) {
+  s += <span class="str">'x'</span>;
+  <span class="kw">if</span> (s.<span class="fn">capacity</span>() != cap) {
+    cap = s.<span class="fn">capacity</span>();      <span class="cm">// 打印可看出倍率</span>
+  }
+}`,
+      card: { num: "038", slug: "038-vector-growth" },
+    },
+    {
+      id: "reserve", layer: "mem", title: "reserve / 容量", lines: ["reserve", "容量"],
+      en: "Capacity Control", tag: "RESERVE", x: 400, y: 780, r: 36,
+      summary: "reserve 预留容量以消除重复搬迁，shrink_to_fit 归还多余内存；两者都只影响 capacity，不改变 size 与内容。",
+      points: [
+        "已知长度上界时 reserve 一次到位，是最廉价的字符串优化。",
+        "C++20 起 reserve 不再缩小容量；无参 reserve() 已被废弃。",
+        "shrink_to_fit 是非强制请求，能否回落到 SSO 缓冲区取决于实现。",
+        "resize 会真正构造/截断字符，与 reserve 完全不同，别混用。",
+        "清空复用：clear() 保留 capacity，是循环里重建字符串的推荐写法。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> line;
+line.<span class="fn">reserve</span>(<span class="num">4096</span>);              <span class="cm">// 循环外预留一次</span>
+<span class="kw">for</span> (<span class="kw">auto</span>&amp; rec : records) {
+  line.<span class="fn">clear</span>();                 <span class="cm">// 保留 capacity</span>
+  line += rec.key;
+  line += <span class="str">'='</span>;
+  line += rec.value;              <span class="cm">// 稳定无分配</span>
+}`,
+      card: null,
+    },
+    {
+      id: "invalidate", layer: "mem", title: "失效规则", lines: ["失效", "规则"],
+      en: "Invalidation", tag: "INVALID", x: 430, y: 1000, r: 36,
+      summary: "任何可能改变容量或长度的操作，都会让此前取得的迭代器、引用、c_str()/data() 指针失效——这是 string 最常见的悬垂来源。",
+      points: [
+        "扩容一定失效；即使不扩容，插入/删除也会移动后续字符。",
+        "实践准则：任何非 const 成员调用后，旧指针/迭代器一律视为失效。",
+        "SSO 串被 move 后，原对象的内部缓冲地址仍属于原对象，不可跨对象缓存。",
+        "swap 会交换缓冲区归属，SSO 状态下相当于逐字节拷贝。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> s = <span class="str">"abc"</span>;
+<span class="kw">const</span> <span class="kw">char</span>* p = s.<span class="fn">c_str</span>();
+s += <span class="str">"very long tail ..."</span>;   <span class="cm">// 可能重新分配</span>
+<span class="fn">puts</span>(p);                     <span class="cm">// 悬垂！UB</span>
+
+<span class="cm">// 正确：用完即取</span>
+<span class="fn">puts</span>(s.<span class="fn">c_str</span>());`,
+      card: { num: "041", slug: "041-stl-iterators" },
+    },
+    {
+      id: "copymove", layer: "mem", title: "拷贝与移动", lines: ["拷贝", "与移动"],
+      en: "Copy &amp; Move", tag: "COPY/MOVE", x: 760, y: 1040, r: 38,
+      summary: "string 是典型的深拷贝值类型；移动只对堆表示才是「搬指针」，短串移动实际上是逐字节拷贝，所以 move 便宜但不免费。",
+      points: [
+        "拷贝构造/赋值 = 分配 + 复制，代价 O(N)；移动构造为 noexcept。",
+        "SSO 串移动 = 拷贝内部缓冲，O(1) 但仍有字节搬运，不会置空源对象内存。",
+        "被移动后的 string 处于「有效但未指定」状态，只能重新赋值或析构。",
+        "接收即持有的参数用按值传 + std::move；只读参数用 string_view。",
+        "返回局部 string 直接 return，靠 RVO/移动，不要写 std::move(局部变量)。",
+      ],
+      code: `<span class="kw">void</span> <span class="fn">sink</span>(<span class="tp">std</span>::<span class="tp">string</span> s) { store_ = <span class="tp">std</span>::<span class="fn">move</span>(s); }
+
+<span class="fn">sink</span>(<span class="str">"literal"</span>);           <span class="cm">// 构造一次，移动一次</span>
+<span class="fn">sink</span>(<span class="tp">std</span>::<span class="fn">move</span>(existing));  <span class="cm">// 零拷贝转移</span>
+
+<span class="tp">std</span>::<span class="tp">string</span> <span class="fn">make</span>() {
+  <span class="tp">std</span>::<span class="tp">string</span> r = <span class="fn">build</span>();
+  <span class="kw">return</span> r;                <span class="cm">// NRVO，别写 std::move(r)</span>
+}`,
+      card: { num: "013", slug: "013-deep-shallow-copy" },
+    },
+    {
+      id: "alloc", layer: "mem", title: "分配器", lines: ["分配", "器"],
+      en: "Allocator", tag: "ALLOCATOR", x: 200, y: 900, r: 34,
+      summary: "第三个模板参数决定堆内存来源。默认 std::allocator 走全局 new；std::pmr::string 可以把字符串内存挂到内存池上。",
+      points: [
+        "SSO 让短串完全不经过分配器，这也是 string 与 vector 的关键差别。",
+        "std::pmr::string 是不同类型，与 std::string 之间必须显式转换。",
+        "pmr 常用于「一次请求内大量临时字符串」：用 monotonic_buffer_resource 批量释放。",
+        "自定义分配器需满足分配器要求；有状态分配器要注意传播与 swap 语义。",
+      ],
+      code: `<span class="kw">char</span> buf[<span class="num">8</span> * <span class="num">1024</span>];
+<span class="tp">std</span>::<span class="tp">pmr</span>::<span class="tp">monotonic_buffer_resource</span> pool{buf, <span class="kw">sizeof</span> buf};
+
+<span class="tp">std</span>::<span class="tp">pmr</span>::<span class="tp">string</span> a(<span class="str">"long text ..."</span>, &amp;pool);
+<span class="tp">std</span>::<span class="tp">pmr</span>::<span class="tp">string</span> b = a;   <span class="cm">// 仍从 pool 取内存</span>
+<span class="cm">// 作用域结束：整块归还，无逐个 free</span>`,
+      card: { num: "043", slug: "043-allocator" },
+    },
+
+    /* ───────── 接口与操作 ───────── */
+    {
+      id: "api", layer: "api", title: "常用接口", lines: ["常用", "接口"],
+      en: "Operations", tag: "API", x: 1250, y: 620, r: 44,
+      summary: "接口面很大（上百个成员），但面试与实战真正高频的只有六组：构造赋值、访问、修改、查找、子串比较、尺寸控制。",
+      points: [
+        "记忆框架：构造 → 访问 → 修改 → 查找 → 切片 → 尺寸。",
+        "同名操作往往有 (pos, len) / 迭代器 / const char* / string_view 多种重载。",
+        "带 pos 的重载越界抛 std::out_of_range；返回下标的查找失败返回 npos。",
+        "string 满足容器要求，可直接用于范围 for 与大部分 STL 算法。",
+        "成员版查找（find 系列）比 std::find 更快：走 traits + memchr 优化。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> s = <span class="str">"key=value"</span>;
+
+<span class="kw">auto</span> eq = s.<span class="fn">find</span>(<span class="str">'='</span>);          <span class="cm">// 查找</span>
+<span class="kw">auto</span> k  = s.<span class="fn">substr</span>(<span class="num">0</span>, eq);       <span class="cm">// 切片（拷贝）</span>
+s.<span class="fn">replace</span>(eq + <span class="num">1</span>, <span class="tp">std</span>::<span class="tp">string</span>::npos, <span class="str">"new"</span>);
+s.<span class="fn">at</span>(<span class="num">0</span>);                       <span class="cm">// 带检查访问</span>`,
+      card: null,
+    },
+    {
+      id: "ctor", layer: "api", title: "构造与赋值", lines: ["构造", "与赋值"],
+      en: "Construct / Assign", tag: "CTOR", x: 1500, y: 460, r: 34,
+      summary: "构造函数重载极多：字面量、重复字符、子串、迭代器区间、初始化列表、string_view，注意 (n, ch) 与 (ptr, n) 的语义差异。",
+      points: [
+        "string(n, ch) 是「n 个字符」；string(ptr, n) 是「取前 n 个字节」。",
+        "从 const char* 构造是隐式的，容易在重载决议与循环里产生意外分配。",
+        "string(nullptr) 是未定义行为；C++23 起该重载被显式删除以便编译期报错。",
+        "assign / operator= 可复用已有 capacity，比重建对象更省。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> a(<span class="num">3</span>, <span class="str">'x'</span>);        <span class="cm">// "xxx"</span>
+<span class="tp">std</span>::<span class="tp">string</span> b(<span class="str">"hello"</span>, <span class="num">3</span>);   <span class="cm">// "hel"</span>
+<span class="tp">std</span>::<span class="tp">string</span> c{<span class="str">'h'</span>, <span class="str">'i'</span>};      <span class="cm">// "hi"</span>
+
+a.<span class="fn">assign</span>(b.<span class="fn">begin</span>(), b.<span class="fn">end</span>()); <span class="cm">// 复用 a 的容量</span>`,
+      card: null,
+    },
+    {
+      id: "access", layer: "api", title: "元素访问", lines: ["元素", "访问"],
+      en: "Element Access", tag: "ACCESS", x: 1550, y: 620, r: 36,
+      summary: "operator[] 不检查越界、at() 抛异常、front/back 取端点、data()/c_str() 拿裸指针——四种访问方式对应四种不同的安全与性能取舍。",
+      points: [
+        "operator[] 无检查（越界即 UB），at() 越界抛 std::out_of_range。",
+        "空串上调用 front() / back() 是 UB，先判 empty()。",
+        "s[s.size()] 是唯一合法的「越界」访问，返回 '\\0' 的引用。",
+        "拿到的引用/指针只在下一次修改前有效，别缓存。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> s = <span class="str">"abc"</span>;
+s[<span class="num">0</span>];              <span class="cm">// 快，无检查</span>
+s.<span class="fn">at</span>(<span class="num">9</span>);           <span class="cm">// throw std::out_of_range</span>
+s[s.<span class="fn">size</span>()];       <span class="cm">// '\\0'，合法但不可写</span>
+<span class="kw">if</span> (!s.<span class="fn">empty</span>()) <span class="fn">use</span>(s.<span class="fn">back</span>());`,
+      card: null,
+    },
+    {
+      id: "modify", layer: "api", title: "修改操作", lines: ["修改", "操作"],
+      en: "Modifiers", tag: "MODIFY", x: 1520, y: 790, r: 36,
+      summary: "append / += / insert / erase / replace / push_back 六件套。尾部操作均摊 O(1)，中间插删要搬移后续字符，是 O(N)。",
+      points: [
+        "拼接优先用 += / append，避免 operator+ 产生的中间临时对象。",
+        "insert / erase 在中间位置为 O(N)，大量编辑请考虑重建或 rope 类结构。",
+        "replace 是「先删再插」的融合版，长度不同也只需一次搬移。",
+        "erase(pos) 之后所有迭代器与指针视为失效。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> s;
+s.<span class="fn">reserve</span>(<span class="num">64</span>);
+s += <span class="str">"user="</span>;             <span class="cm">// 推荐</span>
+s.<span class="fn">append</span>(name);           <span class="cm">// 等价，可带 (ptr, n)</span>
+
+<span class="cm">// 不推荐：每个 + 都可能分配一个临时 string</span>
+<span class="tp">std</span>::<span class="tp">string</span> t = <span class="str">"user="</span> + name + <span class="str">";id="</span> + id;`,
+      card: null,
+    },
+    {
+      id: "find", layer: "api", title: "查找", en: "Search", tag: "FIND",
+      x: 1300, y: 870, r: 36,
+      summary: "find / rfind / find_first_of / find_last_not_of 等八个成员函数，全部返回下标，失败返回 npos，而不是迭代器。",
+      points: [
+        "find 找子串或字符；find_first_of 找「任一字符」，两者极易混淆。",
+        "失败一律返回 std::string::npos，必须与 npos 比较，不能与 -1 或 int 比。",
+        "复杂度最坏 O(N * M)，没有 KMP 保证；C++17 起可用 searcher 定制算法。",
+        "只判断是否包含：C++23 有 contains，C++20 有 starts_with / ends_with。",
+      ],
+      code: `<span class="kw">auto</span> p = s.<span class="fn">find</span>(<span class="str">"://"</span>);
+<span class="kw">if</span> (p != <span class="tp">std</span>::<span class="tp">string</span>::npos) <span class="fn">use</span>(p);
+
+s.<span class="fn">find_first_of</span>(<span class="str">"?#"</span>);      <span class="cm">// 任一字符</span>
+s.<span class="fn">rfind</span>(<span class="str">'/'</span>);              <span class="cm">// 从右往左</span>
+
+<span class="cm">// C++17：Boyer-Moore</span>
+<span class="tp">std</span>::<span class="fn">search</span>(s.<span class="fn">begin</span>(), s.<span class="fn">end</span>(),
+  <span class="tp">std</span>::<span class="tp">boyer_moore_searcher</span>(pat.<span class="fn">begin</span>(), pat.<span class="fn">end</span>()));`,
+      card: null,
+    },
+    {
+      id: "substr", layer: "api", title: "子串与比较", lines: ["子串", "与比较"],
+      en: "Substr &amp; Compare", tag: "SUBSTR", x: 1755, y: 540, r: 34,
+      summary: "substr 返回新字符串（复制，O(N)）；compare / operator&lt;=&gt; 做字典序比较。只读切片场景应优先考虑 string_view。",
+      points: [
+        "substr(pos, len)：pos &gt; size() 抛 out_of_range，len 越界自动截断。",
+        "substr 一定复制；循环切片是常见性能坑，改用 string_view::substr。",
+        "compare 返回负/零/正；C++20 起 string 支持 operator&lt;=&gt; 与自动比较。",
+        "比较按字符值（char 的符号性依平台），不是按语言的排序规则。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> s = <span class="str">"2026-08-11"</span>;
+<span class="kw">auto</span> y = s.<span class="fn">substr</span>(<span class="num">0</span>, <span class="num">4</span>);       <span class="cm">// 分配一个新 string</span>
+
+<span class="tp">std</span>::<span class="tp">string_view</span> sv{s};
+<span class="kw">auto</span> y2 = sv.<span class="fn">substr</span>(<span class="num">0</span>, <span class="num">4</span>);   <span class="cm">// 零拷贝</span>
+
+<span class="kw">if</span> (s.<span class="fn">compare</span>(<span class="num">0</span>, <span class="num">4</span>, <span class="str">"2026"</span>) == <span class="num">0</span>) <span class="fn">ok</span>();`,
+      card: null,
+    },
+    {
+      id: "resize", layer: "api", title: "尺寸控制", lines: ["尺寸", "控制"],
+      en: "Size Control", tag: "RESIZE", x: 1300, y: 400, r: 34,
+      summary: "size/length 同义，empty 判空，resize 改变实际长度并填充字符，C++23 的 resize_and_overwrite 让 string 能安全当作输出缓冲。",
+      points: [
+        "size() 与 length() 完全等价；返回的是字符数（对 UTF-8 即字节数）。",
+        "resize(n) 变长时用 CharT() 或指定字符填充，变短则截断，不缩 capacity。",
+        "老写法 resize 后 memcpy 会白填一遍零；C++23 resize_and_overwrite 免去这次填充。",
+        "max_size() 是理论上限，实际受分配器与地址空间限制。",
+      ],
+      code: `<span class="cm">// C++23：把 string 当输出缓冲，且不预填零</span>
+<span class="tp">std</span>::<span class="tp">string</span> out;
+out.<span class="fn">resize_and_overwrite</span>(<span class="num">64</span>, [&amp;](<span class="kw">char</span>* p, <span class="tp">size_t</span> n) {
+  <span class="kw">return</span> <span class="fn">snprintf</span>(p, n, <span class="str">"%d"</span>, <span class="num">42</span>);   <span class="cm">// 返回真实长度</span>
+});`,
+      card: null,
+    },
+    {
+      id: "iter", layer: "api", title: "迭代与算法", lines: ["迭代", "与算法"],
+      en: "Iterators", tag: "ITERATOR", x: 1755, y: 725, r: 34,
+      summary: "string 提供连续迭代器（C++17 起为 contiguous_iterator），因此几乎所有 STL 算法与 ranges 都能直接作用于它。",
+      points: [
+        "迭代器类别为随机访问/连续，支持 sort、reverse、count_if 等全部算法。",
+        "erase-remove 惯用法可用于删字符；C++20 起可直接用 std::erase。",
+        "范围 for 遍历的是字符（字节），对多字节编码不是「按字」遍历。",
+        "任何修改后旧迭代器失效，遍历中删除要用返回值续接。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> s = <span class="str">"a1b2c3"</span>;
+
+<span class="cm">// C++20：一行删掉全部数字</span>
+<span class="tp">std</span>::<span class="fn">erase_if</span>(s, [](<span class="kw">char</span> c){ <span class="kw">return</span> <span class="fn">isdigit</span>(c); });
+
+<span class="tp">std</span>::<span class="fn">sort</span>(s.<span class="fn">begin</span>(), s.<span class="fn">end</span>());
+<span class="tp">std</span>::<span class="fn">reverse</span>(s.<span class="fn">begin</span>(), s.<span class="fn">end</span>());`,
+      card: { num: "041", slug: "041-stl-iterators" },
+    },
+
+    /* ───────── 视图与转换 ───────── */
+    {
+      id: "interop", layer: "view", title: "视图与转换", lines: ["视图", "与转换"],
+      en: "View &amp; Conversion", tag: "INTEROP", x: 1150, y: 300, r: 42,
+      summary: "围绕 string 的生态层：只读视图（string_view）、数值互转（stoi / from_chars）、格式化（format）、流式处理（stringstream）。",
+      points: [
+        "选型主线：只读传参用 string_view，构造内容用 format，解析数字用 from_chars。",
+        "凡是「返回新 string」的转换都意味着一次可能的分配。",
+        "C 接口交互仍需 c_str()，此时 string 而非 string_view 才是正确载体。",
+        "现代替换关系：ostringstream → format，atoi/stoi → from_chars。",
+      ],
+      code: `<span class="cm">// 各取所长</span>
+<span class="kw">void</span> <span class="fn">log</span>(<span class="tp">std</span>::<span class="tp">string_view</span> msg);        <span class="cm">// 只读传参</span>
+<span class="kw">auto</span> s = <span class="tp">std</span>::<span class="fn">format</span>(<span class="str">"{}:{}"</span>, ip, port); <span class="cm">// 构造</span>
+<span class="kw">int</span> v{};
+<span class="tp">std</span>::<span class="fn">from_chars</span>(t.<span class="fn">data</span>(), t.<span class="fn">data</span>() + t.<span class="fn">size</span>(), v); <span class="cm">// 解析</span>`,
+      card: null,
+    },
+    {
+      id: "string_view", layer: "view", title: "string_view", lines: ["string", "view"],
+      en: "Non-owning View", tag: "VIEW", x: 1075, y: 95, r: 40,
+      summary: "C++17 的「指针 + 长度」只读视图：构造、切片、传参全部零拷贝，代价是不拥有数据、且不保证以 '\\0' 结尾。",
+      points: [
+        "从 string 与 const char* 都能隐式构造，因此是只读参数的首选类型。",
+        "substr / remove_prefix / remove_suffix 都是 O(1)，只挪指针和长度。",
+        "没有空终止保证：data() 绝对不能直接传给 C 的字符串 API。",
+        "不拥有生命周期：绑到临时 string 上会立刻悬垂。",
+        "constexpr 友好，且与 string 的 std::hash 结果一致，可做异构查找。",
+      ],
+      code: `<span class="kw">void</span> <span class="fn">parse</span>(<span class="tp">std</span>::<span class="tp">string_view</span> sv) {
+  <span class="kw">auto</span> p = sv.<span class="fn">find</span>(<span class="str">'='</span>);
+  <span class="kw">auto</span> key = sv.<span class="fn">substr</span>(<span class="num">0</span>, p);   <span class="cm">// 零拷贝</span>
+}
+
+<span class="fn">parse</span>(<span class="str">"a=1"</span>);        <span class="cm">// 无分配</span>
+<span class="fn">parse</span>(str);          <span class="cm">// 无分配</span>
+
+<span class="tp">std</span>::<span class="tp">string_view</span> bad = <span class="fn">get_string</span>();  <span class="cm">// 悬垂！</span>`,
+      card: null,
+    },
+    {
+      id: "numconv", layer: "view", title: "数值互转", lines: ["数值", "互转"],
+      en: "to_string / stoi", tag: "NUM CONV", x: 1400, y: 175, r: 34,
+      summary: "to_string 与 stoi/stod 系列是最方便的转换，但都会分配、抛异常，且 to_string(double) 精度受限，性能敏感处应换 charconv。",
+      points: [
+        "stoi / stol / stod 失败抛 invalid_argument，越界抛 out_of_range。",
+        "atoi 不报错、溢出即 UB，新代码不要再用。",
+        "to_string(double) 相当于 %f，只有 6 位小数，会丢精度。",
+        "stoi 可返回已解析长度（第二参数 pos），用于手写解析器。",
+      ],
+      code: `<span class="kw">try</span> {
+  <span class="kw">int</span> v = <span class="tp">std</span>::<span class="fn">stoi</span>(<span class="str">"123abc"</span>);   <span class="cm">// 123，宽松解析</span>
+  <span class="kw">int</span> w = <span class="tp">std</span>::<span class="fn">stoi</span>(<span class="str">"abc"</span>);      <span class="cm">// throw invalid_argument</span>
+} <span class="kw">catch</span> (<span class="kw">const</span> <span class="tp">std</span>::<span class="tp">exception</span>&amp; e) {}
+
+<span class="tp">std</span>::<span class="fn">to_string</span>(<span class="num">0.1</span>);   <span class="cm">// "0.100000"，非最短表示</span>`,
+      card: null,
+    },
+    {
+      id: "charconv", layer: "view", title: "charconv", lines: ["char", "conv"],
+      en: "from_chars / to_chars", tag: "CHARCONV", x: 1625, y: 250, r: 34,
+      summary: "C++17 的 &lt;charconv&gt;：不分配、不抛异常、不看 locale 的最快数值转换，浮点还保证「最短且可往返」的表示。",
+      points: [
+        "from_chars 返回 {ptr, errc}，用错误码而非异常报告失败，且不跳过空白。",
+        "to_chars 写入调用者提供的缓冲区，零分配；浮点输出最短可往返表示。",
+        "完全不依赖 locale，跨环境结果一致，适合协议与序列化。",
+        "C++23 起是 constexpr；解析热路径相比 stoi 通常有数倍差距。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string_view</span> sv = <span class="str">"4096"</span>;
+<span class="kw">int</span> v{};
+<span class="kw">auto</span> [ptr, ec] = <span class="tp">std</span>::<span class="fn">from_chars</span>(sv.<span class="fn">data</span>(),
+                                 sv.<span class="fn">data</span>() + sv.<span class="fn">size</span>(), v);
+<span class="kw">if</span> (ec == <span class="tp">std</span>::<span class="tp">errc</span>{}) <span class="fn">use</span>(v);
+
+<span class="kw">char</span> buf[<span class="num">32</span>];
+<span class="kw">auto</span> r = <span class="tp">std</span>::<span class="fn">to_chars</span>(buf, buf + <span class="kw">sizeof</span> buf, <span class="num">3.14</span>);
+<span class="tp">std</span>::<span class="tp">string_view</span> out{buf, r.ptr};`,
+      card: null,
+    },
+    {
+      id: "format", layer: "view", title: "std::format", lines: ["std", "format"],
+      en: "Formatting", tag: "FORMAT", x: 1555, y: 100, r: 34,
+      summary: "C++20 的类型安全格式化：编译期检查格式串，一次构造出结果字符串，取代 sprintf 与 ostringstream 的拼接方式。",
+      points: [
+        "格式串在编译期校验，参数类型不匹配直接编译失败。",
+        "format_to / format_to_n 可写入已有缓冲，避免中间 string。",
+        "自定义类型只需特化 std::formatter，无需重载 operator&lt;&lt;。",
+        "C++23 补上 std::print / std::println；旧编译器可用 fmt 库过渡。",
+      ],
+      code: `<span class="kw">auto</span> s = <span class="tp">std</span>::<span class="fn">format</span>(<span class="str">"{}:{:04d} {:.2f}"</span>, ip, port, load);
+
+<span class="cm">// 直接写进已有缓冲，不产生临时 string</span>
+<span class="tp">std</span>::<span class="fn">format_to</span>(<span class="tp">std</span>::<span class="fn">back_inserter</span>(out), <span class="str">"id={}\\n"</span>, id);
+
+<span class="cm">// C++23</span>
+<span class="tp">std</span>::<span class="fn">println</span>(<span class="str">"done: {}"</span>, count);`,
+      card: null,
+    },
+    {
+      id: "stream", layer: "view", title: "流与分割", lines: ["流", "与分割"],
+      en: "Streams &amp; Split", tag: "STREAM", x: 1430, y: 335, r: 34,
+      summary: "stringstream + getline 是最通用的解析/分割手段，写法短但开销大（构造流对象、locale、虚函数），热路径应改为手写或 ranges。",
+      points: [
+        "getline(is, s, delim) 是最简洁的按分隔符切分写法。",
+        "stringstream 每次构造都有可观开销，循环里复用或干脆别用。",
+        "手写分割：find + substr，或用 string_view 做零拷贝切片。",
+        "C++20 ranges 提供 views::split / views::join 的声明式写法。",
+      ],
+      code: `<span class="cm">// 通用但偏慢</span>
+<span class="tp">std</span>::<span class="tp">istringstream</span> is{line};
+<span class="tp">std</span>::<span class="tp">string</span> field;
+<span class="kw">while</span> (<span class="tp">std</span>::<span class="fn">getline</span>(is, field, <span class="str">','</span>)) <span class="fn">use</span>(field);
+
+<span class="cm">// 零拷贝手写分割</span>
+<span class="tp">std</span>::<span class="tp">string_view</span> sv{line};
+<span class="kw">while</span> (!sv.<span class="fn">empty</span>()) {
+  <span class="kw">auto</span> p = sv.<span class="fn">find</span>(<span class="str">','</span>);
+  <span class="fn">use</span>(sv.<span class="fn">substr</span>(<span class="num">0</span>, p));
+  <span class="kw">if</span> (p == sv.npos) <span class="kw">break</span>;
+  sv.<span class="fn">remove_prefix</span>(p + <span class="num">1</span>);
+}`,
+      card: null,
+    },
+
+    /* ───────── 字符与编码 ───────── */
+    {
+      id: "charset", layer: "char", title: "字符与编码", lines: ["字符", "与编码"],
+      en: "Characters", tag: "CHARSET", x: 980, y: 1010, r: 42,
+      summary: "string 只是「字节容器」：它不知道编码，也不做任何 Unicode 处理。所有和「字」有关的语义都要由上层自己负责。",
+      points: [
+        "五种字符类型对应五种 basic_string 别名，彼此不可混用。",
+        "size() 是码元个数；UTF-8 下一个汉字通常占 3 个字节。",
+        "大小写转换、比较、排序都不具备 Unicode 语义。",
+        "标准至今没有真正的 Unicode 处理库，实践中依赖 ICU 等第三方实现。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> s = <span class="str">"中文"</span>;
+s.<span class="fn">size</span>();      <span class="cm">// 6（UTF-8 字节数），不是 2</span>
+s[<span class="num">0</span>];          <span class="cm">// 半个字符的第一个字节</span>
+s.<span class="fn">substr</span>(<span class="num">0</span>, <span class="num">1</span>); <span class="cm">// 截断出非法 UTF-8 序列</span>`,
+      card: null,
+    },
+    {
+      id: "chartypes", layer: "char", title: "字符类型", lines: ["字符", "类型"],
+      en: "Char Types", tag: "CHAR TYPE", x: 900, y: 1230, r: 36,
+      summary: "char / wchar_t / char8_t / char16_t / char32_t 各自对应一个 string 别名；只有 char32_t 能保证「一个码元 = 一个码点」。",
+      points: [
+        "char 的符号性由平台决定，比较字节请显式转 unsigned char。",
+        "wchar_t 宽度不可移植：Windows 2 字节（UTF-16），Linux 4 字节（UTF-32）。",
+        "char8_t 是 C++20 引入的独立类型，u8\"\" 字面量类型随之改变。",
+        "u16string 中一个 emoji 占 2 个码元（代理对），仍非「一字一元」。",
+        "跨类型转换需要显式的编码转换，不能 reinterpret_cast 了事。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span>    a = <span class="str">"ascii"</span>;      <span class="cm">// char</span>
+<span class="tp">std</span>::<span class="tp">u8string</span>  b = <span class="str">u8"utf-8"</span>;    <span class="cm">// char8_t (C++20)</span>
+<span class="tp">std</span>::<span class="tp">u16string</span> c = <span class="str">u"utf-16"</span>;   <span class="cm">// char16_t</span>
+<span class="tp">std</span>::<span class="tp">u32string</span> d = <span class="str">U"code point"</span>; <span class="cm">// char32_t</span>
+
+<span class="kw">if</span> (<span class="kw">static_cast</span>&lt;<span class="kw">unsigned</span> <span class="kw">char</span>&gt;(a[<span class="num">0</span>]) &gt; <span class="num">0x7f</span>) <span class="fn">nonAscii</span>();`,
+      card: null,
+    },
+    {
+      id: "encoding", layer: "char", title: "编码陷阱", lines: ["编码", "陷阱"],
+      en: "Encoding Pitfalls", tag: "ENCODING", x: 1180, y: 1180, r: 36,
+      summary: "把 string 当「字符序列」而不是「字节序列」，是中文场景最高频的线上事故：截断乱码、长度不符、逐字符处理失效。",
+      points: [
+        "按字节截断会切碎多字节序列，产生非法编码并导致下游解析失败。",
+        "toupper / tolower 逐字节处理，对非 ASCII 结果错误甚至 UB（需转 unsigned char）。",
+        "反转字符串会破坏多字节序列，字节序反转 ≠ 字符序反转。",
+        "对齐显示的宽度问题：码点数、码元数、显示宽度是三回事。",
+        "正确做法：入口统一编码，内部只当字节搬运，需要按字处理时用专门库。",
+      ],
+      code: `<span class="cm">// UTF-8 安全截断：跳过续字节 10xxxxxx</span>
+<span class="tp">size_t</span> <span class="fn">safeCut</span>(<span class="tp">std</span>::<span class="tp">string_view</span> s, <span class="tp">size_t</span> n) {
+  <span class="kw">if</span> (n &gt;= s.<span class="fn">size</span>()) <span class="kw">return</span> s.<span class="fn">size</span>();
+  <span class="kw">while</span> (n &gt; <span class="num">0</span> &amp;&amp;
+         (<span class="kw">static_cast</span>&lt;<span class="kw">unsigned</span> <span class="kw">char</span>&gt;(s[n]) &amp; <span class="num">0xC0</span>) == <span class="num">0x80</span>)
+    --n;
+  <span class="kw">return</span> n;
+}`,
+      card: null,
+    },
+    {
+      id: "literals", layer: "char", title: "字面量", lines: ["字面", "量"],
+      en: "Literals", tag: "LITERAL", x: 1230, y: 1010, r: 34,
+      summary: "\"abc\" 是 const char[N]，不是 string；用 \"abc\"s 得到 string、\"abc\"sv 得到 string_view，R\"(...)\" 写原始字符串。",
+      points: [
+        "字面量本身没有 string 语义：\"a\" + \"b\" 是指针相加，编译错误。",
+        "\"...\"s 需要 using namespace std::string_literals（C++14）。",
+        "\"...\"sv 是 constexpr 的 string_view，且能安全携带内嵌 '\\0'。",
+        "R\"(...)\" 原始字符串省掉正则、路径里的反斜杠转义。",
+        "相邻字面量自动拼接，可用于跨行书写长常量。",
+      ],
+      code: `<span class="kw">using namespace</span> <span class="tp">std</span>::<span class="tp">string_literals</span>;
+
+<span class="kw">auto</span> a = <span class="str">"abc"</span>;        <span class="cm">// const char*</span>
+<span class="kw">auto</span> b = <span class="str">"abc"</span>s;       <span class="cm">// std::string</span>
+<span class="kw">auto</span> c = <span class="str">"abc"</span>sv;      <span class="cm">// std::string_view</span>
+
+<span class="kw">auto</span> re = <span class="str">R"(\\d+\\.\\d+)"</span>;  <span class="cm">// 无需转义反斜杠</span>`,
+      card: null,
+    },
+    {
+      id: "hash", layer: "char", title: "哈希与键", lines: ["哈希", "与键"],
+      en: "Hash &amp; Key", tag: "HASH", x: 755, y: 1230, r: 34,
+      summary: "std::hash&lt;string&gt; 让 string 能直接做哈希容器的 key；难点在于「用 string_view / const char* 查找时不要构造临时 string」。",
+      points: [
+        "标准保证 hash&lt;string&gt; 与 hash&lt;string_view&gt; 对同一字符序列结果相同。",
+        "unordered_map&lt;string, T&gt; 用 const char* 查找会构造临时 string（分配）。",
+        "异构查找：map 用 std::less&lt;&gt; 即可（C++14），unordered 需 C++20 + 透明哈希。",
+        "作为 key 的 string 通常较短，SSO 让节点内数据局部性还不错。",
+        "哈希值不保证跨进程/跨版本稳定，不能持久化。",
+      ],
+      code: `<span class="cm">// C++20：异构查找，避免临时 string</span>
+<span class="kw">struct</span> <span class="tp">SvHash</span> {
+  <span class="kw">using</span> is_transparent = <span class="kw">void</span>;
+  <span class="tp">size_t</span> <span class="kw">operator</span>()(<span class="tp">std</span>::<span class="tp">string_view</span> s) <span class="kw">const</span> {
+    <span class="kw">return</span> <span class="tp">std</span>::<span class="tp">hash</span>&lt;<span class="tp">std</span>::<span class="tp">string_view</span>&gt;{}(s);
+  }
+};
+<span class="tp">std</span>::<span class="tp">unordered_map</span>&lt;<span class="tp">std</span>::<span class="tp">string</span>, <span class="kw">int</span>,
+                   <span class="tp">SvHash</span>, <span class="tp">std</span>::<span class="tp">equal_to</span>&lt;&gt;&gt; m;
+m.<span class="fn">find</span>(<span class="str">"key"</span>sv);   <span class="cm">// 无分配</span>`,
+      card: { num: "039", slug: "039-map-unordered-map" },
+    },
+    {
+      id: "constexprstr", layer: "char", title: "constexpr string", lines: ["constexpr", "string"],
+      en: "Compile-time", tag: "CONSTEXPR", x: 1450, y: 1130, r: 36,
+      summary: "C++20 让 string 的构造、修改、析构都能在常量求值中进行，前提是分配的内存不能「逃逸」出编译期。",
+      points: [
+        "编译期分配必须在同一次常量求值内释放，否则编译报错。",
+        "所以 constexpr 函数可以内部用 string，但不能 constexpr 变量长期持有堆表示。",
+        "编译期只想要只读字符串，用 string_view 或 constexpr array 更稳。",
+        "编译器支持不齐：GCC 12+ 较完整，需实测目标工具链。",
+      ],
+      code: `<span class="kw">constexpr</span> <span class="tp">size_t</span> <span class="fn">countA</span>(<span class="tp">std</span>::<span class="tp">string_view</span> in) {
+  <span class="tp">std</span>::<span class="tp">string</span> tmp{in};        <span class="cm">// C++20：编译期可用</span>
+  <span class="kw">return</span> <span class="tp">std</span>::<span class="fn">count</span>(tmp.<span class="fn">begin</span>(), tmp.<span class="fn">end</span>(), <span class="str">'a'</span>);
+}
+<span class="kw">static_assert</span>(<span class="fn">countA</span>(<span class="str">"banana"</span>) == <span class="num">3</span>);
+
+<span class="cm">// constexpr std::string s = "..."; // 长串会因内存逃逸失败</span>`,
+      card: { num: "027", slug: "027-const-constexpr" },
+    },
+
+    /* ───────── 高频陷阱 ───────── */
+    {
+      id: "trap", layer: "trap", title: "高频陷阱", lines: ["高频", "陷阱"],
+      en: "Pitfalls", tag: "PITFALL", x: 1620, y: 950, r: 42,
+      summary: "面试与 code review 里反复出现的四类 string 事故：裸指针悬垂、视图悬垂、npos/无符号误用、无意的隐式拷贝。",
+      points: [
+        "共同根因：string 是「值 + 内部缓冲」，指针与视图都不参与生命周期管理。",
+        "凡是把 data() / c_str() / string_view 存起来，就要能说清底层对象活多久。",
+        "size_type 是无符号的，任何减法都要先判空。",
+        "隐式转换是双刃剑：写起来顺，但会悄悄分配。",
+      ],
+      code: `<span class="cm">// 四个典型现场</span>
+<span class="kw">const</span> <span class="kw">char</span>* p  = <span class="fn">get</span>().<span class="fn">c_str</span>();     <span class="cm">// 1 悬垂指针</span>
+<span class="tp">std</span>::<span class="tp">string_view</span> v = <span class="fn">get</span>();          <span class="cm">// 2 悬垂视图</span>
+<span class="kw">if</span> (s.<span class="fn">find</span>(<span class="str">'x'</span>) &gt;= <span class="num">0</span>) {}             <span class="cm">// 3 恒真</span>
+<span class="kw">for</span> (<span class="tp">std</span>::<span class="tp">string</span> x : vec) {}          <span class="cm">// 4 每轮拷贝</span>`,
+      card: null,
+    },
+    {
+      id: "dangling", layer: "trap", title: "c_str 悬垂", lines: ["c_str", "悬垂"],
+      en: "Dangling Pointer", tag: "DANGLING", x: 1880, y: 860, r: 34,
+      summary: "c_str() / data() 只是借用 string 的内部缓冲：一旦源对象析构、被赋值或扩容，这个指针立即变成悬垂指针。",
+      points: [
+        "最经典写法：把返回 string 的函数结果直接 .c_str()，临时对象在语句末析构。",
+        "把 string 存进容器后再扩容，元素地址变化，缓存的指针一起失效。",
+        "传给 C API 要保证在整个调用期间源 string 存活且不被修改。",
+        "确实需要长期持有裸指针时，让 string 成为成员或用 unique_ptr 明确所有权。",
+      ],
+      code: `<span class="tp">std</span>::<span class="tp">string</span> <span class="fn">name</span>();
+
+<span class="cm">// 错：临时 string 在分号处销毁</span>
+<span class="kw">const</span> <span class="kw">char</span>* p = <span class="fn">name</span>().<span class="fn">c_str</span>();
+<span class="fn">use</span>(p);                    <span class="cm">// UB</span>
+
+<span class="cm">// 对：先落地成命名对象</span>
+<span class="tp">std</span>::<span class="tp">string</span> s = <span class="fn">name</span>();
+<span class="fn">use</span>(s.<span class="fn">c_str</span>());`,
+      card: null,
+    },
+    {
+      id: "svdangle", layer: "trap", title: "视图悬垂", lines: ["视图", "悬垂"],
+      en: "Dangling View", tag: "VIEW LIFE", x: 1900, y: 1050, r: 34,
+      summary: "string_view 让「零拷贝」变得廉价，也让悬垂变得廉价：它不延长临时对象寿命，返回视图、成员保存视图都极易出事。",
+      points: [
+        "别把 string_view 绑到临时 string 上：临时对象在语句结束即析构。",
+        "函数不要返回指向局部 string 的 string_view。",
+        "类成员存 string_view 意味着「所有者必须活得更久」，需在接口上写明。",
+        "跨线程/异步传递一律传 string（持有所有权），不要传视图。",
+        "只在「同一表达式或调用栈内只读」的场景使用视图，才是安全区。",
+      ],
+      code: `<span class="cm">// 错：视图指向已析构的临时对象</span>
+<span class="tp">std</span>::<span class="tp">string_view</span> sv = <span class="fn">makeString</span>();
+
+<span class="cm">// 错：返回局部对象的视图</span>
+<span class="tp">std</span>::<span class="tp">string_view</span> <span class="fn">bad</span>() {
+  <span class="tp">std</span>::<span class="tp">string</span> t = <span class="str">"tmp"</span>;
+  <span class="kw">return</span> t;
+}
+
+<span class="cm">// 对：异步/存储场景持有所有权</span>
+<span class="fn">post</span>([s = <span class="tp">std</span>::<span class="tp">string</span>{sv}] { <span class="fn">use</span>(s); });`,
+      card: null,
+    },
+    {
+      id: "npostrap", layer: "trap", title: "npos 与无符号", lines: ["npos", "无符号"],
+      en: "npos &amp; Unsigned", tag: "NPOS", x: 1700, y: 1180, r: 34,
+      summary: "查找失败返回 npos（即 size_type(-1)，一个极大的无符号数），加上 size() 也是无符号，构成一类必然出错的比较与减法。",
+      points: [
+        "npos == static_cast&lt;size_t&gt;(-1)：任何 &gt;= 0 的判断都恒真。",
+        "只能写 pos != std::string::npos，不要接到 int 变量里再判负。",
+        "s.size() - 1 在空串上会得到巨大的值，循环直接越界。",
+        "find 系列返回下标而非迭代器；std::find 返回迭代器，两套写法别混。",
+      ],
+      code: `<span class="cm">// 错：恒真 / 溢出</span>
+<span class="kw">int</span> pos = s.<span class="fn">find</span>(<span class="str">'x'</span>);        <span class="cm">// 截断为 -1</span>
+<span class="kw">if</span> (s.<span class="fn">find</span>(<span class="str">'x'</span>) &gt;= <span class="num">0</span>) {}     <span class="cm">// 永远成立</span>
+<span class="kw">for</span> (<span class="tp">size_t</span> i = <span class="num">0</span>; i &lt;= s.<span class="fn">size</span>() - <span class="num">1</span>; ++i) {}
+
+<span class="cm">// 对</span>
+<span class="kw">if</span> (<span class="kw">auto</span> p = s.<span class="fn">find</span>(<span class="str">'x'</span>); p != <span class="tp">std</span>::<span class="tp">string</span>::npos) <span class="fn">use</span>(p);
+<span class="kw">if</span> (!s.<span class="fn">empty</span>()) <span class="fn">use</span>(s.<span class="fn">back</span>());`,
+      card: null,
+    },
+    {
+      id: "tempstr", layer: "trap", title: "隐式拷贝", lines: ["隐式", "拷贝"],
+      en: "Hidden Copies", tag: "TEMP", x: 1400, y: 960, r: 34,
+      summary: "const char* 到 string 的隐式转换、按值传参、operator+ 链、范围 for 漏写引用——四种写法都会在你没察觉时分配内存。",
+      points: [
+        "只读参数写成 const std::string&amp; 时，传字面量仍会构造一次临时 string。",
+        "改成 string_view 参数即可让字面量与 string 都零分配。",
+        "map&lt;string, T&gt;::find(\"key\") 会构造临时 string，除非启用异构查找。",
+        "for (auto x : vecOfString) 每轮深拷贝，应写 const auto&amp;。",
+        "operator+ 链在现代实现里能复用右值缓冲，但仍不如 += / format 明确。",
+      ],
+      code: `<span class="kw">void</span> <span class="fn">f</span>(<span class="kw">const</span> <span class="tp">std</span>::<span class="tp">string</span>&amp; s);
+<span class="fn">f</span>(<span class="str">"literal"</span>);      <span class="cm">// 构造临时 string（可能分配）</span>
+
+<span class="kw">void</span> <span class="fn">g</span>(<span class="tp">std</span>::<span class="tp">string_view</span> s);
+<span class="fn">g</span>(<span class="str">"literal"</span>);      <span class="cm">// 零分配</span>
+<span class="fn">g</span>(existing);       <span class="cm">// 零分配</span>
+
+<span class="kw">for</span> (<span class="kw">const</span> <span class="kw">auto</span>&amp; x : vec) <span class="fn">use</span>(x);  <span class="cm">// 别漏 &amp;</span>`,
+      card: { num: "019", slug: "019-explicit-keyword" },
+    },
+  ];
+
+  const EDGES = [
+    /* 总览 → 六大板块 */
+    { from: "string", to: "basic_string", kind: "impl",  label: "模板实例" },
+    { from: "string", to: "api",          kind: "impl",  label: "接口面" },
+    { from: "string", to: "interop",      kind: "impl",  label: "生态层" },
+    { from: "string", to: "charset",      kind: "impl",  label: "字符语义" },
+    { from: "string", to: "growth",       kind: "mech",  label: "内存增长" },
+    { from: "string", to: "trap",         kind: "const", label: "使用陷阱" },
+    { from: "string", to: "copymove",     kind: "const", label: "值语义" },
+
+    /* 内部表示 */
+    { from: "basic_string", to: "sso",      kind: "mech",  label: "短串内联" },
+    { from: "basic_string", to: "heapbuf",  kind: "mech",  label: "长串堆存" },
+    { from: "basic_string", to: "layout",   kind: "mech",  label: "对象布局" },
+    { from: "basic_string", to: "traits",   kind: "impl",  label: "字符特性" },
+    { from: "basic_string", to: "nullterm", kind: "const", label: "空终止" },
+    { from: "basic_string", to: "cow",      kind: "adv",   label: "历史实现" },
+    { from: "sso", to: "heapbuf",           kind: "const", label: "阈值切换" },
+    { from: "sso", to: "layout",            kind: "const", label: "共用空间" },
+    { from: "traits", to: "chartypes",      kind: "const", label: "特化 CharT" },
+
+    /* 内存与性能 */
+    { from: "growth", to: "reserve",    kind: "const", label: "预留消除搬迁" },
+    { from: "growth", to: "invalidate", kind: "const", label: "重分配失效" },
+    { from: "growth", to: "heapbuf",    kind: "mech",  label: "堆缓冲扩张" },
+    { from: "reserve", to: "sso",       kind: "const", label: "短串无需分配" },
+    { from: "alloc", to: "basic_string", kind: "const", label: "分配器参数" },
+    { from: "alloc", to: "growth",      kind: "const", label: "内存来源" },
+    { from: "cow", to: "copymove",      kind: "adv",   label: "被移动语义取代" },
+    { from: "copymove", to: "sso",      kind: "adv",   label: "短串移动即拷贝" },
+    { from: "invalidate", to: "iter",   kind: "const", label: "迭代器语义" },
+
+    /* 接口与操作 */
+    { from: "api", to: "ctor",    kind: "impl", label: "构造赋值" },
+    { from: "api", to: "access",  kind: "impl", label: "元素访问" },
+    { from: "api", to: "modify",  kind: "impl", label: "修改" },
+    { from: "api", to: "find",    kind: "impl", label: "查找" },
+    { from: "api", to: "substr",  kind: "impl", label: "切片比较" },
+    { from: "api", to: "resize",  kind: "impl", label: "尺寸" },
+    { from: "api", to: "iter",    kind: "impl", label: "遍历" },
+    { from: "access", to: "nullterm", kind: "const", label: "c_str 保证" },
+    { from: "access", to: "dangling", kind: "const", label: "裸指针风险" },
+    { from: "modify", to: "growth",    kind: "const", label: "触发扩容" },
+    { from: "modify", to: "invalidate", kind: "const", label: "插删失效" },
+    { from: "find", to: "npostrap",    kind: "const", label: "npos 判定" },
+    { from: "resize", to: "growth",    kind: "const", label: "改变长度" },
+    { from: "substr", to: "string_view", kind: "adv", label: "零拷贝替代" },
+    { from: "ctor", to: "tempstr",     kind: "const", label: "隐式构造" },
+
+    /* 视图与转换 */
+    { from: "interop", to: "string_view", kind: "impl", label: "只读视图" },
+    { from: "interop", to: "numconv",     kind: "impl", label: "数值互转" },
+    { from: "interop", to: "charconv",    kind: "impl", label: "零分配转换" },
+    { from: "interop", to: "format",      kind: "impl", label: "格式化" },
+    { from: "interop", to: "stream",      kind: "impl", label: "流与分割" },
+    { from: "string_view", to: "svdangle", kind: "const", label: "生命周期" },
+    { from: "string_view", to: "tempstr",  kind: "adv",   label: "消除临时串" },
+    { from: "numconv", to: "charconv",     kind: "adv",   label: "更快且不抛" },
+    { from: "format", to: "stream",        kind: "adv",   label: "取代 ostringstream" },
+
+    /* 字符与编码 */
+    { from: "charset", to: "chartypes",    kind: "impl", label: "字符类型" },
+    { from: "charset", to: "encoding",     kind: "impl", label: "编码语义" },
+    { from: "charset", to: "literals",     kind: "impl", label: "字面量" },
+    { from: "charset", to: "hash",         kind: "impl", label: "作容器键" },
+    { from: "charset", to: "constexprstr", kind: "adv",  label: "编译期字符串" },
+    { from: "encoding", to: "chartypes",   kind: "const", label: "码元宽度" },
+    { from: "hash", to: "string_view",     kind: "const", label: "同哈希值" },
+    { from: "literals", to: "tempstr",     kind: "const", label: "明确类型" },
+    { from: "constexprstr", to: "string_view", kind: "adv", label: "编译期首选" },
+
+    /* 高频陷阱 */
+    { from: "trap", to: "dangling",  kind: "impl", label: "悬垂指针" },
+    { from: "trap", to: "svdangle",  kind: "impl", label: "视图悬垂" },
+    { from: "trap", to: "npostrap",  kind: "impl", label: "无符号误用" },
+    { from: "trap", to: "tempstr",   kind: "impl", label: "无意拷贝" },
+    { from: "dangling", to: "nullterm", kind: "const", label: "缓冲区寿命" },
+    { from: "svdangle", to: "substr",   kind: "adv",   label: "复制 vs 视图" },
+  ];
+
+  const PATHS = [
+    {
+      id: "core",
+      title: "核心主线",
+      desc: "string → basic_string → SSO / 堆缓冲 → 扩容",
+      nodes: ["string", "basic_string", "sso", "heapbuf", "layout", "growth", "copymove"],
+    },
+    {
+      id: "sso",
+      title: "SSO 深挖",
+      desc: "阈值 · 布局 · 扩容 · 移动 · COW 历史",
+      nodes: ["sso", "heapbuf", "layout", "cow", "growth", "reserve", "copymove", "alloc"],
+    },
+    {
+      id: "api",
+      title: "接口速查",
+      desc: "构造 · 访问 · 修改 · 查找 · 切片 · 尺寸",
+      nodes: ["api", "ctor", "access", "modify", "find", "substr", "resize", "iter"],
+    },
+    {
+      id: "perf",
+      title: "性能优化",
+      desc: "reserve · string_view · charconv · format",
+      nodes: ["reserve", "growth", "string_view", "charconv", "format", "tempstr", "resize", "alloc"],
+    },
+    {
+      id: "pitfall",
+      title: "高频陷阱",
+      desc: "悬垂 · npos · 隐式拷贝 · 编码截断",
+      nodes: ["trap", "dangling", "svdangle", "npostrap", "tempstr", "invalidate", "nullterm", "encoding"],
+    },
+    {
+      id: "unicode",
+      title: "字符与编码",
+      desc: "字节 vs 字符 · 五种字符类型 · 字面量",
+      nodes: ["charset", "chartypes", "encoding", "literals", "traits", "hash"],
+    },
+  ];
+
+  const EDGE_COLOR = {
+    impl: "#0d9488",
+    mech: "#2563eb",
+    const: "#d97706",
+    adv: "#7c3aed",
+  };
+
+  // count layers + remember home positions
+  for (const n of NODES) {
+    const L = LAYERS.find(l => l.id === n.layer);
+    if (L) L.count++;
+    n.homeX = n.x;
+    n.homeY = n.y;
+  }
+
+  const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
+  let activeLayer = "all";
+  let selectedId = null;
+  let pathHighlight = null;
+  let searchQuery = "";
+
+  // camera / drag
+  const cam = { x: 0, y: 0, k: 1 };
+  let panning = false;
+  let nodeDrag = null; // { id, el, n, moved, originX, originY }
+  let last = { x: 0, y: 0 };
+
+  const stage = document.getElementById("stage");
+  const detail = document.getElementById("detail");
+  const detailBody = document.getElementById("detail-body");
+  const layerList = document.getElementById("layer-list");
+  const pathList = document.getElementById("path-list");
+  const layerCount = document.getElementById("layer-count");
+  const hintBar = document.getElementById("hint-bar");
+
+  // SVG setup
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("xmlns", svgNS);
+  const defs = document.createElementNS(svgNS, "defs");
+  defs.innerHTML = `
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <radialGradient id="hubGrad" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="55%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#115e59"/>
+    </radialGradient>
+  `;
+  svg.appendChild(defs);
+
+  const gWorld = document.createElementNS(svgNS, "g");
+  gWorld.setAttribute("id", "world");
+  const gEdges = document.createElementNS(svgNS, "g");
+  const gEdgeLabels = document.createElementNS(svgNS, "g");
+  const gNodes = document.createElementNS(svgNS, "g");
+  gWorld.append(gEdges, gEdgeLabels, gNodes);
+  svg.appendChild(gWorld);
+  stage.appendChild(svg);
+
+  function layerColor(id) {
+    return LAYERS.find(l => l.id === id)?.color || "#64748b";
+  }
+
+  function shortenEdge(x1, y1, x2, y2, r1, r2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len;
+    return {
+      x1: x1 + ux * (r1 + 2),
+      y1: y1 + uy * (r1 + 2),
+      x2: x2 - ux * (r2 + 6),
+      y2: y2 - uy * (r2 + 6),
+    };
+  }
+
+  function layoutEdge(e) {
+    const a = byId[e.from], b = byId[e.to];
+    const s = shortenEdge(a.x, a.y, b.x, b.y, a.r, b.r);
+    const midX = (s.x1 + s.x2) / 2;
+    const midY = (s.y1 + s.y2) / 2 - 18;
+    e.el.setAttribute("d", `M ${s.x1} ${s.y1} Q ${midX} ${midY} ${s.x2} ${s.y2}`);
+    if (e.labelText) {
+      e.labelText.setAttribute("x", midX);
+      e.labelText.setAttribute("y", midY - 2);
+    }
+  }
+
+  function layoutEdgesForNode(id) {
+    for (const e of edgeEls) {
+      if (e.from === id || e.to === id) layoutEdge(e);
+    }
+  }
+
+  function setNodePos(n, el, x, y) {
+    n.x = x;
+    n.y = y;
+    el.setAttribute("transform", `translate(${x},${y})`);
+    layoutEdgesForNode(n.id);
+  }
+
+  function clientToWorld(clientX, clientY) {
+    const rect = stage.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left - cam.x) / cam.k,
+      y: (clientY - rect.top - cam.y) / cam.k,
+    };
+  }
+
+  // build edges
+  const edgeEls = EDGES.map(e => {
+    const path = document.createElementNS(svgNS, "path");
+    path.setAttribute("class", "edge");
+    path.dataset.from = e.from;
+    path.dataset.to = e.to;
+    const c = EDGE_COLOR[e.kind] || "#94a3b8";
+    path.style.stroke = c;
+    path.style.setProperty("--edge-c", c);
+    gEdges.appendChild(path);
+
+    const labelG = document.createElementNS(svgNS, "g");
+    labelG.setAttribute("class", "edge-label-g");
+    labelG.dataset.from = e.from;
+    labelG.dataset.to = e.to;
+
+    const labelText = document.createElementNS(svgNS, "text");
+    labelText.setAttribute("text-anchor", "middle");
+    labelText.setAttribute("dominant-baseline", "middle");
+    labelText.textContent = e.label;
+    labelG.appendChild(labelText);
+    gEdgeLabels.appendChild(labelG);
+
+    const item = { ...e, el: path, labelEl: labelG, labelText, color: c };
+    layoutEdge(item);
+    return item;
+  });
+
+  function estimateTextWidth(str, fontSize) {
+    let w = 0;
+    for (const ch of str) {
+      w += /[\u3400-\u9fff]/.test(ch) ? fontSize : fontSize * 0.62;
+    }
+    return w;
+  }
+
+  function wrapTitle(title) {
+    if (title.length <= 4) return [title];
+    const mid = Math.ceil(title.length / 2);
+    return [title.slice(0, mid), title.slice(mid)];
+  }
+
+  function buildNodeLabel(n) {
+    const margin = 8;
+    const maxW = (n.r - margin) * 1.7;
+    let lines = n.lines ? [...n.lines] : [n.title];
+    let fontSize = n.hub ? 14 : 12;
+
+    for (let guard = 0; guard < 10; guard++) {
+      const widest = Math.max(...lines.map(l => estimateTextWidth(l, fontSize)));
+      if (widest <= maxW) break;
+      if (lines.length === 1 && n.title.length >= 4) {
+        lines = wrapTitle(n.title);
+        continue;
+      }
+      fontSize = Math.max(9, fontSize - 0.5);
+    }
+
+    const tag = (n.tag || n.en || "").toUpperCase();
+    let tagSize = n.hub ? 9 : 8;
+    while (estimateTextWidth(tag, tagSize) > maxW && tagSize > 6.5) tagSize -= 0.5;
+
+    const lineH = fontSize + 1.5;
+    const hasTag = !!tag;
+    const titleBlockH = (lines.length - 1) * lineH;
+    const blockH = titleBlockH + (hasTag ? tagSize + 5 : 0);
+    const titleTop = -blockH / 2 + fontSize * 0.35;
+
+    const titleEl = document.createElementNS(svgNS, "text");
+    titleEl.setAttribute("class", "node-title");
+    titleEl.setAttribute("text-anchor", "middle");
+    titleEl.setAttribute("font-size", String(fontSize));
+    if (n.hub) titleEl.style.fill = "#fff";
+
+    lines.forEach((line, i) => {
+      const ts = document.createElementNS(svgNS, "tspan");
+      ts.setAttribute("x", "0");
+      ts.setAttribute("y", String(titleTop + i * lineH));
+      ts.textContent = line;
+      titleEl.appendChild(ts);
+    });
+
+    const enEl = document.createElementNS(svgNS, "text");
+    enEl.setAttribute("class", "node-en");
+    enEl.setAttribute("text-anchor", "middle");
+    enEl.setAttribute("font-size", String(tagSize));
+    enEl.setAttribute("y", String(titleTop + titleBlockH + tagSize + 4));
+    enEl.textContent = tag;
+    if (n.hub) enEl.style.fill = "rgba(255,255,255,0.78)";
+
+    return { titleEl, enEl };
+  }
+
+  function tightenLabels(list) {
+    for (const { n, el } of list) {
+      const r = n.r;
+      const margin = 7;
+      const texts = [...el.querySelectorAll("text")];
+      for (let k = 0; k < 8; k++) {
+        let overflow = false;
+        for (const t of texts) {
+          const b = t.getBBox();
+          const corners = [
+            [b.x, b.y], [b.x + b.width, b.y],
+            [b.x, b.y + b.height], [b.x + b.width, b.y + b.height],
+          ];
+          if (corners.some(([x, y]) => Math.hypot(x, y) > r - margin)) {
+            overflow = true;
+            const fs = parseFloat(t.getAttribute("font-size") || "12") - 0.5;
+            if (fs < 7) continue;
+            t.setAttribute("font-size", String(fs));
+          }
+        }
+        if (!overflow) break;
+      }
+    }
+  }
+
+  // build nodes
+  const nodeEls = NODES.map(n => {
+    const g = document.createElementNS(svgNS, "g");
+    g.setAttribute("class", "node" + (n.hub ? " hub" : ""));
+    g.dataset.id = n.id;
+    g.style.setProperty("--node-c", layerColor(n.layer));
+    g.setAttribute("transform", `translate(${n.x},${n.y})`);
+
+    const glow = document.createElementNS(svgNS, "circle");
+    glow.setAttribute("class", "glow");
+    glow.setAttribute("r", n.r + 14);
+
+    const ring = document.createElementNS(svgNS, "circle");
+    ring.setAttribute("class", "ring");
+    ring.setAttribute("r", n.r + 7);
+
+    const body = document.createElementNS(svgNS, "circle");
+    body.setAttribute("class", "body");
+    body.setAttribute("r", n.r);
+    body.setAttribute("filter", "url(#soft)");
+    if (n.hub) {
+      body.setAttribute("fill", "url(#hubGrad)");
+      body.setAttribute("stroke", "#99f6e4");
+      body.setAttribute("stroke-width", "2");
+    } else {
+      body.setAttribute("fill", "#ffffff");
+      body.setAttribute("stroke", layerColor(n.layer));
+      body.setAttribute("stroke-width", "2.5");
+    }
+
+    const { titleEl, enEl } = buildNodeLabel(n);
+    g.append(glow, ring, body, titleEl, enEl);
+    gNodes.appendChild(g);
+
+    g.addEventListener("mouseenter", () => {
+      if (!nodeDrag) hoverNode(n.id, true);
+    });
+    g.addEventListener("mouseleave", () => {
+      if (!nodeDrag) hoverNode(n.id, false);
+    });
+    g.addEventListener("pointerdown", (ev) => {
+      if (ev.button != null && ev.button !== 0) return;
+      ev.stopPropagation();
+      ev.preventDefault();
+      // 先置顶再 capture，避免拖拽中重排丢掉指针捕获
+      gNodes.appendChild(g);
+      const world = clientToWorld(ev.clientX, ev.clientY);
+      nodeDrag = {
+        id: n.id,
+        el: g,
+        n,
+        moved: false,
+        grabDX: n.x - world.x,
+        grabDY: n.y - world.y,
+        startX: ev.clientX,
+        startY: ev.clientY,
+        pointerId: ev.pointerId,
+      };
+      panning = false;
+      g.classList.add("dragging");
+      g.classList.remove("quiet");
+      // 在 stage 上捕获，节点未选中时拖出 hit 区也不会断
+      stage.setPointerCapture(ev.pointerId);
+    });
+
+    return { n, el: g };
+  });
+
+  // 字体就绪后再实测收缩，避免首次测量不准
+  const runTighten = () => tightenLabels(nodeEls);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(runTighten);
+  } else {
+    requestAnimationFrame(runTighten);
+  }
+
+  function neighborsOf(id) {
+    const set = new Set([id]);
+    for (const e of EDGES) {
+      if (e.from === id) set.add(e.to);
+      if (e.to === id) set.add(e.from);
+    }
+    return set;
+  }
+
+  function visibleIds() {
+    let ids = new Set(NODES.map(n => n.id));
+    if (activeLayer !== "all") {
+      ids = new Set(NODES.filter(n => n.layer === activeLayer || n.layer === "hub").map(n => n.id));
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      ids = new Set([...ids].filter(id => {
+        const n = byId[id];
+        return n.title.toLowerCase().includes(q)
+          || n.en.toLowerCase().includes(q)
+          || n.summary.toLowerCase().includes(q);
+      }));
+    }
+    return ids;
+  }
+
+  function applyVisualState(hoverId = null) {
+    const vis = visibleIds();
+    const focus = selectedId || hoverId;
+    const hot = focus ? neighborsOf(focus) : null;
+    const pathSet = pathHighlight ? new Set(pathHighlight) : null;
+    const focusing = !!(focus || pathSet);
+
+    stage.classList.toggle("focus-on", focusing);
+    stage.classList.toggle("path-on", !!pathSet);
+
+    for (const { n, el } of nodeEls) {
+      const inVis = vis.has(n.id);
+      const inPath = !pathSet || pathSet.has(n.id);
+      const inHot = !hot || hot.has(n.id);
+      const isQuiet = !inVis || !inPath || (hot && !inHot);
+      const isRelated = !!(hot && hot.has(n.id) && n.id !== focus);
+      const isSelected = n.id === selectedId || (!selectedId && n.id === hoverId);
+
+      el.classList.toggle("quiet", isQuiet);
+      el.classList.toggle("related", isRelated && !isQuiet);
+      el.classList.toggle("selected", isSelected && inVis);
+      el.classList.toggle("on-path", !!(pathSet && pathSet.has(n.id)));
+      el.style.display = inVis ? "" : "none";
+    }
+
+    for (const e of edgeEls) {
+      const bothVis = vis.has(e.from) && vis.has(e.to);
+      const bothPath = !pathSet || (pathSet.has(e.from) && pathSet.has(e.to));
+      const isHot = !!(hot && bothVis && bothPath
+        && hot.has(e.from) && hot.has(e.to)
+        && (e.from === focus || e.to === focus));
+      const isQuiet = !bothVis || !bothPath || (hot && !isHot);
+      const onPath = !!(pathSet && pathSet.has(e.from) && pathSet.has(e.to));
+
+      e.el.classList.toggle("quiet", isQuiet);
+      e.el.classList.toggle("hot", isHot);
+      e.el.classList.toggle("flow", isHot);
+      e.el.classList.toggle("on-path", onPath && bothVis);
+      e.el.style.display = bothVis ? "" : "none";
+      // hot edges keep their semantic color; quiet edges already styled via CSS
+      if (isHot) e.el.style.stroke = e.color;
+      e.labelEl.classList.toggle("show", isHot);
+      e.labelEl.style.display = bothVis ? "" : "none";
+    }
+  }
+
+  function hoverNode(id, on) {
+    if (selectedId) return;
+    applyVisualState(on ? id : null);
+  }
+
+  function selectNode(id, { keepPath = false } = {}) {
+    selectedId = id;
+    if (!keepPath) pathHighlight = null;
+    renderDetail(byId[id]);
+    detail.classList.add("has-selection");
+    applyVisualState();
+    hintBar.style.opacity = "0";
+  }
+
+  function clearSelection() {
+    selectedId = null;
+    pathHighlight = null;
+    detail.classList.remove("has-selection");
+    applyVisualState();
+    hintBar.style.opacity = "1";
+    document.querySelectorAll(".path-chip").forEach(c => {
+      c.style.borderColor = "";
+    });
+  }
+
+  function cardLinks(card) {
+    const num = card.num;
+    let slug = card.slug;
+    if (!slug && card.href) {
+      slug = card.href.split("/")[0];
+    }
+    if (!slug) return null;
+    return {
+      card: `${slug}/${num}-cpp-interview-card.html`,
+      followup: `${slug}/${num}-cpp-interview-followup.html`,
+    };
+  }
+
+  function renderDetail(n) {
+    const color = layerColor(n.layer);
+    const layerName = LAYERS.find(l => l.id === n.layer)?.name || "";
+    const rels = EDGES.filter(e => e.from === n.id || e.to === n.id).map(e => {
+      const other = e.from === n.id ? e.to : e.from;
+      const outbound = e.from === n.id;
+      return { other: byId[other], label: e.label, outbound };
+    });
+
+    detailBody.innerHTML = `
+      <div class="detail-head">
+        <div class="detail-badge" style="background:${color}">${n.title.slice(0, 1)}</div>
+        <div>
+          <h2>${n.title}</h2>
+          <div class="en">${n.en}</div>
+        </div>
+      </div>
+      <div class="pill-row">
+        <span class="pill layer">${layerName}</span>
+        ${n.card ? `<span class="pill card">卡片 #${n.card.num}</span>` : ""}
+        <span class="pill">${rels.length} 条关联</span>
+      </div>
+      <p class="desc">${n.summary}</p>
+      <div class="section-title">面试要点</div>
+      <ul class="points">
+        ${n.points.map((p, i) => `<li data-n="${String(i + 1).padStart(2, "0")}">${p}</li>`).join("")}
+      </ul>
+      ${n.table ? `<div class="section-title">推导对照表</div>${n.table}` : ""}
+      <div class="section-title">代码示意</div>
+      <div class="code-window">
+        <div class="code-chrome">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+          <span class="code-file">${n.id.replace(/_/g, "-")}.cpp</span>
+        </div>
+        <div class="code">${n.code}</div>
+      </div>
+      <div class="section-title">关联节点</div>
+      <div class="rel-list">
+        ${rels.map(r => `
+          <button class="rel-chip" data-goto="${r.other.id}" type="button">
+            <span class="dir">${r.outbound ? "通向" : "来自"} · ${r.label}</span>
+            ${r.other.title}
+          </button>`).join("")}
+      </div>
+      ${(() => {
+        const links = n.card && cardLinks(n.card);
+        if (!links) return "";
+        return `
+        <div class="section-title">系列卡片 #${n.card.num}</div>
+        <div class="card-links">
+          <a class="link-card card-ans" href="${links.card}" target="_blank" rel="noopener">
+            <span class="link-kicker">Answer</span>
+            参考回答
+            <small>card · 面试话术</small>
+          </a>
+          <a class="link-card card-fu" href="${links.followup}" target="_blank" rel="noopener">
+            <span class="link-kicker">Follow-up</span>
+            追问清单
+            <small>followup · 深挖题</small>
+          </a>
+        </div>`;
+      })()}
+    `;
+
+    detailBody.querySelectorAll("[data-goto]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.goto;
+        const keepPath = !!(pathHighlight && pathHighlight.includes(id));
+        selectNode(id, { keepPath });
+      });
+    });
+  }
+
+  // layers UI
+  function renderLayers() {
+    layerList.innerHTML = "";
+    const allBtn = document.createElement("button");
+    allBtn.className = "layer-btn" + (activeLayer === "all" ? " active" : "");
+    allBtn.type = "button";
+    allBtn.innerHTML = `<span class="swatch" style="background:#0f172a;--swatch-ring:rgba(15,23,42,.12)"></span>全部显示<span class="meta">${NODES.length}</span>`;
+    allBtn.addEventListener("click", () => setLayer("all"));
+    layerList.appendChild(allBtn);
+
+    for (const L of LAYERS) {
+      const btn = document.createElement("button");
+      btn.className = "layer-btn" + (activeLayer === L.id ? " active" : "");
+      btn.type = "button";
+      btn.innerHTML = `<span class="swatch" style="background:${L.color};--swatch-ring:${L.ring}"></span>${L.name}<span class="meta">${L.count}</span>`;
+      btn.addEventListener("click", () => setLayer(L.id));
+      layerList.appendChild(btn);
+    }
+  }
+
+  function setLayer(id) {
+    activeLayer = id;
+    pathHighlight = null;
+    layerCount.textContent = id === "all" ? "全部" : LAYERS.find(l => l.id === id).name;
+    renderLayers();
+    applyVisualState();
+  }
+
+  // paths UI
+  PATHS.forEach((p, i) => {
+    const btn = document.createElement("button");
+    btn.className = "path-chip";
+    btn.type = "button";
+    btn.innerHTML = `<span class="num">${i + 1}</span><div><strong>${p.title}</strong><span>${p.desc}</span></div>`;
+    btn.addEventListener("click", () => {
+      pathHighlight = p.nodes;
+      document.querySelectorAll(".path-chip").forEach(c => { c.style.borderColor = ""; });
+      btn.style.borderColor = "#0d9488";
+      selectNode(p.nodes[0], { keepPath: true });
+    });
+    pathList.appendChild(btn);
+  });
+
+  // camera
+  function applyCam() {
+    gWorld.setAttribute("transform", `translate(${cam.x},${cam.y}) scale(${cam.k})`);
+  }
+
+  function fitView() {
+    const pad = 80;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const n of NODES) {
+      minX = Math.min(minX, n.x - n.r);
+      minY = Math.min(minY, n.y - n.r);
+      maxX = Math.max(maxX, n.x + n.r);
+      maxY = Math.max(maxY, n.y + n.r);
+    }
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    const bw = maxX - minX + pad * 2;
+    const bh = maxY - minY + pad * 2;
+    const k = Math.min(w / bw, h / bh, 1.35);
+    cam.k = k;
+    cam.x = (w - bw * k) / 2 - (minX - pad) * k;
+    cam.y = (h - bh * k) / 2 - (minY - pad) * k;
+    applyCam();
+  }
+
+  function resetLayout() {
+    for (const { n, el } of nodeEls) {
+      setNodePos(n, el, n.homeX, n.homeY);
+    }
+    fitView();
+  }
+
+  function endNodeDrag() {
+    if (!nodeDrag) return;
+    const { el, n, pointerId } = nodeDrag;
+    el.classList.remove("dragging");
+    try { stage.releasePointerCapture(pointerId); } catch (_) {}
+    nodeDrag = null;
+    const keepPath = !!(pathHighlight && pathHighlight.includes(n.id));
+    selectNode(n.id, { keepPath });
+  }
+
+  stage.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".node") || nodeDrag) return;
+    panning = true;
+    stage.classList.add("dragging");
+    last = { x: e.clientX, y: e.clientY };
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (nodeDrag) {
+      e.preventDefault();
+      const dx = e.clientX - nodeDrag.startX;
+      const dy = e.clientY - nodeDrag.startY;
+      if (!nodeDrag.moved && Math.hypot(dx, dy) > 4) nodeDrag.moved = true;
+      if (!nodeDrag.moved) return;
+      const world = clientToWorld(e.clientX, e.clientY);
+      setNodePos(
+        nodeDrag.n,
+        nodeDrag.el,
+        world.x + nodeDrag.grabDX,
+        world.y + nodeDrag.grabDY
+      );
+      return;
+    }
+    if (!panning) return;
+    cam.x += e.clientX - last.x;
+    cam.y += e.clientY - last.y;
+    last = { x: e.clientX, y: e.clientY };
+    applyCam();
+  });
+  stage.addEventListener("pointerup", (e) => {
+    if (nodeDrag) {
+      endNodeDrag();
+      return;
+    }
+    panning = false;
+    stage.classList.remove("dragging");
+    try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+  });
+  stage.addEventListener("pointercancel", (e) => {
+    if (nodeDrag) {
+      endNodeDrag();
+      return;
+    }
+    panning = false;
+    stage.classList.remove("dragging");
+    try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+  });
+  stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const rect = stage.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const prev = cam.k;
+    const next = Math.min(2.2, Math.max(0.45, cam.k * (e.deltaY < 0 ? 1.08 : 0.92)));
+    const wx = (mx - cam.x) / prev;
+    const wy = (my - cam.y) / prev;
+    cam.k = next;
+    cam.x = mx - wx * next;
+    cam.y = my - wy * next;
+    applyCam();
+  }, { passive: false });
+
+  document.getElementById("btn-fit").addEventListener("click", fitView);
+  document.getElementById("btn-reset").addEventListener("click", resetLayout);
+  document.getElementById("btn-clear").addEventListener("click", clearSelection);
+  document.getElementById("btn-tour").addEventListener("click", () => {
+    pathList.querySelector(".path-chip")?.click();
+  });
+  document.getElementById("search").addEventListener("input", (e) => {
+    searchQuery = e.target.value.trim();
+    applyVisualState();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") clearSelection();
+  });
+
+  // 右侧栏拖拽改宽
+  (function setupDetailResize() {
+    const appEl = document.querySelector(".app");
+    const handle = document.getElementById("detail-resizer");
+    if (!appEl || !handle) return;
+
+    const MIN_W = 280;
+    const MAX_W = 720;
+    const KEY = "kg-detail-w";
+
+    const saved = Number(localStorage.getItem(KEY));
+    if (Number.isFinite(saved) && saved >= MIN_W && saved <= MAX_W) {
+      appEl.style.setProperty("--detail-w", `${saved}px`);
+    }
+
+    let resizing = false;
+
+    const applyWidth = (clientX) => {
+      const rect = appEl.getBoundingClientRect();
+      let w = rect.right - clientX;
+      w = Math.min(MAX_W, Math.max(MIN_W, w));
+      appEl.style.setProperty("--detail-w", `${w}px`);
+      return w;
+    };
+
+    handle.addEventListener("pointerdown", (e) => {
+      if (window.matchMedia("(max-width: 1100px)").matches) return;
+      e.preventDefault();
+      resizing = true;
+      handle.classList.add("is-dragging");
+      document.body.classList.add("is-resizing-detail");
+      handle.setPointerCapture(e.pointerId);
+      applyWidth(e.clientX);
+    });
+
+    handle.addEventListener("pointermove", (e) => {
+      if (!resizing) return;
+      applyWidth(e.clientX);
+    });
+
+    const endResize = (e) => {
+      if (!resizing) return;
+      resizing = false;
+      handle.classList.remove("is-dragging");
+      document.body.classList.remove("is-resizing-detail");
+      const w = applyWidth(e.clientX);
+      localStorage.setItem(KEY, String(Math.round(w)));
+      fitView();
+    };
+
+    handle.addEventListener("pointerup", endResize);
+    handle.addEventListener("pointercancel", endResize);
+
+    handle.addEventListener("dblclick", () => {
+      appEl.style.setProperty("--detail-w", "360px");
+      localStorage.setItem(KEY, "360");
+      fitView();
+    });
+  })();
+
+  window.addEventListener("resize", () => fitView());
+
+  renderLayers();
+  applyVisualState();
+  requestAnimationFrame(() => {
+    fitView();
+    // gentle entrance: select hub after brief delay
+    setTimeout(() => selectNode("stl"), 400);
+  });
+})();
+</script>
+</body>
+</html>

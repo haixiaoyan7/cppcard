@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>口述稿 · 09 编译链接与底层机制</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --theme: #6d28d9; --theme-2: #4c1d95; --theme-soft: #f4f0ff;
+    --theme-deep: #3b1570; --theme-rgb: 109,40,217; --theme2-rgb: 76,29,149;
+    --ink: #243041; --muted: #667385;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f3f5f9; color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 96px 16px 48px;
+  }
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 12px 16px; background: rgba(255,255,255,.96);
+    border-bottom: 1px solid #e4e8ef;
+  }
+  .btn {
+    border: none; cursor: pointer; background: var(--theme); color: #fff;
+    font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 8px;
+  }
+  .toolbar span, .toolbar a { color: var(--muted); font-size: 12px; text-decoration: none; }
+  .pages { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  .viewport { overflow: hidden; }
+  .stage { transform-origin: top left; }
+  .frame { width: 720px; height: 1280px; background: #f0f3f8; padding: 18px; }
+  .panel {
+    position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: #fff; border: 1px solid #e2e8f4; border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(74,127,232,.07);
+    display: flex; flex-direction: column;
+  }
+  .panel::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px;
+    background: linear-gradient(180deg, var(--theme), var(--theme-2));
+  }
+  .cover { padding: 52px 52px 40px 60px; color: var(--ink); }
+  .cover .wm {
+    position: absolute; right: -20px; bottom: 40px;
+    font-size: 280px; line-height: .8; font-weight: 900; letter-spacing: -.06em;
+    color: transparent; -webkit-text-stroke: 2px rgba(var(--theme-rgb), .08);
+  }
+  .top, .hero, .kicker, h1, .rule, .hook, .foot, .beats, .bridge { position: relative; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; letter-spacing: 1px; }
+  .no { color: var(--theme); font-size: 28px; font-weight: 900; }
+  .kicker {
+    align-self: flex-start; margin-top: 54px;
+    color: var(--theme-deep); background: var(--theme-soft);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; font-weight: 800; letter-spacing: 2px;
+  }
+  .hero { display: flex; align-items: flex-end; gap: 16px; margin-top: 28px; }
+  .big {
+    font-size: 118px; line-height: .82; font-weight: 900; letter-spacing: -.04em;
+    background: linear-gradient(135deg, var(--theme), var(--theme-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .act { padding-bottom: 12px; border-left: 3px solid var(--theme-2); padding-left: 14px; font-size: 20px; font-weight: 800; }
+  .cover h1 { margin-top: 34px; max-width: 560px; font-size: 58px; line-height: 1.18; }
+  .rule { width: 116px; height: 4px; margin: 24px 0; border-radius: 2px; background: linear-gradient(90deg, var(--theme), var(--theme-2)); }
+  .hook { max-width: 540px; color: #4f5d6f; font-size: 22px; line-height: 1.75; }
+  .order {
+    position: relative; margin-top: 26px; max-width: 580px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  }
+  .order span {
+    padding: 5px 10px; border-radius: 7px; background: var(--theme-soft);
+    color: var(--theme-deep); font-size: 15px; font-weight: 800;
+  }
+  .order i { color: var(--muted); font-style: normal; font-size: 14px; }
+  .foot {
+    margin-top: auto; padding-top: 22px; border-top: 1px solid #e8ecf2;
+    display: flex; justify-content: space-between; color: var(--muted); font-size: 13px;
+  }
+  .script { padding: 34px 36px 28px 46px; }
+  .script .no { font-size: 22px; }
+  .script .no small { color: var(--muted); font-size: 14px; font-weight: 700; }
+  .script h1 { margin: 22px 0 18px; font-size: 32px; line-height: 1.25; }
+  .bridge { margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; background: var(--theme-soft); }
+  .bridge.out { margin-top: 16px; margin-bottom: 0; background: #fff8ee; }
+  .bridge .tag { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .bridge b { color: var(--theme-deep); font-size: 13px; letter-spacing: 1px; }
+  .bridge.out b { color: #9a6230; }
+  .bridge .tag span { color: var(--muted); font-size: 11px; letter-spacing: 1px; }
+  .bridge p { color: #3e4b5e; font-size: 17px; line-height: 1.7; }
+  .beats { display: flex; flex-direction: column; gap: 16px; }
+  .beat {
+    display: grid; grid-template-columns: 58px 1fr; gap: 14px;
+    padding: 16px 16px 16px 12px; border: 1px solid #e7edf5; border-radius: 12px;
+    background: #f9fbfe;
+  }
+  .side { display: flex; flex-direction: column; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 28px; border-radius: 7px; background: var(--theme); color: #fff;
+    font-size: 13px; font-weight: 800;
+  }
+  .chip.ghost { background: #e7edf5; color: #9aa6b5; }
+  .beat p { color: #2d3948; font-size: 18px; line-height: 1.75; }
+  code {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: .92em; color: var(--theme-deep); background: var(--theme-soft);
+    padding: 0 5px; border-radius: 4px;
+  }
+  .script .foot b { color: var(--theme); font-size: 16px; }
+</style>
+</head>
+<body>
+  <div class="toolbar" data-html2canvas-ignore="true">
+    <button id="exportAll" class="btn">导出本幕口述稿 (PNG)</button>
+    <span>第 09 幕 · 720 × 1280</span>
+    <a href="index-oral.html">← 返回口述稿目录</a>
+  </div>
+  <div class="pages" id="pages"><div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-09-00"><div class="panel cover"><div class="wm">09</div><div class="top"><div><div class="brand">C++ ORAL SCRIPT</div><div class="sub">口述稿 · 可以直接照着讲</div></div><div class="no">CODE TO INSTRUCTION</div></div><div class="kicker">09</div><div class="hero"><div class="big">09</div><div class="act">ACT 09</div></div><h1>编译链接与底层机制</h1><div class="rule"></div><p class="hook">篇一讲的都是语言。可是 CPU 不认识类、模板、lambda，它只认识指令。中间发生了什么？</p><div class="order"><span>054</span><i>→</i><span>055</span><i>→</i><span>056</span><i>→</i><span>057</span><i>→</i><span>059</span><i>→</i><span>060</span><i>→</i><span>061</span><i>→</i><span>062</span></div><div class="foot"><span>8 段口述 · 8 张原卡 · 共 6 页</span><span>篇二 · 一行代码到一条指令</span></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-09-01"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇二 · 一行代码到一条指令</div></div><div class="no">1 <small>/ 5</small></div></div><h1>编译链接与底层机制</h1><section class="bridge in"><div class="tag"><b>承上</b><span>FROM LAST ACT</span></div><p>篇一讲的都是语言。可是 CPU 不认识类、模板、lambda，它只认识指令。中间发生了什么？</p></section><div class="beats"><article class="beat"><div class="side"><span class="chip">054</span></div><p>编译分四步：预处理展开头文件和宏；编译把每个 <code>.cpp</code> 变成汇编，模板实例化、内联都发生在这一步；汇编生成目标文件；链接把目标文件拼起来，把符号引用对上地址。</p></article><article class="beat"><div class="side"><span class="chip">055</span></div><p>链接有两种。静态链接把库代码直接复制进可执行文件，部署简单，但体积大，库更新了要重新链接；动态链接在运行时加载，多个进程共享同一份库，通过 PLT 和 GOT 间接跳转，库可以单独升级，但会有版本依赖的问题。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>2 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-09-02"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇二 · 一行代码到一条指令</div></div><div class="no">2 <small>/ 5</small></div></div><h1>编译链接与底层机制</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">056</span></div><p>链接时，每个符号在整个程序里只能有一个定义，这就是 ODR。两个 <code>.cpp</code> 定义了同名的普通函数，链接器会报重复定义，这还好办。更可怕的是 inline 函数或者模板，在两个编译单元里定义得不一样，链接器会悄悄只留一份，程序出现诡异的行为，这是未定义行为。幕 2 讲的 <code>static</code> 内部链接、匿名命名空间，就是让名字只在本文件可见。</p></article><article class="beat"><div class="side"><span class="chip">057</span></div><p>符号对上了，二进制层面也要对上，这就是 ABI：名字修饰、类的内存布局、虚表布局、调用约定。C++ 为了支持重载会做名字修饰，所以给 C 或其他语言调用的接口要加 <code>extern &quot;C&quot;</code>。一个动态库只要改了导出类的成员布局，比如加了一个成员，所有依赖它的程序都得重新编译，这就是 ABI 破坏，终章的 PIMPL 就是用来解决这个问题的。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>3 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-09-03"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇二 · 一行代码到一条指令</div></div><div class="no">3 <small>/ 5</small></div></div><h1>编译链接与底层机制</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">059</span></div><p>程序跑起来之后，用到的地址都是虚拟地址。每个进程都以为自己独占整个地址空间，MMU 通过页表把虚拟地址翻译成物理地址，TLB 缓存最近的翻译结果。访问的页不在内存里，就触发缺页中断。幕 1 说的栈和堆，都是这片虚拟地址空间里的不同区域。</p></article><article class="beat"><div class="side"><span class="chip">060</span></div><p>内存怎么切分，决定了会不会产生碎片。分段按逻辑单元切，大小不一，容易产生外部碎片；分页按固定大小的页切，没有外部碎片，但页内会有内部碎片。用户态的 <code>malloc</code> 也有同样的问题，频繁分配释放小对象就会产生碎片，这是终章内存池的动机之一。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>4 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-09-04"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇二 · 一行代码到一条指令</div></div><div class="no">4 <small>/ 5</small></div></div><h1>编译链接与底层机制</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">061</span></div><p><code>malloc</code> 拿不到内存时，要向内核要，这就是系统调用。用户态切到内核态要保存寄存器、切换权限、刷新部分 CPU 状态，一次大约是几十到几百纳秒，比一次普通函数调用贵两个数量级。所以高性能程序的思路永远是：少进内核、批量进内核。篇三的 epoll、io_uring 都是这个思路的延续。</p></article></div><div class="foot"><span>卡号不用念出来</span><b>5 / 6</b></div></div></div></div></div>
+<div class="viewport"><div class="stage"><div class="frame" data-name="b-oral-09-05"><div class="panel script"><div class="top"><div><div class="brand">ORAL SCRIPT</div><div class="sub">篇二 · 一行代码到一条指令</div></div><div class="no">5 <small>/ 5</small></div></div><h1>编译链接与底层机制</h1><div class="beats"><article class="beat"><div class="side"><span class="chip">062</span></div><p>最后，就算在用户态，速度也取决于 cache。CPU 以 64 字节的 cache line 为单位读取内存，所以连续访问快、跳跃访问慢，这就是 <code>vector</code> 通常比 <code>list</code> 快的根本原因。并发时还有一个坑叫伪共享：两个线程写两个不同的变量，但它们在同一个 cache line 上，cache line 会在两个核之间来回失效。解决办法是用幕 1 讲的 <code>alignas(64)</code> 把它们隔开。这里同时回收了幕 1 的对齐和幕 7 的并发。</p></article></div><section class="bridge out"><div class="tag"><b>启下</b><span>INTO NEXT ACT</span></div><p>代码变成了可执行文件。它被执行起来就是一个进程。这个进程怎么跑、怎么和别人协作？</p></section><div class="foot"><span>卡号不用念出来</span><b>6 / 6</b></div></div></div></div></div></div>
+<script>
+var W = 720, H = 1280;
+var viewports = Array.prototype.slice.call(document.querySelectorAll('.viewport'));
+function fit() {
+  var scale = Math.min(1, (window.innerWidth - 32) / W, (window.innerHeight - 144) / H);
+  viewports.forEach(function (v) {
+    v.querySelector('.stage').style.transform = 'scale(' + scale + ')';
+    v.style.width = (W * scale) + 'px';
+    v.style.height = (H * scale) + 'px';
+  });
+}
+window.addEventListener('resize', fit); fit();
+function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); }); }
+document.getElementById('exportAll').addEventListener('click', async function () {
+  if (typeof html2canvas !== 'function') { alert('html2canvas 尚未加载。'); return; }
+  var btn = this, label = btn.textContent; btn.disabled = true;
+  viewports.forEach(function (v) { v.querySelector('.stage').style.transform = 'none'; v.style.width = W + 'px'; v.style.height = H + 'px'; });
+  await nextFrame();
+  try {
+    for (var i = 0; i < viewports.length; i++) {
+      btn.textContent = '导出中 ' + (i + 1) + '/' + viewports.length + '…';
+      var frame = viewports[i].querySelector('.frame');
+      var canvas = await html2canvas(frame, { scale: 2, backgroundColor: '#f0f3f8', useCORS: true, logging: false, width: W, height: H, windowWidth: W, windowHeight: H });
+      var a = document.createElement('a'); a.download = frame.dataset.name + '.png'; a.href = canvas.toDataURL('image/png'); a.click();
+      await new Promise(function (r) { setTimeout(r, 300); });
+    }
+  } catch (e) { alert('导出失败：' + e.message); }
+  finally { btn.disabled = false; btn.textContent = label; fit(); }
+});
+</script>
+</body>
+</html>

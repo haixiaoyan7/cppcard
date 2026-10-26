@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>C++ 面试闪卡</title>
+<style>
+  :root {
+    --blue: #3d5afe;
+    --blue-deep: #3949ab;
+    --blue-soft: #eef2ff;
+    --ink: #1f232c;
+    --ink-soft: #4a4f5a;
+    --muted: #8b919e;
+    --line: #e8eaef;
+    --panel: #ffffff;
+    --page: #e9ebf0;
+    --hot: #e8590c;
+    --shadow: 0 12px 40px rgba(31, 35, 44, 0.12);
+    --radius: 18px;
+    --card-h: min(72vh, 620px);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+    background: var(--page);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  .topbar {
+    flex-shrink: 0;
+    background: rgba(24, 28, 44, 0.94);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .back {
+    color: #b9c0d6; text-decoration: none; font-size: 13px; white-space: nowrap;
+  }
+  .back:hover { color: #fff; }
+  .topbar-title { font-size: 15px; font-weight: 700; }
+  .progress-text { font-size: 12px; color: #8891a8; font-variant-numeric: tabular-nums; }
+
+  .controls {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  .chip {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink-soft);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .chip:hover { border-color: var(--blue); color: var(--blue-deep); }
+  .chip.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .chip-toggle {
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .chip-toggle input { accent-color: var(--blue); }
+
+  .stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 16px 8px;
+    min-height: 0;
+  }
+
+  .progress-bar-wrap {
+    width: min(420px, 100%);
+    height: 4px;
+    background: var(--line);
+    border-radius: 999px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), #6366f1);
+    border-radius: 999px;
+    transition: width 0.25s ease;
+  }
+
+  .flip-scene {
+    width: min(420px, 100%);
+    height: var(--card-h);
+    perspective: 1200px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .flip-card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .flip-card.flipped { transform: rotateY(180deg); }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: var(--radius);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .face-back { transform: rotateY(180deg); }
+
+  .face-head {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, var(--blue-soft), transparent);
+    flex-shrink: 0;
+  }
+  .face-back .face-head { background: linear-gradient(180deg, #f0fdf4, transparent); }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    margin-bottom: 8px;
+  }
+  .num-badge {
+    font-size: 13px; font-weight: 800; color: var(--blue);
+    font-variant-numeric: tabular-nums;
+  }
+  .tag {
+    font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+    background: var(--page); color: var(--muted);
+  }
+  .tag-hot { background: #fff4e6; color: var(--hot); }
+  .face-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    color: var(--muted); text-transform: uppercase;
+  }
+  .face-back .face-label { color: #2b8a3e; }
+
+  .face-body {
+    flex: 1;
+    padding: 18px 20px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .question {
+    font-size: clamp(20px, 5vw, 24px);
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--ink);
+  }
+  .hint {
+    margin-top: auto;
+    padding: 14px 18px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .summary-box {
+    background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #166534;
+  }
+  .summary-box strong { display: block; font-size: 11px; margin-bottom: 4px; opacity: 0.7; }
+
+  .bullet-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .bullet-list li {
+    font-size: 14px; line-height: 1.65; color: var(--ink-soft);
+  }
+  .bullet-list .lbl {
+    font-weight: 700; color: var(--ink);
+  }
+  .para { font-size: 14px; line-height: 1.7; color: var(--ink-soft); margin-bottom: 10px; }
+
+  .full-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 14px;
+    font-size: 13px; font-weight: 600;
+    color: var(--blue); text-decoration: none;
+  }
+  .full-link:hover { text-decoration: underline; }
+
+  .nav-bar {
+    flex-shrink: 0;
+    width: min(420px, 100%);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    padding: 12px 16px 20px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .nav-btn {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    font-size: 14px; font-weight: 600;
+    padding: 12px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .nav-btn:hover { border-color: var(--blue); background: var(--blue-soft); }
+  .nav-btn:disabled { opacity: 0.35; cursor: default; }
+  .nav-btn.primary {
+    background: var(--blue); border-color: var(--blue); color: #fff;
+  }
+  .nav-btn.primary:hover { background: var(--blue-deep); }
+
+  .empty {
+    text-align: center; padding: 40px 20px; color: var(--muted);
+    display: none;
+  }
+  .empty.show { display: block; }
+
+  @media (max-width: 480px) {
+    :root { --card-h: min(68vh, 560px); }
+    .controls { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 6px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <a class="back" href="index.html">← 索引</a>
+    <span class="topbar-title">闪卡模式</span>
+  </div>
+  <span class="progress-text" id="progressText">1 / 86</span>
+</header>
+
+<div class="controls" id="filters">
+  <button class="chip active" data-filter="all">全部</button>
+  <button class="chip" data-filter="hot">🔥 高频</button>
+  <button class="chip" data-filter="super">🔥🔥</button>
+  <button class="chip" data-filter="backend">后端</button>
+  <button class="chip" data-filter="huawei">华为</button>
+  <label class="chip chip-toggle"><input type="checkbox" id="shuffleCheck" /> 随机</label>
+</div>
+
+<div class="stage" id="stage">
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:1%"></div></div>
+
+  <div class="flip-scene" id="flipScene">
+    <div class="flip-card" id="flipCard">
+      <div class="face face-front">
+        <div class="face-head">
+          <div class="meta-row" id="frontMeta"></div>
+          <div class="face-label">Question · 题目</div>
+        </div>
+        <div class="face-body">
+          <div class="question" id="questionText"></div>
+        </div>
+        <div class="hint">点击卡片 · 空格键 · 翻转看答案</div>
+      </div>
+      <div class="face face-back">
+        <div class="face-head">
+          <div class="meta-row" id="backMeta"></div>
+          <div class="face-label">Answer · 参考回答</div>
+        </div>
+        <div class="face-body" id="answerBody"></div>
+        <div class="hint">← → 切换题目 · 再看一遍可点「不会」</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty" id="emptyState">当前筛选没有题目</div>
+</div>
+
+<nav class="nav-bar">
+  <button class="nav-btn" id="btnPrev" disabled>← 上一题</button>
+  <button class="nav-btn primary" id="btnFlip">翻转</button>
+  <button class="nav-btn" id="btnNext">下一题 →</button>
+</nav>
+
+<script>
+const CARDS = [{"num": 1, "title": "指针和引用有什么区别？", "module": "一：指针与内存管理", "hot": false, "superHot": false, "stars": 2, "cardUrl": "001-pointer&reference/001-cpp-interview-card.html", "summary": "引用更像对象本身，指针更像操作对象的工具。", "bullets": [{"label": "定义", "text": "指针是一个变量，存储的是内存地址；引用是已有变量的别名。"}, {"label": "内存大小", "text": "从 sizeof 来看，sizeof(指针) 得到的是地址大小，在 64 位系统中通常是 8 字节；sizeof(引用) 得到的是引用对象本身的大小。"}, {"label": "初始化", "text": "指针可以为空，可以改变指向，可以进行指针运算；引用不能为空，必须初始化，一旦绑定，不能重新绑定到其他对象。"}, {"label": "使用方式", "text": "使用指针需要判空，并且需要显式解引用；引用可以像普通变量一样直接使用，不需要判空，也不需要解引用。"}, {"label": "应用场景", "text": "引用常用于函数参数传递和返回值，避免对象拷贝；指针常用于动态内存管理、链表、树、图等底层数据结构，以及多态等场景中。"}], "paragraphs": []}, {"num": 2, "title": "什么是智能指针？", "module": "一：指针与内存管理", "hot": true, "superHot": false, "stars": 2, "cardUrl": "002-smart-pointer/cpp-interview-card-002.html", "summary": "智能指针本质是 RAII 的封装，通过对象生命周期自动管理资源释放。", "bullets": [{"label": "定义", "text": "智能指针是 C++里用于自动管理动态内存的类对象，通过 RAII 机制，在对象生命周期结束时自动释放资源，从而避免手动 new/delete 带来的内存泄漏问题。"}, {"label": "unique_ptr", "text": "C++提供三种智能指针：unique_ptr、shared_ptr、weak_ptr。unique_ptr 表示独享所有权，不能拷贝，只能通过 std::move 转移所有权。"}, {"label": "shared_ptr", "text": "shared_ptr 表示共享所有权，通过引用计数管理资源，当引用计数为 0 时自动释放。但当两个 shared_ptr 互相持有对方时，会形成循环引用，导致引用计数无法归零，造成内存泄漏。"}, {"label": "weak_ptr", "text": "所以有了 weak_ptr，它是对 shared_ptr 的弱引用，不参与引用计数，因此可以打破循环依赖。但它不拥有资源，访问对象时必须通过 lock()方法临时提升为 shared_ptr。"}, {"label": "使用建议", "text": "在实际开发中，优先使用 unique_ptr，需要共享时使用 shared_ptr，可能产生循环引用的场景下使用 weak_ptr。"}], "paragraphs": []}, {"num": 3, "title": "RAII 是什么？除了智能指针还有哪些应用？", "module": "一：指针与内存管理", "hot": false, "superHot": false, "stars": 3, "cardUrl": "003-raii/cpp-interview-card-003.html", "summary": "", "bullets": [], "paragraphs": ["RAII: Resource Acquisition Is Initialization 获取资源即初始化， 是C++中一种重要的资源管理思想\nC++中局部对象离开作用域时，其析构函数一定会被调用。\n因此RAII的核心思想是将资源的生命周期与对象的生命周期绑定，在对象构造时获取资源，在对象析构时自动释放资源，这样可以避免程序员手动管理资源，防止内存泄漏，并且具有良好的异常安全性。\nRAII应用于智能指针，互斥锁，文件句柄，数据库连接，Socket等资源管理场景", "---"]}, {"num": 4, "title": "栈内存和堆内存的区别？对象应该分配在哪里？", "module": "一：指针与内存管理", "hot": false, "superHot": false, "stars": 2, "cardUrl": "004-stack-vs-heap/004-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["栈内存由编译器自动分配和释放 生命周期随作用域结束而结束\n堆内存由程序员或RAII对象进行管理，生命周期由程序控制\n栈采用先进后出的管理方式，只需要移动栈顶指针即可完成内存的分配和释放，因此速度非常快，且不会产生内存碎片，但空间相对较小，堆内存可以按照任意顺序申请和释放，因此管理更加灵活，但由于需要维护空闲内存并处理内存碎片，其分配和释放速度相对较慢，也更容易产生内存碎片\n在实际开发中，小对象和局部变量通常放在栈上，需要跨作用域存在或者生命周期需要运行时动态控制对象放在堆上，并优先使用智能指针进行管理", "---"]}, {"num": 5, "title": "new/delete 和 malloc/free 的区别？", "module": "一：指针与内存管理", "hot": false, "superHot": false, "stars": 2, "cardUrl": "005-malloc-vs-new/005-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["malloc/free是c标准库提供的函数，malloc需要指定申请的内存大小，只负责申请一块儿原始内存，返回nullptr,不会调用构造函数，c++中通常需要进行类型转换，不会调用构造函数，申请失败返回nullptr.相应地 free只负责释放内存，不会调用对象析构函数\nnew/delete是c++提供的运算符，new会根据对象类型计算所需内存大小，在申请内存后自动调用构造函数完成对象初始化，并返回对应类型的指针，默认情况下申请失败抛出bad_alloc异常,相应的delete会调用对象的析构函数，在释放内存\n由于两者管理对象生命周期的方式不同。因此不能混用", "---"]}, {"num": 6, "title": "内存泄漏的常见场景及检测手段？", "module": "一：指针与内存管理", "hot": false, "superHot": false, "stars": 3, "cardUrl": "006-memory-leak/006-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["内存泄漏是指程序申请了一块儿堆内存，但由于某种原因没有及时释放，并且后续已经无法再访问这块内存，导致这部分内存无法重新利用\n常见的内存泄漏场景：忘记释放动态内存，异常提前退出导致delete我i执行，指针被覆盖导致原始地址丢失，shared_ptr循环引用，容器或缓存持续增长未及时清理\n常见的检测手段 valgrind/ AddressSanitizer\nvalgrind 通过动态插桩监控程序运行，不需要重新编译，但运行开销较大，速度较慢\nASan是编译器提供的运行时检测工具，需要在编译时加入-fsanitize=address等选项进行插桩，但运行速度较快", "---"]}, {"num": 7, "title": "内存对齐是什么？为什么需要？", "module": "一：指针与内存管理", "hot": true, "superHot": false, "stars": 3, "cardUrl": "007-memory-alignment/007-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["内存对齐是指编译器根据目标平台ABI和数据类型的对齐要求，对对象在内存中的布局进行安排，使其起始地址满足对应的对齐规则\n对于结构体和类对象，编译器会在成员之间插入padding 调整成员布局，使每个成员都满足自身的对齐要求，同时结构体整体大小需要是最大对齐要求的整数倍，以保证结构体数组中每个元素的起始地址也满足对齐要求。\n内存对齐的主要目的是提高CPU访问效率，如果数据没有对齐，可能导致跨边界访问，需要额外的内存访问开销，在部分硬件架构上甚至可能产生异常\n内存对齐主要由编译器实现 程序员可通过alignas或pargma pack等方式调整对齐方式，在设计结构体时，可以将对齐要求大的成员放在前面，对齐要求小的成员放在后面，以减少 Padding。", "---"]}, {"num": 8, "title": "placement new 是什么？什么场景用？", "module": "一：指针与内存管理", "hot": false, "superHot": false, "stars": 3, "cardUrl": "008-placement-new/008-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["placement new 是一种特殊形式的new operator, 用于在已经分配好的内存上构造对象。与普通new不同，它不会申请内存，只会调用对象的构造函数完成对象初始化。\n使用方法是new(已经分配的内存) T(...) 其底层会调用pleacement 版本的operator new，该函数只是返回传入的内存地址.\nplacement new 常用于内存池，STL容器实现以及高性能内存管理场景\n由于内存不是通过普通new  分配的 因此不能调用delete释放内存，而是需要手动调用析构函数，再由原来的内存管理者负责回收内存"]}, {"num": 9, "title": "虚函数的实现原理（vtable）？", "module": "二：面向对象", "hot": true, "superHot": false, "stars": 3, "cardUrl": "009-virtual-function/009-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["编译器用过虚函数表和虚函数指针实现运行时的动态绑定\n当一个类中定义了虚函数时，编译器会为该类生成一张虚函数表，虚函数表中存储的是该类的各个虚函数对应的函数地址\n对于该类创建的每一个对象，编译器会在对象内部隐式地添加一个虚函数指针，该指针指向所属类的虚函数表，vptr是对象成员，每个对象都有自己的vptr,但同一个类的对象通常指向同一张vtable\n当通过基类指针调用虚函数时，编译器不会再编译阶段确定具体调用哪个函数，而是在运行时通过对象中vptr找到对应的vtable,再从vtable中取出正确的函数地址进行调用\n虚函数会增加vtable/vptr的空间开销和间接调用的时间开销", "---"]}, {"num": 10, "title": "纯虚函数和抽象类的作用？", "module": "二：面向对象", "hot": false, "superHot": false, "stars": 2, "cardUrl": "010-abstract-class/010-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["纯虚函数是在虚函数声明之后加上=0的虚函数，通常只定义接口，不提供具体实现，并要求派生类必须实现该函数\n包含至少一个纯虚函数的类称为抽象类。抽象类不能实例化，只能作为基类供其他类继承\n纯虚函数和抽象类的主要作用是定义统一接口，规范派生类行为，并结合虚函数机制实现运行时多态", "---"]}, {"num": 11, "title": "多重继承的菱形问题及虚继承？", "module": "二：面向对象", "hot": false, "superHot": false, "stars": 3, "cardUrl": "011-virtual-inheritance/011-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["虚继承主要是为了解决多重继承中的菱形继承问题。在普通继承中，派生类对象内部会包含基类子对象的数据，当出现菱形继承时，最底层派生类中会包含多份相同的基类子对象，从而导致数据冗余以及成员访问二义性问题。", "虚继承是在继承关系中加入 virtual 关键字，使得公共基类变成虚基类。在保持继承结构不变的情况下，最底层派生类对象中只会保留一份公共虚基类子对象。", "虚继承的实现原理是编译器会在包含虚继承的类对象中增加虚基类指针（vbptr），该指针指向虚基类表（vbtable），虚基类表中保存虚基类相对于当前对象的偏移信息。当访问虚基类成员时，编译器通过 vbptr 找到 vbtable，再根据偏移量定位唯一的虚基类对象。", "因此，无论通过哪一条继承路径访问该基类，最终访问的都是同一个虚基类子对象，从而解决菱形继承中的数据冗余和访问二义性问题。", "---"]}, {"num": 12, "title": "构造函数和析构函数能是虚函数吗？为什么？", "module": "二：面向对象", "hot": false, "superHot": false, "stars": 2, "cardUrl": "012-virtual-ctor-dtor/012-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["构造函数不能是虚函数，因为虚函数调用依赖对象中的vptr和vtable,而构造函数执行时对象尚未构造完成，虚函数机制还不能正常工作\n析构函数可以，而且基类析构函数通常应该声明为虚函数，这样通过基类指针删除派生类对象时，能够根据对象的实际类型调用正确的析构函数，保证派生类资源被正确释放，避免资源泄露\n另外，析构函数还可以声明为纯虚函数，用于将类设计成抽象类。但必须提供函数体实现，因为销毁派生类对象时最终一定会调用基类析构函数，如果没有对应的函数定义，链接阶段会找不到基类析构函数，从而产生链接错误", "---"]}, {"num": 13, "title": "深拷贝 vs 浅拷贝？Rule of Three/Five？", "module": "二：面向对象", "hot": false, "superHot": false, "stars": 3, "cardUrl": "013-deep-shallow-copy/013-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["浅拷贝是指在复制对象时，只复制成员变量的值。对于指针成员，只会复制指针地址，而不会复制指针指向的资源\n浅拷贝是指在复制对象时，不仅复制成员变量的值，还会为指针指向的资源重新申请内存并复制其内容，使每个对象拥有独立资源\n编译器默认生成的拷贝构造函数和拷贝赋值运算符通常执行的是浅拷贝，当类管理动态资源时，如果自定义了析构函数，通常也需要自定义拷贝构造函数和拷贝赋值运算符\nc++11之后还需要考虑移动构造函数和移动赋值运算符。\n现代c++更推荐用RAII类管理资源 不手动编写这五个特殊成员", "---"]}, {"num": 14, "title": "RTTI 和 dynamic_cast 的原理和代价？", "module": "二：面向对象", "hot": true, "superHot": false, "stars": 3, "cardUrl": "014-rtti/014-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["RTTI runtime type information 运行时类型信息，允许程序在运行阶段通过基类指针火引用识别对象的真实类型\n通常只有包含至少一个虚函数的多态类才会生成RTTI信息，编译器会在虚函数表中保存与类型相关的信息，通过对象的中的vptr找到vtable，进而获取对象的实际类型信息以及继承关系\nRTTI主要提供两个工具 dynamic_cast/typeid\ndynamic_cast用于安全地在继承体系中进行向下转型，运行时会检查对象的真是类型，转型失败返回nullptr,引用则抛出异常，依赖RTTI\ntypeid用于获取对象的类型信息或进行严格的类型比较。对于多态类行，会在运行时返回对象的实际类型，对于非多态类行则退化为编译期静态类型判断\nRTTI提供了较大的灵活性，使程序能够根据对象的实际类型动态执行不同逻辑，而无需手动维护类型枚举或类型标识，但RTTI会带来额外的内存开销和一定的运行时开销，因此高性能场景下应谨慎使用", "---"]}, {"num": 15, "title": "类型转换", "module": "二：面向对象", "hot": false, "superHot": false, "stars": 2, "cardUrl": "015-type-casting/015-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["c风格的强制类型转换过于粗暴没有安全检查且极难排查， c++提供四种显示类型转换\nstatic_cast:  用于普通类型转换和继承体系中的类型转换，在编译器进行类型检查，没有运行时开销，但向下转型不检查对象的真实类型\ndynamic_cast：用于多态类型中的安全向下转型，依赖RTTI在运行时检查对象的真是类型，安全性高，但存在一定运行时开销\nconst_cast：用于添加或移除const valotile属性，不能改变对象类型 \nreinterpret_cast用于底层内存重解释，不进行实际数据转换，仅改变编译器解释数据的方式，是最不安全的一种转换", "---"]}, {"num": 16, "title": "访问控制（public/protected/private 继承）有什么区别？", "module": "二：面向对象", "hot": false, "superHot": false, "stars": 2, "cardUrl": "016-access-control/016-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["C++提供public/protected/private 三种访问权限修饰符，他们既可以修饰类成员，也可以修饰继承关系\n当修饰类成员时，public成员可以在任何地方访问，protected成员只能在类内部和派生类中访问，private成员只能在类内部访问\n当修饰继承关系时，改变的是基类成员在派生类对外的访问权限\npublic继承保留基类成员原有的访问权限，protected继承会将基类的public/protected成员变为protected, private继承会将基类的public/protected成员变为private\nfriend可以突破访问权限控制，友元可以是函数/类/成员函数，他们能访问类的private/protected成员，友元是单向的不具有传递性和继承性\nclass struct的区别是默认访问权限和默认继承方式不同 class默认是private, struct默认是public", "---"]}, {"num": 17, "title": "函数重载 / 重写(override) / 隐藏(hide) 的区别？", "module": "二：面向对象", "hot": true, "superHot": false, "stars": 2, "cardUrl": "017-overload-override-hide/017-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["重载是指同一作用域内函数名相同，参数列表不同的多个函数，包括参数个数，类型和顺序不同，编译器在编译期根据实参类型决定调用哪个函数，因此重载属于静态多态。，返回值类型不同不能作为重载依据\n重写是指派生类重新实现基类的虚函数，要求函数名相同，参数列表想用，返回值兼容，重写通过虚函数表在运行时完成动态绑定，属于动态多态\n隐藏又叫名称隐藏，是指内层作用域中的同名成员覆盖外层作用域中的同名成员，发生在编译期，不属于多态，如果希望保留，可以使用using 将其重新引入当前作用域", "---"]}, {"num": 18, "title": "static 关键字的多种含义（变量/函数/类成员）？", "module": "二：面向对象", "hot": true, "superHot": false, "stars": 2, "cardUrl": "018-static-keyword/018-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["static 的核心作用是改变变量生命周期、符号可见性以及类成员的归属关系。", "static 修饰局部变量时，可以将变量生命周期延长到程序结束，并且只初始化一次，但作用域保持不变。", "static 修饰全局变量或函数时，可以限制符号只在当前源文件可见，形成内部链接，避免大型项目中的全局命名冲突。", "static 修饰类成员变量时，表示该变量属于类而不是对象，所有对象共享同一份数据。", "static 修饰类成员函数时，表示函数属于类而不是对象，因此没有 this 指针，只能访问静态成员，不能直接访问非静态成员。", "---"]}, {"num": 19, "title": "explicit 关键字与隐式类型转换？（构造/转换函数何时被隐式调用）", "module": "二：面向对象", "hot": true, "superHot": false, "stars": 2, "cardUrl": "019-explicit-keyword/019-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["explicit 用于禁止编译器进行隐式类型转换，主要用于修饰类中的构造函数和类型转换运算符。", "第一类是构造函数，包括单参数构造函数，以及除第一个参数外其余参数都具有默认值的构造函数。这类构造函数可能在函数传参、函数返回或使用 = 初始化时触发隐式类型转换。C++11 之后，explicit 可以用于修饰任意构造函数。", "第二类是类型转换运算符 operator Type()。这类函数可能在赋值、条件判断或表达式计算时触发隐式类型转换。", "使用 explicit 后，只能通过直接初始化或显式类型转换的方式完成转换，从而避免意外的隐式类型转换，提高代码的安全性和可读性。"]}, {"num": 20, "title": "左值 vs 右值？移动语义解决什么问题？", "module": "三：C++11/14/17/20 新特性", "hot": false, "superHot": false, "stars": 3, "cardUrl": "020-lvalue-rvalue/020-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["左值通常是有名字、可以取地址、生命周期相对稳定的对象，\n右值通常是字面量、表达式产生的临时对象或返回对象的函数调用结果，没有持久身份，生命周期较短。\n左值引用只能绑定左值，const 左值引用既可以绑定左值，也可以绑定右值。C++11引入了右值引用，只能绑定右值\nc++11还引入了移动语义，通过转移资源所有权来避免不必要的深拷贝，从而提高程序性能。移动构造和移动赋值通常只是接管资源，而不是重新分配和复制资源\nstd::move是实现移动语义的重要工具，但它本质上并不移动任何资源，而是将一个左值强制转换为右值引用，本质类似于static_cast<T&&>,这样编译器就可以优先匹配移动构造函数或移动赋值运算符，从而完成真正的资源转移", "---"]}, {"num": 21, "title": "std::move 和 std::forward 分别做了什么？", "module": "三：C++11/14/17/20 新特性", "hot": true, "superHot": false, "stars": 3, "cardUrl": "021-move-forward/021-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["std::move 的作用是将一个对象转换为右值引用类型的表达式，从而允许编译器优先匹配移动构造函数或移动赋值运算符，实现资源转移。需要注意的是，std::move 本身不会移动任何资源，它只是提供了移动的条件，真正执行移动的是移动构造函数或移动赋值运算符。", "std::move 的典型使用场景是在普通函数或成员函数内部，当明确知道某个对象后续不再需要使用，希望转移其资源时使用。", "C++ 中有一个重要规则：任何有名字的变量都是左值，即使它的类型是右值引用。 因此在函数参数传递过程中，传入的右值绑定到一个有名字的参数后，该参数表达式会变成左值。", "为了解决这个问题，C++ 引入了 std::forward。std::forward 用于完美转发，它结合模板类型推导和引用折叠规则，根据参数原本的值类别进行转发：如果传入的是左值，则保持左值；如果传入的是右值，则保持右值，从而避免参数在模板函数传递过程中丢失值类别。", "std::forward 的典型使用场景是在模板函数中，作为参数转发层，将接收到的参数以原始值类别传递给下一个函数", "---"]}, {"num": 22, "title": "RVO / NRVO 与拷贝消除？C++17 的「保证拷贝消除」？", "module": "三：C++11/14/17/20 新特性", "hot": true, "superHot": false, "stars": 3, "cardUrl": "022-rvo-nrvo/022-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["C++ 编译器会对函数返回对象进行拷贝消除（Copy Elision），避免返回过程中产生额外的临时对象以及不必要的拷贝构造和移动构造。常见的优化技术包括 RVO（Return Value Optimization）和 NRVO（Named Return Value Optimization）。", "RVO 主要针对返回匿名临时对象的场景，NRVO 主要针对返回具名局部变量的场景", "在很多编译器 ABI 的实现中，其底层原理是通过隐藏返回值指针（sret）实现。调用方提前分配返回对象的存储空间，并将该地址作为隐藏参数传递给被调用函数。", "对于 RVO，被调用函数直接在该返回值地址构造对象；对于 NRVO，编译器会将局部变量的存储位置重定向到返回值空间，使局部对象与最终返回对象成为同一个对象，从而消除拷贝和移动开销。", "C++17 之后，对于返回纯右值（prvalue）的场景，标准规定必须执行拷贝消除（Guaranteed Copy Elision），即使类型既没有拷贝构造函数也没有移动构造函数，也能够正常返回对象。", "RVO/NRVO 与移动语义的目标都是减少对象返回时的开销，但优先级更高。编译器会优先尝试 RVO/NRVO；只有当拷贝消除无法应用时，才会考虑移动构造；如果移动构造不可用，则再考虑拷贝构造。", "---"]}, {"num": 23, "title": "异常安全的三种保证（basic/strong/nothrow）与 noexcept？", "module": "三：C++11/14/17/20 新特性", "hot": true, "superHot": false, "stars": 3, "cardUrl": "023-exception-safety/023-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["异常安全是指程序在发生异常时仍然能够保持合理状态，通常分为三个等级，basic guraantee保证对象仍然处于有效状态不会资源泄露，通常以来RAII和站展开机制实现，让异常传播时，编译器会自动调用当前作用域内对象的析构函数，从而正确释放资源\nstrong guarantee 保证操作要么完全成功要么失败后回滚到调用前状态，常见实现方式是copyandswap,现在临时对象上完成操作，玩不成功后再通过swap一次性提交结果\nno throw guarantee 保证函数不会向外抛出异常，是最高等级的异常安全保证，通过noexcept实现，noexcept是C++11引入的异常说明符，用于生命函数不会抛出异常 如果异常试图离开一个noexcept函数，运行时会直接调用std terminate终止程序而不会继续进行正常的异常传播\n标准库空气再扩容和元素迁移时会优先使用noexcept移动构造函数，如果没有，退化为使用拷贝构造，因此自定义类型的移动构造函数和移动赋值运算符通常声明为noexcept，系后汉书默认是noexcept", "---"]}, {"num": 24, "title": "lambda 表达式的本质是什么？捕获列表怎么工作？", "module": "三：C++11/14/17/20 新特性", "hot": true, "superHot": false, "stars": 2, "cardUrl": "024-lambda/024-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["Lambda 是 C++11 引入的匿名函数。本质上，Lambda 表达式会让编译器生成一个唯一的闭包类型，并重载函数调用运算符 operator()，捕获列表决定闭包对象中保存哪些外部变量。", "按值捕获会将外部变量拷贝到闭包对象的数据成员中。默认情况下 Lambda 的 `operator()` 是 `const` 的，因此无法修改这些成员；如果需要修改，需要显式使用 `mutable`，但修改的是闭包对象中的副本，不会影响外部变量。", "按引用捕获会在闭包对象中保存对外部变量的引用关系，因此可以直接修改外部变量。但如果 Lambda 的生命周期超过被引用对象的生命周期，会产生悬挂引用（Dangling Reference），属于未定义行为。", "对于类成员捕获，`[this]` 捕获的是当前对象指针，而 `[*this]`（C++17）会将当前对象按值复制到闭包对象中。另外C++14 引入了初始化捕获（Init Capture），允许使用表达式直接声明并初始化闭包成员变量，常用于结合移动语义进行资源转移，例如捕获 `unique_ptr`。\n此外，无捕获 Lambda 可以隐式转换为函数指针，而有捕获 Lambda 由于内部保存状态，本质上是闭包对象，不能隐式转换为普通函数指针。", "---"]}, {"num": 25, "title": "std::function 的原理与开销？类型擦除是什么？", "module": "三：C++11/14/17/20 新特性", "hot": false, "superHot": false, "stars": 3, "cardUrl": "025-std-function/025-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["`std::function` 是 C++11 提供的通用可调用对象包装器，可以统一封装函数、函数指针、Lambda、Functor、bind 表达式等各种可调用对象。本质上它利用了类型擦除（Type Erasure）技术，将不同类型的可调用对象包装成统一接口。", "类型擦除的核心思想是在编译期通过模板机制，为不同具体类型生成对应的包装代码；在运行期隐藏真实类型，只暴露统一的调用接口，从而实现不同类型对象的统一管理和调用。", "`std::function` 的典型实现方式是定义抽象基类，再通过模板派生类包装不同类型的可调用对象，最终通过虚函数实现统一调用", "`std::function` 的性能开销主要来自三个方面：", "1. 类型擦除带来的额外间接调用层；\n2. 调用分发机制带来的开销，例如虚函数、函数指针表等间接调用；\n3. 对象较大时可能产生堆内存分配。", "为了减少动态内存分配带来的开销，标准库实现通常采用 Small Buffer Optimization（SBO），对于较小的 Lambda 或函数对象直接存储在 `std::function` 内部缓冲区中，避免额外的堆分配。", "因此，`std::function` 提供了很强的运行时抽象能力和灵活性，但相比模板实现的静态多态，会存在一定运行时开销。", "---"]}, {"num": 26, "title": "auto / decltype 的推导规则？", "module": "三：C++11/14/17/20 新特性", "hot": false, "superHot": false, "stars": 2, "cardUrl": "026-auto-decltype/026-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["`auto` 的类型推导规则与模板参数 `T` 的按值推导基本一致。", "对于普通 `auto` 推导，会忽略表达式的引用属性以及顶层 `cv`限定符，数组和函数会退化为对应指针类型。\n对于 `auto&` 和 `const auto&`，会按照引用推导规则进行推导，保留底层 `const` 信息。\n对于 `auto&&`，如果发生类型推导，则形成万能引用：绑定左值时推导为左值引用，绑定右值时推导为右值引用，并遵循引用折叠规则。\n数组和函数在按值推导时会发生退化，但在引用推导时会保留原始类型。", "`auto` 与模板推导的一个重要区别是列表初始化。对于 `auto x = {1,2,3}`，会推导为 `std::initializer_list<int>`。", "`decltype` 不进行类型推导，而是直接获取表达式类型，并完整保留引用和 `const/volatile` 属性。对于变量名 `decltype(x)`，得到变量声明类型；对于表达式 `decltype((x))`，由于 `(x)` 是左值表达式，因此结果为引用类型。", "`decltype(auto)` 是 C++14 引入的特性，它按照 `decltype` 的规则推导类型，但采用 `auto` 的书写形式，常用于函数返回值推导，以保留引用属性和值类别，避免类型信息丢失。", "---"]}, {"num": 27, "title": "constexpr 和 const 的区别？编译期计算？", "module": "三：C++11/14/17/20 新特性", "hot": false, "superHot": false, "stars": 3, "cardUrl": "027-const-constexpr/027-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["const 强调只读语义，表示对象不能通过当前接口被修改。它可以修饰变量、指针、成员变量和成员函数：", "修饰变量时表示变量不可修改；\n修饰指针时，const 在 * 左侧表示指向内容不可修改，在 * 右侧表示指针本身不可修改；\n修饰成员变量时，必须在构造函数初始化列表中完成初始化；\n修饰成员函数时，表示该函数不能修改对象的非 mutable 成员，本质上会将 this 指针视为 const Class* const。", "constexpr 是 C++11 引入的关键字，强调编译期计算。它可以修饰变量、对象、函数和构造函数。constexpr 变量要求其初始值必须是常量表达式；constexpr 函数表示该函数具备编译期求值能力，当参数是常量表达式时可在编译期执行，否则仍然在运行期执行。constexpr 构造函数允许对象在编译期完成构造。C++17 又引入了 if constexpr，用于编译期选择代码分支。", "constexpr 对象一定是 const；const 对象不一定是 constexpr。", "编译期计算（Compile-time Computation）是指编译器在生成目标代码之前就完成表达式求值，并将结果直接写入最终代码中，而不是等到程序运行时再计算。这样既能减少运行期开销，也能满足数组长度、模板参数、case 标签等必须使用常量表达式的场景", "---"]}, {"num": 28, "title": "结构化绑定（structured bindings）怎么用？", "module": "三：C++11/14/17/20 新特性", "hot": false, "superHot": false, "stars": 2, "cardUrl": "028-structured-bindings/028-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["结构化绑定是c++17引入的语法特性，可以将一个对象拆解成多个变量，从而方便访问其内部元素，避免频繁使用。first .second或成员变量名\n它支持数组，pair, tuple以及聚合类型进行解构，对于聚合类型，回按照成员生命顺序进行拆解\n其本质是编译期生成一个隐藏对象，在用过成员访问活get<N>()获取各个元素，因此属于编译期语法糖，不会引入额外的运行时开销\n结构化绑定支持值绑定和引用绑定， auti [a,b]会对元素进行拷贝 auto& [a, b] 回直接绑定到元对象成员，修改变量会影响元对象， const auto& [a,b] 可以避免拷贝并保证只读访问，因此实际开发中做常用形式\n使用时注意绑定变量数量必须与可分解元素数量完全匹配，不支持忽略某个成员，只能结构一层，不能直接进行深层的嵌套结构绑定得到的名字并不是对象成员本身，而是编译器生成的别名或引用；\n自定义类型若想支持结构化绑定，可以实现 tuple-like 协议（tuple_size、tuple_element 和 get<N>()）", "---"]}, {"num": 29, "title": "std::optional / std::variant / std::any 各解决什么问题？", "module": "三：C++11/14/17/20 新特性", "hot": false, "superHot": false, "stars": 3, "cardUrl": "029-optional-variant-any/029-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["std::optional 用于表示一个值可能存在，也可能不存在，常用于函数返回可能失败的结果。\n底层由两部分组成：\n  一个状态标记，表示当前是否包含有效对象；\n  一块按照 T 对齐的原始存储空间，用于存放对象。\n创建 optional<T> 时并不一定构造 T 对象，而是在需要时通过 placement new 原地构造；当对象失效或 optional 销毁时，再显式调用析构函数销毁对象。", "std::variant 用于表示多个固定类型中的某一种，本质上是类型安全的 union。\n底层通常包含：\n  一个类型索引 index，记录当前存储的是哪种类型；\n  一块能够容纳所有候选类型最大对象的存储空间。\n同一时刻只有一个对象处于有效状态。\n当切换类型时，会先析构当前对象，再在同一块存储空间中构造新的对象，并更新类型索引。\n相比传统 union：variant 额外维护类型信息，从而保证类型安全，避免错误访问导致未定义行为。", "std::any 用于解决运行时未知类型的统一存储问题，例如插件系统、消息系统和配置系统。\n底层采用**类型擦除（Type Erasure）**实现：\n  编译期为每个类型生成对应的管理函数；\n  运行时保存真实对象、类型信息以及管理函数指针；\n  对外统一表现为 std::any 接口。\n对象存入时构造真实对象并记录类型信息；替换对象时先销毁旧对象，再构造新对象。\n读取时通过：std::any_cast<T>()\n检查类型是否匹配：\n  匹配成功返回对象；\n  不匹配抛出 std::bad_any_cast。\n多数实现还会使用 SBO（Small Buffer Optimization）：\n  小对象直接存储在内部缓冲区；\n  大对象使用堆内存存储。", "---"]}, {"num": 30, "title": "C++20 Concepts 是什么？解决什么痛点？", "module": "三：C++11/14/17/20 新特性", "hot": false, "superHot": false, "stars": 3, "cardUrl": "030-concepts/030-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["Concepts 是 C++20 引入的模板约束机制，用于显式描述模板参数必须满足的接口和语义要求。\n它解决了传统模板编程中的几个核心痛点：", "模板错误信息晦涩，往往只有在模板实例化失败后才能看到大量复杂报错；\n模板参数的要求隐藏在实现细节中，接口不够直观；\nSFINAE、enable_if 等约束手段语法复杂，可读性较差。\nConcept 本质上是一个编译期布尔条件，使用 concept 关键字定义，通常结合 requires 表达式描述类型必须满足的操作、接口或性质。\n编译器在模板匹配阶段会优先检查 Concept 约束：", "满足约束的模板参与重载决议；\n不满足约束的模板直接被排除，而不会进入后续模板实例化过程\n从实现角度看，Concept 不会引入任何运行时开销，本质上属于编译期约束检查和模板候选筛选机制，可以看作 C++20 对 SFINAE 的语言级升级方案", "---"]}, {"num": 31, "title": "协程（coroutines）的基本原理和应用场景？", "module": "三：C++11/14/17/20 新特性", "hot": false, "superHot": false, "stars": 3, "cardUrl": "031-coroutines/031-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["协程（Coroutine）是 C++20 引入的一种无栈、用户态的可挂起执行单元。它允许函数在执行过程中挂起和恢复，从而以同步代码风格编写异步逻辑，避免回调地狱和手写状态机。", "其本质是编译器生成的状态机。编译器在发现 co_await、co_yield 或 co_return 后，会生成状态机代码，并确定协程帧（Coroutine Frame）布局，用于保存 Promise 对象、执行状态以及需要跨挂起点保存的局部变量和参数。", "运行时每次调用协程函数都会创建独立的协程帧，常见实现是堆上分配。帧中构造 Promise 对象，再通过 promise_type::get_return_object() 生成返回对象（如 Task）。Task 通常封装 coroutine_handle，该句柄关联当前协程帧，可用于 resume() 恢复执行和 destroy() 释放资源。", "执行到 co_await 时，会进入 Awaiter 协议：await_ready() 判断是否需要挂起；若需要挂起则执行 await_suspend()，保存状态并将控制权返回给调用方或调度器；恢复后通过 await_resume() 获取结果，状态机根据保存的 state 从对应位置继续执行。co_yield 通常用于 Generator，产生一个值后挂起；co_return 用于结束协程并将结果交给 Promise。", "协程不等于线程，它不提供并行能力，而是解决异步流程管理问题。典型应用场景包括网络服务器、异步 I/O、RPC、数据库访问以及 Generator 等 I/O 密集型系统。"]}, {"num": 32, "title": "函数模板和类模板的实例化过程？", "module": "四：模板与泛型编程", "hot": false, "superHot": false, "stars": 2, "cardUrl": "032-template-instantiation/032-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["模板本质上是一种编译期代码生成机制。编译器看到模板定义时，不会立即生成具体代码，而是保存模板蓝图；当模板被使用时，根据具体类型进行实例化。\n当需要生成函数模板实例时，编译器首先进行模板参数推导，确定模板参数 T，然后将模板参数替换为具体类型，生成对应函数，之后按照普通函数流程进行语义检查、优化和代码生成。\n实例化类模板对象时，编译器会生成一个独立类型，包括对应的数据布局和类型信息。成员函数通常在实际使用时才进行实例化。\n类模板通常需要显式指定模板参数，C++17 引入 CTAD（Class Template Argument Deduction）后，部分构造场景可以自动推导类型。\n模板实例化流程：\n  保存模板定义；\n  使用时确定模板参数；\n  替换模板参数生成具体代码；\n  生成 AST 和符号；\n  按普通代码流程生成机器码。\n模板属于编译期静态多态，通过生成不同类型和函数实现多态，不产生运行时动态分发开销。但由于不同模板参数通常会生成不同机器码，也可能导致代码膨胀", "---"]}, {"num": 33, "title": "模板特化和偏特化的区别和用法？", "module": "四：模板与泛型编程", "hot": false, "superHot": false, "stars": 3, "cardUrl": "033-template-specialization/033-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["模板特化（Template Specialization）是针对某些特殊类型，为模板提供特殊实现的机制，本质是在编译期根据类型选择不同代码。", "模板特化分为两种：\n  **1. 全特化（Full Specialization）**将所有模板参数指定为具体类型。没有泛化能力\n  **2. 偏特化（Partial Specialization）**只指定部分模板参数，或者匹配某种类型模式，仍然保留泛化能力。只支持类模板", "编译器会在模板匹配阶段选择匹配程度最高的版本。", "模板特化常用于：\n  * `type_traits` 类型萃取；\n  * 针对特殊类型优化；\n  * 标准库对特殊类型提供特殊实现。", "它属于编译期静态多态，不产生运行时开销。", "---"]}, {"num": 34, "title": "SFINAE 是什么？enable_if 怎么用？", "module": "四：模板与泛型编程", "hot": false, "superHot": false, "stars": 3, "cardUrl": "034-sfinae-enable-if/034-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["SFINAE（Substitution Failure Is Not An Error），即：模板参数替换失败不是错误。它是 C++ 模板重载决议机制的一部分。", "当编译器进行模板参数替换时，如果发现某个模板不满足条件，例如类型不存在某个成员函数或不支持某种操作，编译器不会报错，而是将该模板从候选列表中移除，然后继续匹配其他模板。", "std::enable_if 是利用 SFINAE 实现模板约束的工具。\n它的原理：\n  条件为 true 时，enable_if<true, T>::type 存在，模板有效；\n  条件为 false 时，type 不存在，触发替换失败，该模板被移除。", "C++20 Concepts 可以看作 SFINAE 的升级方案：\n  语法更清晰；\n  错误信息更友好；\n  约束表达更直观。", "---"]}, {"num": 35, "title": "可变参数模板（variadic templates）怎么展开？", "module": "四：模板与泛型编程", "hot": false, "superHot": false, "stars": 3, "cardUrl": "035-variadic-templates/035-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["可变参数模板（Variadic Template）是 C++11 引入的特性，通过**参数包**接收任意数量的模板参数。本质上是编译器在编译期将参数包展开成多个独立的类型或参数\n常见展开方式有\n  1. 直接展开 需要完美转发时写 std::forward， \n  2. 递归展开将参数拆成 first 和 rest... 递归处理，并提供终止条件（如零参数重载）：\n  3. 初始化列表展开（C++11）借花括号初始化触发展开；0 凑 int；数组只是载体\n  4. 折叠表达式（Fold Expression，C++17）用于直接对参数包进行运算或遍历\n对于类模板，可变参数模板存成tuple,为多个成员类型，通过 std::get<N>() 按索引访问", "---"]}, {"num": 36, "title": "模板元编程的基本思路？编译期 vs 运行期？", "module": "四：模板与泛型编程", "hot": false, "superHot": false, "stars": 3, "cardUrl": "036-template-metaprogramming/036-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["模板元编程的本质是利用模板实例化过程在编译期进行计算和代码生成。", "其核心思想是：把类型当作数据，把模板实例化过程当作计算过程。", "可以理解为：\n  类型（Type）当数据；\n  模板特化当分支（if）；\n  模板递归当循环；\n  类型变换（type_traits）当函数。", "传统程序是在运行期计算，而模板元编程是在编译期通过模板递归、模板特化和类型推导完成计算，并根据结果生成最终代码。", "模板元编程常用的几种手段：\n  模板递归：实现编译期计算；\n  模板特化/偏特化：实现编译期分支选择；\n  SFINAE / enable_if：实现编译期条件约束；\n  类型萃取（type_traits）：获取和转换类型信息；\n  C++17 constexpr、if constexpr：简化编译期逻辑；\n  C++20 Concepts：实现更清晰的模板约束。", "---"]}, {"num": 37, "title": "CRTP（奇异递归模板模式）是什么？", "module": "四：模板与泛型编程", "hot": false, "superHot": false, "stars": 3, "cardUrl": "037-crtp/037-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["CRTP（Curiously Recurring Template Pattern，奇异递归模板模式）是一种模板设计模式，其特点是**派生类将自身作为模板参数传给基类**。这种写法看起来像递归，因此称为“奇异递归”。", "CRTP 的本质是**静态多态**。编译器在实例化 `Base<Derived>` 时已经知道 `Derived` 的具体类型，因此可以直接调用 `Derived::impl()`，无需虚函数和虚表，实现零运行时开销。", "相比虚函数：\n  * CRTP 属于**编译期多态**，调用可内联，没有虚函数开销；\n  * 虚函数属于**运行时多态**，依赖 vtable 和动态绑定。", "CRTP 常见应用场景包括：\n  * 静态多态；\n  * Mixins（给类添加功能）；\n  * `std::enable_shared_from_this`；\n  * 表达式模板（Eigen 等高性能库）；\n  * 编译期接口复用。"]}, {"num": 38, "title": "vector 的扩容策略和迭代器失效？", "module": "五：STL 与数据结构", "hot": true, "superHot": false, "stars": 2, "cardUrl": "038-vector-growth/038-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["`std::vector` 底层采用**连续内存**存储元素，内部维护两个重要属性：\n  * **size**：当前元素个数；\n  * **capacity**：当前已分配存储空间可容纳的元素个数。", "当 `size == capacity` 时，需要进行扩容。`vector` 会重新申请一块更大的连续内存（具体倍数由标准库实现决定，常见约为 **1.5 倍或 2 倍**），然后将原有元素迁移到新空间，最后释放旧内存。", "迁移时，若元素类型的**移动构造函数是 `noexcept`**，通常会优先使用移动构造；否则为了保证 Strong Exception Guarantee，标准库可能退化为拷贝构造。因此一次扩容的时间复杂度为 **O(n)**。\n虽然单次扩容代价较高，但由于采用倍增扩容策略，连续执行大量 `push_back()` 的**均摊时间复杂度（Amortized Complexity）仍然是 O(1)**。", "* **reserve(n)**：只调整 `capacity`，不创建元素，也不会修改 `size`，通常用于提前申请空间，减少扩容次数。\n  * **resize(n)**：修改 `size`。扩大时会构造新元素，缩小时会析构多余元素；容量可能增大，但不会因为 `size` 变小而自动释放内存。", "发生扩容时，由于底层内存重新分配：所有迭代器、指针和引用全部失效。\n未发生扩容时：\n  * `push_back()`：只有 `end()` 迭代器失效，其余迭代器保持有效。\n  * `insert()` / `erase()`：插入或删除位置及其后的所有迭代器失效，之前的位置保持有效。", "---"]}, {"num": 39, "title": "map vs unordered_map 底层实现和性能对比？", "module": "五：STL 与数据结构", "hot": true, "superHot": false, "stars": 2, "cardUrl": "039-map-unordered-map/039-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["std::map 底层通常采用**红黑树（Red-Black Tree）**实现，是一种自平衡二叉搜索树。", "它的特点：\n  元素按 Key 自动有序存储；\n  查找、插入、删除时间复杂度均为 O(log n)；\n  支持 lower_bound、upper_bound、区间查找等有序操作；\n  迭代器除删除元素外通常不会失效。\n  std::unordered_map 底层通常采用**哈希表（Hash Table）**实现。", "内部维护：\n  Bucket（桶数组）；\n  哈希函数（Hash Function）；\n  冲突解决结构（通常采用链地址法，也有实现采用其他方式）。", "它的特点：\n  元素无序存储；\n  查找、插入、删除平均时间复杂度为 O(1)，最坏情况下哈希冲突严重会退化到 O(n)；\n  当负载因子（Load Factor）过大时会 rehash，重新分配桶并重新计算元素位置。\n  需要有序和范围查询用 map，追求查找性能一般用 unordered_map。", "---"]}, {"num": 40, "title": "deque 的底层结构是什么？", "module": "五：STL 与数据结构", "hot": false, "superHot": false, "stars": 3, "cardUrl": "040-deque-structure/040-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["std::deque 是一种双端队列，与 vector 最大的区别是：它的元素不要求存储在一整块连续内存中。", "底层通常采用：中控数组（Map） + 多个内存块（Block）", "中控数组中保存各个数据块的指针，每个 Block 保存一部分元素。", "随机访问：O(1) 根据索引计算所在 Block，再定位具体元素。\n头尾插入/删除：O(1) 通常只需要在两端增加或释放元素或 Block，不需要搬迁全部元素。\n中间插入/删除：O(n) 通常会选择距离更近的一端移动元素，给新元素腾出空间。\n内存不整体连续 因此不能像 vector 一样把 deque 当成连续数组使用。", "---"]}, {"num": 41, "title": "STL 迭代器的分类和设计思想？", "module": "五：STL 与数据结构", "hot": false, "superHot": false, "stars": 2, "cardUrl": "041-stl-iterators/041-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["迭代器是连接容器和算法的桥梁，本质上是对元素访问方式的抽象。\nSTL 迭代器按照能力从弱到强主要分为：Input Iterator：单向、单遍访问，主要用于读取，例如 istream_iterator；Output Iterator：单向、单遍访问，主要用于写入，例如 ostream_iterator、back_inserter；\nForward Iterator：支持读写、单向移动，并且可以多遍遍历，例如 forward_list、无序容器；Bidirectional Iterator：在 Forward 基础上支持 --，例如 list、set、map；\nRandom Access Iterator：进一步支持 +、-、[] 和随机跳转，例如 vector、deque；Contiguous Iterator（C++20）：在 Random Access 基础上进一步保证元素在内存中连续，例如 vector、array、string。\nSTL 让算法面向迭代器能力编程，而不是面向具体容器编程。容器负责存储数据，迭代器负责访问数据，算法负责处理数据。通过迭代器实现了容器与算法的解耦", "---"]}, {"num": 42, "title": "常见排序算法在 STL 中的实现（introsort）？", "module": "五：STL 与数据结构", "hot": false, "superHot": false, "stars": 3, "cardUrl": "042-stl-sorting/042-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["STL 中最常见的排序算法是 std::sort、std::stable_sort 和 std::partial_sort\n* **`std::sort`**：通常采用 **Introsort**，即快速排序为主，递归深度过深时切换到堆排序，小区间使用插入排序。平均 **O(n log n)**，最坏 **O(n log n)**，**不保证稳定**。\n* **`std::stable_sort`**：通常采用归并排序思想，并尽可能利用额外缓冲区。复杂度通常为 **O(n log n)**，特点是**稳定排序**，保证相等元素的相对顺序不变，但通常比 `sort` 开销更大。\n* **`std::partial_sort`**：用于只需要前 `k` 个**有序**元素的场景，典型思路是维护大小为 `k` 的堆，复杂度约为 **O(n log k)**。\n* **`std::nth_element`**：基于快速排序 partition 的选择算法，只保证第 `k` 个位置的元素正确，以及左右两侧分别不大于/不小于它，但**两侧内部不保证有序**，平均复杂度 **O(n)**。", "---"]}, {"num": 43, "title": "allocator 的作用和自定义 allocator？", "module": "五：STL 与数据结构", "hot": false, "superHot": false, "stars": 3, "cardUrl": "043-allocator/043-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["std::allocator 是 STL 提供的默认内存分配器，主要负责分配和释放原始内存；对象在这块内存上的构造和析构，通常由容器通过 std::allocator_traits 完成。", "它的核心作用是将容器逻辑和内存管理解耦，避免容器把 new/delete 等内存策略写死。", "通过自定义 Allocator，可以替换底层的内存分配策略，例如内存池、特殊对齐内存、共享内存等。", "---"]}, {"num": 44, "title": "string 的 SSO（短字符串优化）是什么？", "module": "五：STL 与数据结构", "hot": false, "superHot": false, "stars": 3, "cardUrl": "044-string-sso/044-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["`std::string` 底层与 `vector` 类似，字符串数据通常存储在**连续内存**中，并且支持动态扩容，可以通过 `data()` 获取底层字符数据地址。", "不同的是，`std::string` 通常会采用 **SSO（Short String Optimization，短字符串优化）**：\n> **短字符串直接存储在 `string` 对象内部的缓冲区中，避免额外的堆内存分配。**", "当字符串超过内部缓冲区容量时，才会申请堆内存存储数据。", "SSO 的优点是可以减少短字符串频繁 `new/delete` 带来的开销，提高性能。", "需要注意：", "* **SSO 不是 C++ 标准强制要求的**，属于标准库实现优化；\n  * 不同编译器/标准库实现的 SSO 缓冲区大小可能不同；\n  * 不能假设 `std::string` 一定采用 SSO；\n  * SSO 会增加 `string` 对象本身的大小，以空间换取减少堆分配。"]}, {"num": 45, "title": "std::thread 的基本用法和线程生命周期管理？", "module": "六：并发与多线程", "hot": false, "superHot": false, "stars": 2, "cardUrl": "045-std-thread/045-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["std::thread 是 C++11 提供的线程封装类，用来创建和管理操作系统线程。它底层会调用平台相关的原生线程 API，例如 Linux 下通常基于 pthread。它可以接收函数指针、Lambda、函数对象、成员函数等可调用对象。\nthread 对象创建后线程立即开始执行，并处于 joinable 状态。在线程对象析构前，必须先调用 join() 或 detach()，使其变成非 joinable 状态，否则会调用 std::terminate()。\njoin()：等待线程执行完成，调用 join() 的线程会阻塞。\ndetach()：将线程与 thread 对象分离，线程独立运行，容易产生对象生命周期和悬空引用问题。\nstd::thread 不可拷贝，只能移动，因为一个线程资源不能被两个 thread 对象同时拥有。\nstd::thread 本身是 RAII 风格的线程资源封装，但不会在析构时自动 join；C++20 的 std::jthread 会在析构时自动请求停止并 join，使用起来更加安全。", "---"]}, {"num": 46, "title": "mutex / lock_guard / unique_lock 的区别和用法？", "module": "六：并发与多线程", "hot": false, "superHot": false, "stars": 2, "cardUrl": "046-mutex-locks/046-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["std::mutex 是互斥锁对象，同一时刻只能被一个线程持有，提供 lock() 和 unlock()。如果一个线程已经持有锁，其他线程调用 lock() 会阻塞等待。实际开发中，同一份共享数据应该由同一把锁保护，通常把 mutex 和它保护的数据放在一起管理。", "手动 lock/unlock 容易因为异常、return 等情况忘记解锁，因此通常使用 RAII。", "std::lock_guard 是最简单的 RAII 锁管理器，构造时自动加锁，析构时自动解锁。通常创建局部变量，离开作用域后自动释放锁。它不可拷贝，也不可移动，适合整个作用域都需要持锁的场景。", "std::unique_lock 同样采用 RAII，但更加灵活，可以延迟加锁、手动 unlock/lock、try_lock，并且可以移动但不能拷贝。它也是 condition_variable 常用的锁类型，因为等待时需要暂时释放锁，被唤醒后再重新加锁。", "---"]}, {"num": 47, "title": "条件变量（condition_variable）怎么用？虚假唤醒？", "module": "六：并发与多线程", "hot": false, "superHot": false, "stars": 3, "cardUrl": "047-condition-variable/047-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["std::condition_variable 是一个类对象，用于线程间的等待和通知，避免线程为了等待某个条件而忙等，主要提供 wait()、notify_one() 和 notify_all()。", "wait() 通常需要传入已经加锁的 std::unique_lock。它会在等待时临时释放 mutex 并阻塞，线程被唤醒后再重新获取 mutex，因此不能使用 lock_guard。", "由于存在虚假唤醒，以及条件可能已经被其他线程消耗，所以 wait() 应该配合条件判断：被唤醒后会先重新获取 mutex，再检查条件；如果条件仍不满足，就继续等待。", "notify_one() 和 notify_all() 只负责通知等待线程，不会自动修改条件，也不负责加锁。条件的修改仍然需要由通知方在 mutex 保护下完成。", "---"]}, {"num": 48, "title": "std::async / future / promise / packaged_task 各解决什么？", "module": "六：并发与多线程", "hot": false, "superHot": false, "stars": 3, "cardUrl": "048-async-future-promise/048-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["C++11 中，std::thread 用来创建线程并执行函数，但线程函数的返回值不能直接通过 thread 获取。", "std::future 表示一个未来才能获得的结果，通过 get() 获取结果，通常只能调用一次。结果可以通过 promise、packaged_task 或 async 产生。", "std::promise 是结果的生产端，通过 set_value() 或 set_exception() 主动设置结果，然后由对应的 future 获取。它本身不负责创建线程，需要自己安排线程执行。", "std::packaged_task 是把一个已有的可调用对象包装成任务，执行任务后会自动把返回值关联到 future。它本身也不负责创建线程，通常交给线程池或 std::thread 执行。", "std::async 则是更高层的封装，把任务执行和 future 结果获取结合起来，并根据 launch 策略决定异步执行还是延迟执行。\n---"]}, {"num": 49, "title": "原子操作和内存序（memory_order）？", "module": "六：并发与多线程", "hot": true, "superHot": false, "stars": 3, "cardUrl": "049-atomic-memory-order/049-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["多线程同时访问共享数据时，如果没有适当的同步机制，就可能产生数据竞争。", "C++ 提供 std::atomic<T>，将适合的类型包装成原子对象，并提供 load、store、exchange、compare_exchange、fetch_add 等原子操作。这些操作具有不可分割性，其他线程不会观察到操作执行到一半，从而避免这个原子变量上的数据竞争。", "但原子性只保证单次原子操作。多次操作之间仍然可能存在顺序和可见性问题，周围的普通变量也不会因此自动变得线程安全。", "因此原子操作可以指定内存序（Memory Order），控制该原子操作与周围内存访问之间的顺序以及跨线程可见性。", "常见内存序从弱到强：\n  relaxed：只保证原子性，不负责线程间同步；\n  acquire：获取语义，后续内存访问不能被重排到它之前；\n  release：发布语义，之前的内存访问不能被重排到它之后；\n  acq_rel：同时具有 acquire 和 release 语义，主要用于读改写操作；\n  seq_cst：默认，提供最强的顺序保证，并为 seq_cst 原子操作建立统一总顺序；\n  consume：理论上用于更弱的依赖关系同步，但实际工程中基本不使用。", "---"]}, {"num": 50, "title": "无锁编程的基本思路？CAS 操作？", "module": "六：并发与多线程", "hot": true, "superHot": false, "stars": 3, "cardUrl": "050-lock-free/050-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["无锁编程主要利用 std::atomic 的原子操作，在不让线程因 mutex 阻塞的情况下实现并发更新。常见方式包括 CAS 和 SPSC。", "CAS 比较原子变量当前值和 expected：相等则原子地替换成新值；否则失败，并把当前值写回 expected，是否重试由调用方决定，通常在循环中重试。compare_exchange_strong 不允许伪失败；compare_exchange_weak 允许伪失败，因此通常放在循环中使用。", "CAS 要注意 ABA 问题：值可能从 A→B→A，CAS 只看到还是 A，却不知道中间发生过变化。可以使用 tagged pointer，把指针和版本号一起作为 CAS 的比较对象。", "还要注意内存回收：节点摘下后不能立刻 delete 或复用，否则可能产生悬空指针和 ABA。常见方案有 Hazard Pointer、RCU、Epoch。", "SPSC 是单生产者单消费者，通常使用固定数组 + 两个原子下标：生产者只修改 tail，消费者只修改 head，双方不会同时修改同一个下标，因此一般不需要 CAS，使用 load/store + acquire/release 即可。", "---"]}, {"num": 51, "title": "线程池的设计与实现？", "module": "六：并发与多线程", "hot": true, "superHot": false, "stars": 3, "cardUrl": "051-thread-pool/051-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["线程池的核心是预先创建一组 Worker 线程，通过共享任务队列复用线程，避免频繁创建和销毁线程。", "通常用 vector<thread> 保存 Worker，用 queue<function<void()>> 保存任务。构造时通过 emplace_back 创建指定数量的线程，线程入口通过 [this] { worker_loop(); } 调用成员函数。", "worker_loop() 循环从任务队列取任务。队列会被多个线程访问，所以使用 mutex 保护；取出任务后立即释放锁，再在锁外执行任务，避免耗时任务阻塞其他 Worker。为避免 Worker 空转，使用 condition_variable，wait() 配合 unique_lock 和条件：条件不满足就睡眠，被唤醒后重新获取锁并检查条件。", "提交任务时，可以用可变参数模板接收任意函数和参数，然后使用 std::bind 将函数和参数包装成无参任务，再通过 packaged_task + future 实现返回值。由于 packaged_task 不可拷贝，而 std::function 通常要求目标可复制，因此可以用 shared_ptr<packaged_task> 管理它，再把任务放入队列。", "停止线程池时设置 stop = true，调用 notify_all() 唤醒所有 Worker。Worker 在 stop && tasks.empty() 时退出，最后对所有线程调用 join()", "---"]}, {"num": 52, "title": "互斥锁 / 读写锁 / 自旋锁 / 信号量的区别与选型？", "module": "六：并发与多线程", "hot": false, "superHot": false, "stars": 3, "cardUrl": "052-lock-types/052-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["mutex 同一时刻只有一个线程持有。lock 获取，unlock 释放；竞争失败会阻塞，不会一直空转。适用于保护共享数据。", "读写锁 一把 shared_mutex，两种模式：读用 shared_lock，写用 unique_lock。多个读者可以同时持有读锁；写者必须等所有读者和写者退出后独占。适用于读多写少。", "自旋锁 语义类似 mutex，但获取不到锁时会循环检查、不主动睡眠。适用于临界区极短、预计很快就能拿到锁的场景。", "信号量 内部维护一个计数：acquire 成功时计数减一，release 时加一；计数为 0 时，acquire 会阻塞等待。适用于限制资源并发数量以及线程间通知/同步。", "---"]}, {"num": 53, "title": "死锁的四个必要条件与破解方法？", "module": "六：并发与多线程", "hot": false, "superHot": false, "stars": 2, "cardUrl": "053-deadlock/053-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["死锁的必要条件是：互斥、占有且等待、不可剥夺、循环等待，四个条件必须同时成立。", "互斥：资源同一时刻只能被一个线程占用；\n占有且等待：持有资源的同时等待其他资源；\n不可剥夺：已获得的资源不能被强制夺走；\n循环等待：线程之间形成等待环。", "避免死锁最常用的是破坏循环等待，对多把 mutex 规定统一的加锁顺序；需要同时获取多把锁时，可以使用 std::lock / std::scoped_lock。也可以使用 try_lock，失败后释放已有锁再重试，但需要注意可能产生活锁。同时尽量缩短临界区，避免持锁调用复杂或可能再次加锁的函数。"]}, {"num": 54, "title": "编译的四个阶段（预处理→编译→汇编→链接）？", "module": "七：编译链接与底层机制", "hot": false, "superHot": false, "stars": 2, "cardUrl": "054-compile-stages/054-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["C++ 从源码到可执行文件，通常经历：预处理 → 编译 → 汇编 → 链接。", "预处理：处理 # 开头的指令，得到预处理后的源码 .i/.ii。包括展开 #include、#define，处理 #if/#ifdef 等条件编译，以及删除注释。", "编译：把预处理后的源码翻译成汇编代码 .s，主要包括词法分析、语法分析、语义分析、中间代码生成与优化、目标代码生成。", "汇编：汇编器把 .s 转换成可重定位目标文件 .o。.o 中已经包含机器指令，但一些函数、全局变量的最终地址还没有确定，并保留符号表和重定位信息。", "链接：把多个 .o、静态库 .a 等组合成最终的可执行文件或共享库，主要包括符号解析、重定位和段合并。", "---"]}, {"num": 55, "title": "静态链接 vs 动态链接？符号解析过程？", "module": "七：编译链接与底层机制", "hot": true, "superHot": false, "stars": 3, "cardUrl": "055-static-dynamic-link/055-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["一个 .cpp 要复用另一个 .cpp 的代码，双方都先编成 .o。同一程序里可以直接把这些 .o 链在一起；跨程序复用再做成静态库或动态库。", "静态库：多个 .o 用 ar 打成 .a。链接时从左到右处理输入：普通 .o 全部收下；对 .a 则按当前未定义符号抽出需要的 .o，新抽出的文件可能继续产生未定义符号，再向后面的输入解析。收齐后做段合并和重定位。运行不再依赖 .a，但可执行文件更大，多个程序会各带一份库代码。改了静态库，通常要重新链接程序。", "动态库：.o 一般用 -fPIC 编成位置无关代码，再 -shared 生成 .so。链程序时不把库代码拷进可执行文件，只记录对 .so 的依赖和 PLT/GOT 等信息。链接器仍会检查 .so 是否提供了用到的符号，没有则 undefined reference；有则把调用接到跳板，不填最终地址。运行时动态链接器先加载 .so。函数符号默认在第一次调用时通过 PLT/GOT 完成绑定和重定位。可执行文件更小，多个进程可共享库代码；ABI 兼容时可以换 .so，但运行时必须找到正确版本的动态库。", "---"]}, {"num": 56, "title": "ODR（One Definition Rule）违反会怎样？", "module": "七：编译链接与底层机制", "hot": true, "superHot": false, "stars": 3, "cardUrl": "056-odr/056-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["每个 .cpp 单独编译，编译器看不见别的翻译单元里的函数体。链接时按名字把引用接到定义上，必须能唯一确定接到哪一份。", "所以有 ODR：整个程序里，同一个普通实体原则上只能有一份定义；声明可以有很多份。", "函数：声明在 .h，定义在某一个 .cpp；定义要放进 .h 并被多处 include，需 inline（或模板）。\n全局变量：.h 里 extern int g;，某一个 .cpp 里 int g = 1;。\n违反时：重复定义报 duplicate，没有定义报 undefined；inline 内容不一致往往不报错但只留一份，行为未定义", "---"]}, {"num": 57, "title": "ABI 兼容性问题和 extern \"C\"？", "module": "七：编译链接与底层机制", "hot": false, "superHot": false, "stars": 3, "cardUrl": "057-abi-extern-c/057-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["**ABI（Application Binary Interface）**是二进制层面的接口约定，决定不同编译产物（.o / .so / 可执行文件）能不能直接链接和调用。", "ABI 通常包括：符号命名、函数调用约定（参数/返回值怎么传）、数据类型和结构体布局与对齐、C++ 对象布局（如虚表、RTTI）、异常处理等。", "ABI 会受到硬件、操作系统、编译器及编译选项、标准库等因素影响。ABI 兼容才能正确链接和调用，也才能在兼容前提下替换 .so。", "**符号命名：**C++ 支持函数重载，编译器通过 Name Mangling 区分不同的 foo；C 不支持重载，通常直接使用 foo。如果一边按 C++ 规则改名，一边按 C 规则查找，符号就匹配不上，可能出现 undefined reference。", "C++ 可以使用 extern \"C\" 指定 C language linkage，使函数使用 C 风格的符号命名规则，从而方便 C++ 调用 C 库，也可以让 C++ 函数以 C 接口形式暴露给其他语言。同一个 extern \"C\" 名字不能通过重载区分多个函数。", "---"]}, {"num": 58, "title": "C++ 对象的内存布局（含虚表指针）？", "module": "七：编译链接与底层机制", "hot": false, "superHot": false, "stars": 3, "cardUrl": "058-object-layout/058-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["每个对象必须有唯一地址，所以空类通常至少占 1 字节，里面没有有效数据。空类作为基类时，可能通过 EBO 优化，不占额外空间。", "普通对象里主要是非静态数据成员，通常按声明顺序布局，并根据对齐要求插入 padding。静态成员属于类，不属于某个对象，不占对象空间；成员函数也不占每个对象的空间。有虚函数时，常见实现会在对象里增加一个 vptr，指向类对应的 vtable。vtable 通常由多个对象共享，通过 vptr 实现运行时多态。", "单继承：派生对象包含一个基类子对象，常见布局中基类子对象位于前面，派生类成员位于后面。如果基类已经有虚函数，派生类通常复用基类的 vptr 和虚表体系。", "多继承：对象包含多个基类子对象。常见实现中，第一个具有虚函数的基类可能作为主基类共享对象开头的 vptr，其他需要独立虚函数分派的基类子对象通常各自有 vptr，因此一个对象可能存在多个 vptr。", "虚继承：最终派生对象中虚基类只保留一份。它的具体位置和定位方式由 ABI 决定，常见实现会通过虚表中的偏移信息或 vbptr/vbtable 等机制找到虚基类。如果虚基类本身有虚函数，它自己的基类子对象也可能包含 vptr。", "---"]}, {"num": 59, "title": "虚拟内存是什么？虚拟地址→物理地址的转换（页表）？", "module": "七：编译链接与底层机制", "hot": true, "superHot": false, "stars": 3, "cardUrl": "059-virtual-memory/059-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["虚拟内存是操作系统给每个进程提供的一套独立虚拟地址空间，虚拟地址通常连续，但实际物理内存映射可以是稀疏的。程序使用虚拟地址，不直接访问物理内存。", "虚拟空间和物理内存都按页管理，常见页面大小是 4KB。CPU 的 MMU 根据页表把虚拟地址翻译成物理地址。页表记录虚拟页到物理页框的映射，以及读、写、执行等权限。", "地址翻译过程：MMU 首先查询 TLB，命中后得到物理页号，再加上页内偏移访问物理内存。TLB 未命中时进行页表遍历；如果存在有效映射，就更新 TLB 后访问；如果没有映射，就产生缺页异常，由操作系统分配物理页或从文件/Swap 等位置调入；如果访问非法，则报错。", "很多内存区域采用按需分配，第一次访问时才真正建立物理页映射。", "虚拟内存主要解决三个问题：", "进程隔离：不同进程有独立页表，相同虚拟地址可以映射到不同物理页。\n内存保护：页表项带有权限，MMU 可以阻止非法读写和执行。\n内存管理：物理页不要求连续，可以按需分配；只读代码页（例如 .so 的代码页）可以被多个进程共享。", "---"]}, {"num": 60, "title": "内存碎片（内部/外部）？分段与分页的区别？", "module": "七：编译链接与底层机制", "hot": false, "superHot": false, "stars": 3, "cardUrl": "060-memory-fragmentation/060-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["内存碎片是已经空闲，但暂时不好利用的内存空间，分为内部碎片和外部碎片。", "内部碎片：分给程序的内存块比实际需要的大，多出来的空间在块内部，其他程序不能使用。", "外部碎片：空闲内存总量足够，但散落成很多小块，找不到一块足够大的连续空间。", "分段和分页都是内存管理中的分块方式：", "分段：按照程序的逻辑结构划分，例如代码、数据、栈，每个段大小可变。段通常需要满足连续性要求，因此容易产生外部碎片。", "分页：把虚拟地址空间和物理内存划分成固定大小的页和页框，常见是 4KB。任意空闲页框都可以映射一个虚拟页，不要求物理内存连续，因此基本解决了外部碎片问题；但最后一个页可能没有用满，会产生内部碎片。", "---"]}, {"num": 61, "title": "用户态 vs 内核态？系统调用的开销来自哪里？", "module": "七：编译链接与底层机制", "hot": true, "superHot": false, "stars": 2, "cardUrl": "061-user-kernel-mode/061-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["用户态和内核态是 CPU 的两种权限级别。\n普通应用以及 libc 的普通代码运行在用户态，不能直接访问硬件、执行特权指令或修改页表等关键资源；\n操作系统内核运行在内核态，拥有更高权限。", "读文件、创建进程、建立内存映射等需要内核代办的操作，通过 syscall 指令从用户态进入内核态，这称为系统调用。", "系统调用会涉及特权级切换、必要的上下文保存与恢复、参数和权限检查，以及内核代码执行，因此相比普通函数调用，会多出一笔较高的固定额外开销。", "---"]}, {"num": 62, "title": "cache-friendly 代码？cacheline 与 false sharing？", "module": "七：编译链接与底层机制", "hot": true, "superHot": false, "stars": 3, "cardUrl": "062-cache-false-sharing/062-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["CPU 执行 load 指令访问数据时，通常先检查 L1 Cache，如果未命中，再依次向 L2、L3，最后到 RAM 查找。找到数据后，通常以 Cache Line 为单位加载，常见大小是 64 字节，再提供给 load 操作", "Cache-friendly 指让数据访问模式符合 CPU Cache 的工作方式。常见做法是让数据尽量连续、紧凑，从而充分利用空间局部性和时间局部性，减少 Cache Miss 和随机内存访问。", "在多核 CPU 中，通常 L1/L2 更偏向每个 Core 私有，L3 往往由多个 Core 共享，但具体 Cache 层级和共享方式取决于 CPU 架构。", "**False Sharing（伪共享）**发生在多线程场景：不同 Core 上的线程虽然修改的是不同变量，但这些变量恰好位于同一个 Cache Line。由于 Cache 一致性协议通常以 Cache Line 为粒度，一个 Core 修改其中一个变量后，可能导致其他 Core 上包含另一个变量的 Cache Line 副本失效，从而产生频繁的缓存一致性流量，降低程序性能。", "解决 False Sharing 的核心思路是：让不同线程频繁修改的数据位于不同的 Cache Line，常见方法包括使用 alignas(64) 或增加 padding。"]}, {"num": 63, "title": "单例模式的线程安全实现（Meyer's Singleton）？", "module": "八：设计模式与系统设计", "hot": false, "superHot": false, "stars": 2, "cardUrl": "063-singleton/063-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["单例模式的核心是：**一个类在整个程序运行期间只存在一个实例，并提供统一的访问入口。**", "常见实现方式是将**构造函数设为 ****`private`**，防止外部直接创建对象；同时删除**拷贝构造、拷贝赋值、移动构造和移动赋值**，避免通过复制或移动产生其他实例。", "通过 `static` 成员函数提供统一的访问入口。`static` 成员函数属于类本身，不依赖具体对象，可以直接通过类名调用。`instance()` 返回对象的**引用**，避免拷贝，并让调用方访问同一个单例对象。", "使用**函数内局部静态变量**，具有**懒初始化**特性：第一次调用 `instance()` 时才创建对象；之后每次调用都返回同一个对象。同时，局部静态变量的生命周期由程序自动管理，通常在程序退出时自动析构。", "C++11 标准保证**函数内局部静态变量的初始化是线程安全的**。多个线程第一次同时调用 `instance()` 时，只有一个线程负责初始化 `obj`，但**不代表单例对象内部的数据访问也是线程安全的**。如果多个线程同时修改单例内部的共享数据，仍然需要使用 `mutex`、`atomic` 等同步机制。", "---"]}, {"num": 64, "title": "工厂模式和抽象工厂在 C++ 中怎么实现？", "module": "八：设计模式与系统设计", "hot": false, "superHot": false, "stars": 2, "cardUrl": "064-factory/064-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["工厂模式主要解决的是业务逻辑和对象创建逻辑解耦的问题。业务不再直接 new 具体类，而是把对象创建集中到工厂一侧。", "可以把创建集中到一个工厂类中，业务传入所需类型，这就是简单工厂。但工厂内部通常仍然需要大量 if/else 或 switch 进行类型判断。", "进一步可以利用运行时多态解决这个问题。C++ 的构造函数不能是虚函数，于是可以把“创建对象”这个动作抽象成一个虚函数 ，声明在抽象工厂类中，由各个已经构造好的具体工厂去覆盖，这就是工厂方法模式。", "工厂虚函数通常返回产品基类的智能指针。这样实际可以指向派生类对象，通过基类接口实现多态，同时 unique_ptr 自动管理动态对象的生命周期，也避免了按基类对象值返回时产生的对象切片。", "如果系统中不只是需要创建一种产品，而是需要创建多个相互关联、需要保持匹配的产品，就可以把多个 create 接口组合到一个抽象工厂中。", "---"]}, {"num": 65, "title": "观察者模式 / 发布-订阅在 C++ 中的实现？", "module": "八：设计模式与系统设计", "hot": false, "superHot": false, "stars": 3, "cardUrl": "065-observer-pubsub/065-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["观察者 / 发布-订阅解耦的是状态变化和「通知谁」：业务只改数据，听众名单不写死在业务里。", "观察者模式中，被观察者用 vector 保存观察者，通过sub添加，unsub移除，notify遍历并调用回调。notify 先复制再遍历，避免回调里改表导致迭代器失效。多线程用 mutex 保护这张表：锁内只拷贝，解锁后再调回调，避免死锁", "表里可以存放基类指针，一般是裸指针/weak_ptr,  不负责指针生命周期，销毁前先unsub， 观察者继承抽象类，实现纯虚回调函数 update()；基类需要虚析构函数。", "表里也可以存放回调函数利用 std::function 的类型擦除能力统一保存不同类型的 Lambda、Functor 等可调用对象。", "发布-订阅是同一套机制，差别是表在中间的 Bus 上。发布方只 publish(topic, data)，订阅方只 subscribe(topic, ...)，双方不持有对方指针；Bus 按 topic 分桶存放回调。", "---"]}, {"num": 66, "title": "PIMPL 惯用法解决什么问题？", "module": "八：设计模式与系统设计", "hot": false, "superHot": false, "stars": 3, "cardUrl": "066-pimpl/066-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["头文件一旦修改，所有 include 它的 cpp 通常都需要重新编译。**PIMPL 的核心就是把实现细节从头文件挪到 ****`.cpp`****，头文件只保留公开接口。**", "具体做法是把原来类中的私有数据和私有实现放到一个 `Impl` 类中，`Impl` 的定义放在原来的 `.cpp` 文件里。头文件中只保存一个 `std::unique_ptr<Impl>`，因为指针本身不需要知道 `Impl` 的具体布局，所以只需要对 `Impl` 做前向声明。", "但是 `unique_ptr` 销毁对象时最终需要执行 `delete`，而删除 `Impl` 时必须看到完整类型。因此 PIMPL 中的析构函数通常只在头文件声明，然后在 `.cpp` 中、`Impl` 完整定义之后再实现。", "移动构造和移动赋值同样在 `.cpp` 中定义；`std::unique_ptr` 不能拷贝，所以公开类的拷贝构造和拷贝赋值通常直接 `= delete`。如果需要支持拷贝，则需要在 `.cpp` 中自己实现深拷贝。", "PIMPL 还有一个重要作用是改善 **ABI 稳定性**。对外的类对象通常只包含一个指针，因此 `Impl` 内部增加或删除成员时，不会改变公开类的对象布局，已经编译好的客户端二进制更不容易因为内部实现变化而受到影响。", "---"]}, {"num": 67, "title": "如何设计一个高性能的日志系统？", "module": "八：设计模式与系统设计", "hot": false, "superHot": false, "stars": 3, "cardUrl": "067-logging/067-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["日志是程序留下的「发生了什么」的记录；日志系统是让这些记录从产生到查询，稳定、集中地工作的整套设计。", "业务线程负责尽可能轻地生产日志，后台 I/O 线程负责异步、批量地写出日志，Agent（如 Fluent Bit）负责跨进程、跨机器收集日志，消息系统（如 Kafka）负责削峰和缓冲，ES 等存储系统负责查询和分析。", "进程内：业务线程先进行日志级别过滤，然后生成轻量日志消息，尽量减少内存分配；日志系统通过内存队列解决业务线程和 I/O 线程处理速度不匹配的问题。队列根据生产消费模型选择合适的同步方式，例如锁/无锁/有界环。", "队列满时需要提前定义策略：关键日志：阻塞或背压，尽量保证不丢；普通日志：允许丢弃，避免影响业务；不同日志级别可以采用不同策略。", "本地文件要有滚动（大小/时间）和保留。正常退出必须排空队列再关闭，避免退出丢日志。磁盘要提前监控告警，空间不足时降级（停低级别、只保错误），避免写满把服务拖死。", "---"]}, {"num": 68, "title": "如何设计一个内存池（memory pool）？", "module": "八：设计模式与系统设计", "hot": true, "superHot": true, "stars": 3, "cardUrl": "068-memory-pool/068-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["内存池（Memory Pool）的核心思想是：提前申请一大块内存，将其切分成固定大小的 Block，通过 Free List 复用，避免频繁调用 new/delete。", "内存池用 vector 保存每次申请的 Chunk 地址。申请新 Chunk 后，按照 block_size 和 block_num 切分成多个 Block，每个 Block 通过 next 指针连接成 Free List。", "主要接口：", "allocate()：Free List 为空则先申请并切分新 Chunk；然后摘下链表头，返回这块未初始化内存。deallocate()：把头插回 Free List，不还给操作系统。", "clear()：按 vector 里的地址对每个 Chunk operator delete，清空 vector，free_list 置空。", "align_up 用于将地址或大小向上调整到指定 alignment 的整数倍，保证 Block 满足内存对齐要求。"]}, {"num": 69, "title": "epoll 的 ET 和 LT 模式区别？如何避免漏读？", "module": "九：网络编程与操作系统", "hot": true, "superHot": false, "stars": 3, "cardUrl": "069-epoll-et-lt/069-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["Epoll 是 Linux 提供的一种 I/O 多路复用机制，用于高并发网络编程。本质是一个线程管理很多文件描述符，只在 FD 发生就绪事件时进行处理，ET/LT 是 epoll 的两种就绪事件通知模式。", "LT（Level Trigger，水平触发）：只要 FD 仍然处于就绪状态，就会持续通知。例如 Socket 还有数据没读完，下一次 epoll_wait() 仍然会返回这个 FD，因此不容易漏读。", "ET（Edge Trigger，边缘触发）：只有 FD 的状态从“不就绪 → 就绪”发生变化时通知一次。如果一次没有把数据读完，剩余数据可能不会再次触发事件，因此容易出现漏读。", "阻塞 FD 在没有数据时，recv() 会一直等待；非阻塞 FD 在没有数据时会立即返回 -1，并设置 errno = EAGAIN/EWOULDBLOCK。", "ET 为避免漏读，实际使用时应将 FD 设置为非阻塞，并在一次事件处理中循环 recv()，直到返回 EAGAIN/EWOULDBLOCK，表示当前数据已经读完。", "---"]}, {"num": 70, "title": "select / poll / epoll 的底层数据结构差异？为什么 epoll 是 O(1)？", "module": "九：网络编程与操作系统", "hot": true, "superHot": false, "stars": 3, "cardUrl": "070-select-poll-epoll/070-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["网络编程通过 Socket 创建文件描述符（FD）。FD 是内核提供给用户层的句柄，用户层通过 `read()`、`write()`、`recv()`、`send()` 等接口与内核交互。", "`select`、`poll`、`epoll` 的核心差异是：**如何保存关注的 FD，以及如何找到就绪的 FD。**", "**select：**使用 `fd_set` 位图保存关注的 FD。调用前设置关注，内核返回时修改位图，用户层需要遍历整个 FD 范围查找就绪 FD。常见实现的 `FD_SETSIZE` 为 1024，因此存在 FD 值范围限制。", "**poll：**使用 `pollfd` 结构体数组保存 FD，并通过两个字段表示关注事件和实际就绪事件：", "* `events`：关注的事件；\n* `revents`：实际就绪的事件。", "它没有 `select` 的固定大小限制，但每次调用仍需遍历整个数组。", "**epoll：**关注的 FD 保存在内核中，主要使用：", "* **红黑树**：管理关注的 FD；\n* **就绪链表**：保存已经就绪的 FD。", "通过 `epoll_ctl()` 管理 FD，操作通常为 `O(log N)`；`epoll_wait()` 直接获取就绪事件，成本主要与就绪数量 `K` 有关，通常为 `O(K)`。", "---"]}, {"num": 71, "title": "Reactor 模型？主从 Reactor / one loop per thread？", "module": "九：网络编程与操作系统", "hot": true, "superHot": false, "stars": 3, "cardUrl": "071-reactor/071-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["epoll 是内核提供的 I/O 多路复用工具，负责筛选并告知哪些 FD 已经就绪；Reactor 是上层的事件驱动架构，负责将就绪事件分发给对应的 Handler 处理。", "One Loop Per Thread：一个线程对应一个独立的 Event Loop，每个 Loop 管理自己的一组 FD，可以有多个线程和多个 Loop。", "优点是结构清晰、减少锁竞争；缺点是耗时或阻塞操作会阻塞当前 Loop 上的其他 FD。", "主从 Reactor：通常由一个 Main Reactor thread 和多个 Sub Reactor thread 组成。Main Reactor 线程负责监听 listen_fd 和 accept()，Sub Reactor 负责已建立连接的 I/O 处理。", "Main Reactor 接收到 client_fd 后通知 Sub Reactor。Sub Reactor 被唤醒后，在自己的线程中调用 epoll_ctl() 将 client_fd 注册到自己的 epoll。", "---"]}, {"num": 72, "title": "TCP 三次握手、四次挥手与 TIME_WAIT（2MSL）？", "module": "九：网络编程与操作系统", "hot": true, "superHot": false, "stars": 3, "cardUrl": "072-tcp-handshake/072-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["TCP 三次握手用于建立连接，四次挥手用于关闭连接。TCP 是全双工通信，因此连接的建立和关闭都需要双方分别确认。", "**三次握手：**客户端发送 SYN，服务端回复 SYN + ACK，客户端再发送 ACK。这样双方都能确认对方的收发能力正常，并同步初始序列号。", "**四次挥手：**主动关闭方发送 FIN，被动关闭方回复 ACK；被动关闭方处理完剩余数据后发送 FIN，主动关闭方再回复 ACK。若被动方没有待发数据，可以把 ACK 和 FIN 合在一个包里。", "**TIME_WAIT：**主动关闭方发送最后一个 ACK 后进入 TIME_WAIT，持续 2MSL。MSL 是 一个 TCP 报文在网络中允许存活的最长时间。Linux 中常见的 TIME_WAIT 持续时间约为 60s，", "等待 2MSL 可以理解为：一份时间给最后的 ACK 到达对端，另一份给“ACK 丢失后对端重传的 FIN”回到本端；同时让旧连接的报文在网络中自然消失，避免影响后续使用相同四元组的新连接。", "---"]}, {"num": 73, "title": "零拷贝与 mmap 的原理？数据如何从网卡到用户态？", "module": "九：网络编程与操作系统", "hot": true, "superHot": false, "stars": 3, "cardUrl": "073-zero-copy/073-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["网卡先通过 DMA 把数据写入 RX Ring，网卡产生中断后，驱动通常通过 NAPI 进行批量处理，数据经过协议栈后进入 Socket 的接收队列。应用调用 `recv()` 时，内核把数据从内核态拷贝到用户态。", "发包则相反，应用调用 `send()` 后，内核通常将用户态数据复制到内核发送缓冲区，随后协议栈添加报文头，驱动把待发送的 `skb` 放入 TX Ring，网卡再通过 DMA 从内存中取走数据并发送。", "内核两层缓冲：网卡用的是 RX/TX Ring，Socket 用的是 Recv-Q/Send-Q，用户 `buf` 是第三块。和用户态之间的 CPU 拷贝，收、发各一次；网卡那一跳是 DMA。", "**零拷贝**主要是为了**减少 CPU 参与的数据复制，提高 I/O 性能**。常见的零拷贝技术有：", "* `sendfile()` / `splice()`：让数据尽量留在内核中，在文件、管道和 Socket 之间流转；\n* `MSG_ZEROCOPY`：发送时尽量直接使用用户态页面，内核需要保证这些页面在 DMA 完成前不能被释放或修改；\n* `mmap()`：将文件或设备对应的页面映射到用户态虚拟地址空间，使用户态可以直接访问映射的文件页，减少 `read()` 带来的复制。", "---"]}, {"num": 74, "title": "io_uring 与惊群（thundering herd）问题？eventfd 为何存在？", "module": "九：网络编程与操作系统", "hot": false, "superHot": false, "stars": 3, "cardUrl": "074-io-uring/074-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["io_uring 是 Linux 提供的异步 I/O 接口。用户态和内核通过共享的 SQ（Submission Queue）和 CQ（Completion Queue）传递 I/O 请求和完成结果。", "相比 epoll_wait() + recv() / send()，io_uring 可以一次提交多个 I/O 请求，再批量获取完成结果，从而减少系统调用和用户态、内核态切换。", "**惊群（Thundering Herd）**是多个线程同时等待同一个事件源，事件到来时大量线程被唤醒，但通常只有一个线程真正处理，其余线程产生无效唤醒和锁竞争。常见解决方式是 One Loop Per Thread，避免多个线程无必要地竞争同一个事件源。", "eventfd 是 Linux 提供的特殊 FD，本质是一个 64 位计数器，主要用于事件通知，可以被 epoll 监听。例如工作线程把任务放入任务队列后，写 eventfd 唤醒 EventLoop", "---"]}, {"num": 75, "title": "进程 / 线程 / 协程的区别？", "module": "九：网络编程与操作系统", "hot": true, "superHot": false, "stars": 2, "cardUrl": "075-process-thread-coroutine/075-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["进程、线程、协程是三层不同粒度的并发执行单位。核心差别在：谁调度、内存怎么隔离、切换成本有多高。", "进程是操作系统眼里正在运行的程序实例，是资源分配的基本单位。拥有独立的虚拟地址空间、文件描述符表和系统资源。进程之间相互隔离，通信需要 IPC。创建和切换成本通常最高。", "线程是进程内部的执行流，是 CPU 调度的基本单位。同一进程内的线程共享地址空间和大部分资源，但各自拥有独立的栈、寄存器和执行状态。线程由内核调度，可以利用多核 CPU 真正并行执行。", "协程是用户态的轻量级可挂起执行单元，通常由程序或语言运行时调度。切换成本通常远低于线程。协程一般采用协作式调度，必须主动让出执行权；如果出现死循环，就会阻塞同一线程上的其他协程。", "一个进程里至少有一条线程（主线程）。一条线程同一时刻只跑一个执行流；若用了协程，这条线程会在多个协程之间切换。没有不属于任何进程的线程，也没有直接跑在进程上、不经过线程的协程。", "---"]}, {"num": 76, "title": "fork 的写时拷贝（COW）机制？fork 返回值怎么实现？", "module": "九：网络编程与操作系统", "hot": false, "superHot": false, "stars": 3, "cardUrl": "076-fork-cow/076-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["fork() 是操作系统提供的系统调用，用于创建子进程。", "fork() 创建子进程时，不会立即复制整个物理内存，而是让父子进程暂时共享相同的物理页，但各自拥有独立的虚拟地址空间。", "共享页会被标记为只读。当父进程或子进程尝试写入时，触发缺页异常；内核分配新的物理页；复制原页内容；修改方更新页表；之后独立写入。因此，读共享、写复制，可以减少 fork() 的创建开销。", "fork() 调用后，会产生两个进程的返回结果：内核创建子进程，并复制必要的进程上下文；内核分别设置父子进程的返回值寄存器：父进程：返回子进程 PID；子进程：返回 0；创建失败：返回 -1；父子进程从系统调用返回后的同一条指令继续执行。", "---"]}, {"num": 77, "title": "进程间通信（IPC）有哪些方式？各自适用场景？", "module": "九：网络编程与操作系统", "hot": true, "superHot": false, "stars": 3, "cardUrl": "077-ipc/077-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["管道传输的是单向字节流，**没有消息边界**。包括匿名管道和命名管道。匿名管道通常通过 `pipe()` 创建，结合 `fork()`，让父子进程或兄弟进程继承文件描述符进行通信。命名管道通过 `mkfifo()` 创建文件系统路径，因此无亲缘关系的进程也可以通信。", "共享内存允许多个进程将同一块物理内存映射到各自的虚拟地址空间，进程可以直接读写，从而减少数据拷贝，适合大量、高频、低延迟的数据交换。但共享内存本身不负责同步，通常需要配合互斥锁或信号量保护临界区。", "消息队列以消息为单位进行收发，具有消息边界，并且可以暂存消息，因此发送方和接收方不需要严格同时运行。适合结构化数据传递和生产者消费者模型。", "Socket 既可以用于本机进程通信，例如 Unix Domain Socket，也可以用于跨主机通信，例如 TCP 或 UDP。适合双向通信和网络通信场景。", "信号是内核向进程发送的异步事件通知，用于轻量通知和进程控制，不适合传输大量业务数据。\n信号量则是内核维护的计数器，用于进程之间的同步、互斥和资源计数"]}, {"num": 78, "title": "事务的 ACID 与四种隔离级别？各级别用什么锁？", "module": "十：数据库与分布式", "hot": true, "superHot": false, "stars": 3, "cardUrl": "078-acid-isolation/078-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["**原子性**：一个事务中的操作要么全部成功，要么全部失败。\n**一致性**：事务执行前后，数据库都必须满足约束和业务规则。\n**隔离性**：多个事务并发执行时，彼此之间应该尽量互不干扰。\n**持久性**：事务提交后，数据应该持久保存，即使数据库发生崩溃，也不能丢失。", "并发事务主要有三个问题：", "**脏读**：读到了其他事务还没有提交的数据。\n**不可重复读**：同一个事务内，两次读取同一行，结果不同。\n**幻读**：同一个事务内，两次范围查询，返回的记录集合发生变化。", "四种隔离级别分别是：\n**RU，Read Uncommitted**：事务可以读取其他事务还没有提交的数据，隔离性最弱，可能出现脏读。\n**RC，Read Committed**：只能读取已经提交的数据，可以解决脏读，但仍然可能出现不可重复读和幻。\n**RR，Repeatable Read**：同一个事务中的普通查询基于一致性快照，因此可以避免典型的不可重复读。\n**Serializable，可串行化**：让并发事务表现得像串行执行，隔离性最强，但并发性能最低。", "MySQL InnoDB 默认使用 **RR**。对于普通 `SELECT`，主要通过 MVCC 进行快照读；对于 `UPDATE`、`DELETE`、`SELECT ... FOR UPDATE` 等当前读，会使用 **Next-Key Lock**，它由 Record Lock 和 Gap Lock 组成，可以锁住记录以及前面的间隙，防止其他事务在范围内插入新的记录，从而避免典型的幻读。", "---"]}, {"num": 79, "title": "MySQL InnoDB 索引（B+ 树）？聚簇 vs 非聚簇索引？", "module": "十：数据库与分布式", "hot": false, "superHot": false, "stars": 3, "cardUrl": "079-innodb-btree-index/079-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["MySQL InnoDB 的索引通常使用 B+ 树。", "B+ 树是一种多路平衡搜索树，所有叶子节点位于同一层，并且叶子节点之间通过链表连接。它的特点是树高度低、查询效率稳定，同时适合范围查询和排序。", "InnoDB 中，主键索引就是聚簇索引。聚簇索引的叶子节点直接保存完整的数据行，因此通过主键查找到叶子节点后，就可以直接得到整行数据。一张表通常只有一个聚簇索引。", "普通索引属于非聚簇索引，也叫二级索引。它的叶子节点通常保存索引列的值和对应的主键值，而不是完整数据行。", "因此通过二级索引查询时，首先根据索引列找到主键，再通过主键索引找到完整数据行，这个过程叫回表。\n如果查询所需的字段都已经包含在二级索引中，就不需要回表，这叫覆盖索引", "---"]}, {"num": 80, "title": "MySQL 索引优化：最左前缀 / 覆盖索引 / 回表 / 索引失效？", "module": "十：数据库与分布式", "hot": true, "superHot": true, "stars": 3, "cardUrl": "080-index-optimization/080-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["最左前缀原则是指联合索引需要从最左边的列开始匹配。如果中间列出现范围条件，后面的列通常不能继续用于缩小索引扫描范围，但仍可能用于索引条件下推或过滤。", "回表是指通过二级索引找到主键后，再根据主键到聚簇索引中获取完整数据行。覆盖索引是指查询所需的字段都能直接从当前使用的索引中获得，因此不需要回表。", "常见索引失效或利用率降低的情况包括：不满足最左前缀、对索引列使用函数或表达式、隐式类型转换、LIKE 以通配符开头、部分 OR 条件、匹配范围过大以及索引选择性太差。", "但“索引失效”不能简单理解为完全不使用索引。有时索引仍然被使用，只是过滤效果差，或者由于回表成本高，优化器选择了全表扫描。", "判断索引是否真正生效，应该使用 EXPLAIN，重点查看 key、key_len、type、rows 和 Extra，而不是只看 SQL 是否包含索引列。", "---"]}, {"num": 81, "title": "undolog / redolog / binlog 的作用与区别？", "module": "十：数据库与分布式", "hot": false, "superHot": false, "stars": 3, "cardUrl": "081-mysql-logs/081-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["Undo Log、Redo Log 和 Binlog 分别解决不同的问题。", "Undo Log 属于 InnoDB，主要记录修改前的信息，用于事务回滚。同时，MVCC 的历史版本链也依赖 Undo Log。", "Redo Log 也属于 InnoDB，主要记录数据页的修改，用于数据库崩溃后的恢复。MySQL 采用 WAL，也就是先写 Redo Log，再将数据页写入磁盘，从而保证已经提交的数据在崩溃后可以恢复。", "Binlog 属于 MySQL Server 层，记录数据库发生的变更事件，主要用于主从复制、增量备份和数据恢复。", "Redo Log 和 Binlog 的作用不同，因此 MySQL 提交事务时需要通过两阶段提交协调两者，保证 Redo Log 和 Binlog 的一致性。", "---"]}, {"num": 82, "title": "MVCC 的实现原理？", "module": "十：数据库与分布式", "hot": true, "superHot": false, "stars": 3, "cardUrl": "082-mvcc/082-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["MVCC，多版本并发控制，主要用于解决数据库读写并发的问题。它的核心思想是保存数据的多个历史版本，让不同事务根据自己的读视图读取自己应该看到的版本，从而减少读锁带来的并发冲突。", "InnoDB 实现 MVCC 主要依赖三个东西：隐藏事务信息、Undo Log 和 Read View。", "InnoDB 的聚簇索引记录中有隐藏的事务 ID 和 Undo Log 指针，比如 DB_TRX_ID 和 DB_ROLL_PTR。事务修改一条记录时，会生成新版本，同时通过 Undo Log 保存旧版本，多个版本通过 roll_ptr 形成版本链。", "当事务执行普通 SELECT 时，会进行快照读，并创建或使用 Read View。Read View 本质上是一套版本可见性规则，用来判断某个版本对应的事务 ID 对当前事务是否可见。如果当前版本不可见，就沿着 Undo Log 版本链向前查找，直到找到可见版本。", "RC 和 RR 的主要区别在 Read View 的创建时机：", "RC 通常每条一致性读都会创建新的 Read View，所以同一个事务中两次查询可能看到不同的数据。", "RR 通常在第一次一致性读时创建 Read View，后续普通 SELECT 复用这个 Read View，因此可以保证普通一致性读的可重复读。", "---"]}, {"num": 83, "title": "Raft 一致性算法？为什么不能解决拜占庭问题？", "module": "十：数据库与分布式", "hot": false, "superHot": false, "stars": 3, "cardUrl": "083-raft/083-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["Raft 是一种分布式一致性算法，目标是在多副本系统中，即使部分节点故障，也能对日志顺序达成一致。", "它把问题分成三部分：Leader 选举、日志复制和安全性。", "正常情况下有一个 Leader 和多个 Follower。所有写请求都发给 Leader，Leader 先把操作写入本地日志，再复制给其他节点；当多数派确认后，这条日志才会 commit，并应用到状态机。", "如果 Leader 挂了，Follower 会在新的 term 发起选举，获得多数派选票的节点成为新 Leader。Raft 通过 term、投票规则和日志完整性，保证已提交的数据不会丢失", "Raft 不能解决拜占庭问题，因为它假设节点虽然可能宕机或网络异常，但不会恶意撒谎。而拜占庭节点可能向不同节点发送矛盾信息，经典情况下通常需要 3f+1 个节点容忍 f 个拜占庭节点。", "---"]}, {"num": 84, "title": "Redis 常见数据结构与使用场景？缓存一致性怎么保证？", "module": "十：数据库与分布式", "hot": false, "superHot": false, "stars": 2, "cardUrl": "084-redis-structures/084-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["Redis 是一个开源的、基于内存的 Key-Value 数据库，读写性能高，常用于**缓存、Session、计数器、分布式锁和排行榜**等场景。", "Redis 的 Key 通常是 String，Value 支持多种数据结构，包括 **String、List、Hash、Set、ZSet**，以及 Bitmap、HyperLogLog、GEO 和 Stream。", "其中，**Hash 适合存储对象，Set 用于无序去重，ZSet 按 score 排序，常用于排行榜**。", "缓存一致性通常采用 **Cache Aside**：读请求先查缓存，未命中再查数据库并回填缓存；写请求**先更新数据库，再删除缓存**。", "如果对一致性要求更高，可以结合 **Binlog、MQ** 等机制异步删除或更新缓存，进一步保证最终一致性。", "---"]}, {"num": 85, "title": "缓存穿透 / 击穿 / 雪崩的区别与解决？", "module": "十：数据库与分布式", "hot": true, "superHot": true, "stars": 2, "cardUrl": "085-cache-failures/085-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["**缓存穿透**是指查询的数据在缓存和数据库中都不存在，例如恶意请求不存在的 ID，导致每次请求都绕过缓存直接访问数据库。", "常见解决方案：", "* 布隆过滤器，提前判断数据是否可能存在；\n* 数据库查不到时缓存一个短 TTL 的空值；\n* 参数校验，拦截明显非法请求；\n* 限流，防止恶意刷接口。", "**缓存击穿**是指一个热点 Key 在高并发访问时刚好过期，导致大量请求同时 Miss，一起访问数据库。", "常见解决方案：", "* **互斥锁**，只允许一个线程重建缓存；\n* **逻辑过期**，不设置物理 TTL，在 value 中保存过期时间，由后台异步刷新；\n* 热点 Key 设置较长 TTL 或不设置过期时间，并通过后台定时刷新。", "**缓存雪崩**是指大量 Key 同时过期，或者 Redis 整体不可用，导致大量请求同时访问数据库，甚至拖垮整个系统。", "常见解决方案：", "* TTL 加随机值，避免大量 Key 同时过期；\n* Redis 主从、哨兵或集群，提高缓存可用性；\n* 多级缓存；\n* 限流、降级和熔断，保护数据库；\n* DB 异常时快速失败。", "---"]}, {"num": 86, "title": "Redis 为什么快？过期策略与内存淘汰（LRU/LFU）？", "module": "十：数据库与分布式", "hot": true, "superHot": false, "stars": 2, "cardUrl": "086-redis-performance/086-cpp-interview-card.html", "summary": "", "bullets": [], "paragraphs": ["Redis 快主要有几个原因：数据主要存储在内存中、使用高效的数据结构、核心命令采用单线程串行执行、通过 I/O 多路复用处理大量网络连接，并采用事件驱动模型减少线程切换和锁竞争。", "Key 到期怎么删？Redis 采用惰性删除 + 定期删除。惰性删除是在访问 Key 时发现过期再删除；定期删除是 Redis 周期性随机抽查一部分带过期时间的 Key 并清理。两者配合，既避免频繁遍历所有 Key 消耗 CPU，又避免过期 Key 长期占用内存。", "内存满了删谁？由 maxmemory-policy 决定。常见策略有 LRU（最近最少使用）、LFU（访问频率最低）、随机淘汰、TTL 优先等。", "淘汰策略主要分为两类：", "allkeys-*：从所有 Key 中选择淘汰对象；\nvolatile-*：只从设置了 TTL 的 Key 中选择淘汰对象。", "---"]}];
+
+const TRACKS = {
+  backend: new Set([...Array(9).keys()].map(i=>i+45).concat([...Array(18).keys()].map(i=>i+69))),
+  huawei: new Set([...Array(19).keys()].map(i=>i+1)),
+};
+
+function pad(n) { return String(n).padStart(3, '0'); }
+function cardPath(c) { return c.cardUrl; }
+
+let pool = [...CARDS];
+let index = 0;
+let flipped = false;
+let filter = 'all';
+let shuffled = false;
+
+function matchesFilter(c) {
+  if (filter === 'all') return true;
+  if (filter === 'hot') return c.hot;
+  if (filter === 'super') return c.superHot;
+  if (filter === 'backend') return TRACKS.backend.has(c.num);
+  if (filter === 'huawei') return TRACKS.huawei.has(c.num);
+  return true;
+}
+
+function rebuildPool(keepNum) {
+  pool = CARDS.filter(matchesFilter);
+  if (shuffled) shuffleArray(pool);
+  if (!pool.length) {
+    document.getElementById('flipScene').style.display = 'none';
+    document.getElementById('emptyState').classList.add('show');
+    document.getElementById('progressText').textContent = '0 / 0';
+    return;
+  }
+  document.getElementById('flipScene').style.display = '';
+  document.getElementById('emptyState').classList.remove('show');
+  if (keepNum != null) {
+    const i = pool.findIndex(c => c.num === keepNum);
+    index = i >= 0 ? i : 0;
+  } else {
+    index = 0;
+  }
+  flipped = false;
+  render();
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function stars(n) { return '★'.repeat(n); }
+
+function metaHtml(c) {
+  let h = `<span class="num-badge">#${pad(c.num)}</span>`;
+  h += `<span class="tag">${c.module.split('：')[0]}</span>`;
+  h += `<span class="tag">${stars(c.stars)}</span>`;
+  if (c.superHot) h += `<span class="tag tag-hot">🔥🔥</span>`;
+  else if (c.hot) h += `<span class="tag tag-hot">🔥</span>`;
+  return h;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderAnswer(c) {
+  let html = '';
+  if (c.summary) {
+    html += `<div class="summary-box"><strong>一句话总结</strong>${escapeHtml(c.summary)}</div>`;
+  }
+  if (c.bullets.length) {
+    html += '<ul class="bullet-list">';
+    c.bullets.forEach(b => {
+      html += '<li>';
+      if (b.label) html += `<span class="lbl">${escapeHtml(b.label)}：</span>`;
+      html += escapeHtml(b.text) + '</li>';
+    });
+    html += '</ul>';
+  } else {
+    c.paragraphs.forEach(p => {
+      html += `<p class="para">${escapeHtml(p)}</p>`;
+    });
+  }
+  html += `<a class="full-link" href="${cardPath(c)}" onclick="event.stopPropagation()">查看完整卡片 →</a>`;
+  return html;
+}
+
+function render() {
+  if (!pool.length) return;
+  const c = pool[index];
+  document.getElementById('flipCard').classList.toggle('flipped', flipped);
+  document.getElementById('frontMeta').innerHTML = metaHtml(c);
+  document.getElementById('backMeta').innerHTML = metaHtml(c);
+  document.getElementById('questionText').textContent = c.title;
+  document.getElementById('answerBody').innerHTML = renderAnswer(c);
+  document.getElementById('progressText').textContent = `${index + 1} / ${pool.length}`;
+  document.getElementById('progressBar').style.width = `${((index + 1) / pool.length) * 100}%`;
+  document.getElementById('btnPrev').disabled = index === 0;
+  document.getElementById('btnNext').disabled = index === pool.length - 1;
+}
+
+function flip() {
+  if (!pool.length) return;
+  flipped = !flipped;
+  document.getElementById('flipCard').classList.toggle('flipped', flipped);
+}
+
+function go(delta) {
+  if (!pool.length) return;
+  const next = index + delta;
+  if (next < 0 || next >= pool.length) return;
+  index = next;
+  flipped = false;
+  render();
+}
+
+document.getElementById('flipScene').addEventListener('click', flip);
+document.getElementById('btnFlip').addEventListener('click', flip);
+document.getElementById('btnPrev').addEventListener('click', () => go(-1));
+document.getElementById('btnNext').addEventListener('click', () => go(1));
+
+document.getElementById('filters').addEventListener('click', e => {
+  const btn = e.target.closest('.chip[data-filter]');
+  if (!btn) return;
+  filter = btn.dataset.filter;
+  document.querySelectorAll('.chip[data-filter]').forEach(b => b.classList.toggle('active', b === btn));
+  rebuildPool();
+});
+
+document.getElementById('shuffleCheck').addEventListener('change', e => {
+  shuffled = e.target.checked;
+  rebuildPool(pool[index]?.num);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, textarea, select')) return;
+  if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); flip(); }
+  else if (e.code === 'ArrowLeft') go(-1);
+  else if (e.code === 'ArrowRight') go(1);
+  else if (e.code === 'KeyR') rebuildPool(pool[index]?.num);
+});
+
+// URL hash: #042
+const hashNum = parseInt(location.hash.replace('#', ''), 10);
+rebuildPool(Number.isFinite(hashNum) ? hashNum : null);
+if (Number.isFinite(hashNum)) {
+  const i = pool.findIndex(c => c.num === hashNum);
+  if (i >= 0) { index = i; render(); }
+}
+</script>
+</body>
+</html>
